@@ -11,7 +11,9 @@ import {
   CheckCircle, 
   PlayCircle, 
   Upload,
-  Building
+  Building,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Task } from '@/types/Task';
 import CompleteTaskModal from './CompleteTaskModal';
@@ -24,6 +26,7 @@ interface TaskCardProps {
 
 const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -134,112 +137,129 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
 
   return (
     <>
-      <Card className="bg-gradient-card border-border hover:border-primary/30 transition-all duration-300 hover:shadow-elevated group">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2 mb-2">
-              <Building className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold text-card-foreground group-hover:text-primary transition-colors">
+      <Card className="bg-gradient-card border-border hover:border-primary/30 transition-all duration-300 hover:shadow-elevated">
+        {/* Compact Header - Always Visible */}
+        <CardHeader 
+          className="pb-3 cursor-pointer hover:bg-muted/20 transition-colors"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <Building className="h-4 w-4 text-primary flex-shrink-0" />
+              <h3 className="font-semibold text-card-foreground truncate">
                 {task.business_name}
               </h3>
+              {getStatusBadge()}
             </div>
-            {getStatusBadge()}
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 flex-shrink-0">
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
           </div>
-          
-          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-            {task.brief}
-          </p>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          {/* Task Info */}
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <User className="h-3 w-3" />
-              <span>Created by {task.created_by}</span>
+        {/* Expandable Content */}
+        {isExpanded && (
+          <CardContent className="pt-0 space-y-4">
+            {/* Task Brief */}
+            <div className="bg-muted/30 rounded-lg p-3">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {task.brief}
+              </p>
             </div>
-            
-            {task.taken_by && (
+
+            {/* Task Info */}
+            <div className="space-y-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <PlayCircle className="h-3 w-3" />
-                <span>Claimed by {task.taken_by}</span>
+                <User className="h-3 w-3" />
+                <span>Created by {task.created_by}</span>
               </div>
-            )}
-            
-            <div className="flex items-center gap-2">
-              <Clock className="h-3 w-3" />
-              <span>Created {formatDate(task.created_at)}</span>
+              
+              {task.taken_by && (
+                <div className="flex items-center gap-2">
+                  <PlayCircle className="h-3 w-3" />
+                  <span>Claimed by {task.taken_by}</span>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-2">
+                <Clock className="h-3 w-3" />
+                <span>Created {formatDate(task.created_at)}</span>
+              </div>
+              
+              {task.completed_at && (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-3 w-3" />
+                  <span>Completed {formatDate(task.completed_at)}</span>
+                </div>
+              )}
             </div>
-            
-            {task.completed_at && (
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-3 w-3" />
-                <span>Completed {formatDate(task.completed_at)}</span>
-              </div>
-            )}
-          </div>
 
-          {/* Actions */}
-          <div className="flex gap-2 pt-2 border-t border-border/50">
-            {task.status === 'open' && (
-              <Button
-                variant="success"
-                size="sm"
-                onClick={handleClaim}
-                disabled={isLoading}
-                className="flex-1"
-              >
-                <PlayCircle className="h-3 w-3" />
-                Claim Task
-              </Button>
-            )}
-
-            {task.status === 'in_progress' && task.taken_by === currentUser && (
-              <>
+            {/* Actions */}
+            <div className="flex gap-2 pt-2 border-t border-border/50">
+              {task.status === 'open' && (
                 <Button
-                  variant="warning"
+                  variant="success"
                   size="sm"
-                  onClick={() => setShowCompleteModal(true)}
-                  className="flex-1"
-                >
-                  <Upload className="h-3 w-3" />
-                  Complete
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRevert}
+                  onClick={handleClaim}
                   disabled={isLoading}
                   className="flex-1"
                 >
                   <PlayCircle className="h-3 w-3" />
-                  Revert
+                  Claim Task
                 </Button>
-              </>
-            )}
+              )}
 
-            {task.status === 'completed' && task.zip_path && (
+              {task.status === 'in_progress' && task.taken_by === currentUser && (
+                <>
+                  <Button
+                    variant="warning"
+                    size="sm"
+                    onClick={() => setShowCompleteModal(true)}
+                    className="flex-1"
+                  >
+                    <Upload className="h-3 w-3" />
+                    Complete
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRevert}
+                    disabled={isLoading}
+                    className="flex-1"
+                  >
+                    <PlayCircle className="h-3 w-3" />
+                    Revert
+                  </Button>
+                </>
+              )}
+
+              {task.status === 'completed' && task.zip_path && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownload}
+                  className="flex-1"
+                >
+                  <Download className="h-3 w-3" />
+                  Download
+                </Button>
+              )}
+
               <Button
-                variant="outline"
+                variant="destructive"
                 size="sm"
-                onClick={handleDownload}
-                className="flex-1"
+                onClick={handleDelete}
+                disabled={isLoading}
               >
-                <Download className="h-3 w-3" />
-                Download
+                <Trash2 className="h-3 w-3" />
               </Button>
-            )}
-
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDelete}
-              disabled={isLoading}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </div>
-        </CardContent>
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       <CompleteTaskModal

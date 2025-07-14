@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -70,6 +70,9 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }: CreateTaskModalProp
             <Plus className="h-5 w-5 text-primary" />
             Create New Task
           </DialogTitle>
+          <DialogDescription>
+            Fill in the details below to create a new task for your team.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">

@@ -1,15 +1,8 @@
-import { useState } from 'react';
 import { Task } from '@/types/Task';
 import TaskCard from './TaskCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { Circle, Clock, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Circle, Clock, CheckCircle } from 'lucide-react';
 
 interface KanbanBoardProps {
   tasks: Task[];
@@ -18,19 +11,6 @@ interface KanbanBoardProps {
 }
 
 const KanbanBoard = ({ tasks, currentUser, onUpdate }: KanbanBoardProps) => {
-  const [expandedColumns, setExpandedColumns] = useState<Record<string, boolean>>({
-    'open': true,
-    'in_progress': true,
-    'completed': false
-  });
-
-  const toggleColumn = (columnKey: string) => {
-    setExpandedColumns(prev => ({
-      ...prev,
-      [columnKey]: !prev[columnKey]
-    }));
-  };
-
   const activeTasks = tasks.filter(task => !task.is_deleted);
   
   const openTasks = activeTasks.filter(task => task.status === 'open');
@@ -40,7 +20,6 @@ const KanbanBoard = ({ tasks, currentUser, onUpdate }: KanbanBoardProps) => {
   const columns = [
     {
       title: 'Open',
-      key: 'open',
       tasks: openTasks,
       count: openTasks.length,
       icon: Circle,
@@ -49,7 +28,6 @@ const KanbanBoard = ({ tasks, currentUser, onUpdate }: KanbanBoardProps) => {
     },
     {
       title: 'In Progress',
-      key: 'in_progress',
       tasks: inProgressTasks,
       count: inProgressTasks.length,
       icon: Clock,
@@ -58,7 +36,6 @@ const KanbanBoard = ({ tasks, currentUser, onUpdate }: KanbanBoardProps) => {
     },
     {
       title: 'Completed',
-      key: 'completed',
       tasks: completedTasks,
       count: completedTasks.length,
       icon: CheckCircle,
@@ -68,68 +45,59 @@ const KanbanBoard = ({ tasks, currentUser, onUpdate }: KanbanBoardProps) => {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
       {columns.map((column) => {
         const Icon = column.icon;
-        const isExpanded = expandedColumns[column.key];
         
         return (
-          <Card key={column.title} className="bg-gradient-card border-border">
-            {/* Column Header - Always Visible */}
-            <CardHeader 
-              className="pb-3 cursor-pointer hover:bg-muted/20 transition-colors"
-              onClick={() => toggleColumn(column.key)}
-            >
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Icon className="h-5 w-5 text-primary" />
-                  <span className="text-lg">{column.title}</span>
+          <div key={column.title} className="flex flex-col h-full">
+            {/* Column Header */}
+            <Card className="mb-4 bg-gradient-card border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Icon className="h-5 w-5 text-primary" />
+                    <span className="text-lg">{column.title}</span>
+                  </div>
                   <Badge className={`${column.color} ${column.textColor} px-2 py-1`}>
                     {column.count}
                   </Badge>
-                </div>
-                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                  {isExpanded ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </Button>
-              </CardTitle>
-            </CardHeader>
+                </CardTitle>
+              </CardHeader>
+            </Card>
 
-            {/* Collapsible Tasks Content */}
-            {isExpanded && (
-              <CardContent className="pt-0">
+            {/* Tasks Container */}
+            <div className="flex-1 min-h-0">
+              <div className="space-y-3 h-full overflow-y-auto pr-2 custom-scrollbar">
                 {column.tasks.length === 0 ? (
-                  <div className="bg-muted/30 border border-dashed border-border/50 rounded-lg p-6">
-                    <div className="text-center space-y-2">
-                      <Icon className="h-8 w-8 text-muted-foreground mx-auto opacity-50" />
-                      <p className="text-sm text-muted-foreground">
-                        No {column.title.toLowerCase()} tasks
-                      </p>
-                      {column.title === 'Open' && (
-                        <p className="text-xs text-muted-foreground">
-                          Create a new task to get started
+                  <Card className="bg-gradient-card border-dashed border-border/50">
+                    <CardContent className="flex items-center justify-center py-8">
+                      <div className="text-center space-y-2">
+                        <Icon className="h-8 w-8 text-muted-foreground mx-auto opacity-50" />
+                        <p className="text-sm text-muted-foreground">
+                          No {column.title.toLowerCase()} tasks
                         </p>
-                      )}
-                    </div>
-                  </div>
+                        {column.title === 'Open' && (
+                          <p className="text-xs text-muted-foreground">
+                            Create a new task to get started
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 ) : (
-                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                    {column.tasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        currentUser={currentUser}
-                        onUpdate={onUpdate}
-                      />
-                    ))}
-                  </div>
+                  column.tasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      currentUser={currentUser}
+                      onUpdate={onUpdate}
+                    />
+                  ))
                 )}
-              </CardContent>
-            )}
-          </Card>
+              </div>
+            </div>
+          </div>
         );
       })}
     </div>

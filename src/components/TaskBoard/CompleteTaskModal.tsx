@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -122,6 +122,9 @@ const CompleteTaskModal = ({ isOpen, onClose, task, onComplete }: CompleteTaskMo
             <CheckCircle className="h-5 w-5 text-success" />
             Complete Task
           </DialogTitle>
+          <DialogDescription>
+            Upload the deliverable file to mark this task as completed.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
