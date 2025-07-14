@@ -130,6 +130,8 @@ export const tasks = {
       userId = '44444444-4444-4444-4444-444444444444'
     }
 
+    console.log('Creating task with userId:', userId, 'taskData:', taskData);
+
     const { data, error } = await supabase
       .from('tasks')
       .insert({
@@ -140,7 +142,12 @@ export const tasks = {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Task creation error:', error);
+      throw error;
+    }
+    
+    console.log('Task created successfully:', data);
     return data
   },
 

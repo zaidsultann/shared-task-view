@@ -14,7 +14,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,10 +68,10 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
           <div className="space-y-6">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-bold text-foreground">
-                {isSignUp ? "Create Account" : "Welcome back"}
+                Welcome back
               </h2>
               <p className="text-muted-foreground">
-                {isSignUp ? "Create a new account to get started" : "Sign in to your account to continue"}
+                Sign in to your account to continue
               </p>
             </div>
 
@@ -118,30 +118,17 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                 {isLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>{isSignUp ? "Creating account..." : "Signing in..."}</span>
+                    <span>Signing in...</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
                     <LogIn className="h-5 w-5" />
-                    <span>{isSignUp ? "Create Account" : "Sign In"}</span>
+                    <span>Sign In</span>
                   </div>
                 )}
               </Button>
             </form>
 
-            {/* Toggle between Login/Signup */}
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-primary hover:text-primary-700 font-medium transition-colors"
-                >
-                  {isSignUp ? "Sign In" : "Create Account"}
-                </button>
-              </p>
-            </div>
           </div>
         </div>
       </div>
