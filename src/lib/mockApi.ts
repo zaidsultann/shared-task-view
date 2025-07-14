@@ -92,28 +92,29 @@ export const mockApi = {
     const task = tasks.find(t => t.id === taskId);
     if (!task) throw new Error('Task not found');
     
-    // Store file as base64 for download
-    const fileData = await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.readAsDataURL(zipFile);
-    });
-    
-    const zipPath = `${taskId}_${zipFile.name}`;
-    
-    // Store file data in localStorage
-    localStorage.setItem(`task_file_${taskId}`, JSON.stringify({
-      fileName: zipFile.name,
-      fileData: fileData,
-      fileType: zipFile.type
-    }));
-    
-    task.status = 'completed';
-    task.completed_at = Date.now();
-    task.zip_path = zipPath;
-    
-    localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
-    return task;
+    try {
+      // For large files, we'll just store file metadata and simulate upload
+      const fileInfo = {
+        fileName: zipFile.name,
+        fileSize: zipFile.size,
+        fileType: zipFile.type,
+        uploadedAt: Date.now()
+      };
+      
+      const zipPath = `${taskId}_${zipFile.name}`;
+      
+      // Store file info instead of actual file data for large files
+      localStorage.setItem(`task_file_${taskId}`, JSON.stringify(fileInfo));
+      
+      task.status = 'completed';
+      task.completed_at = Date.now();
+      task.zip_path = zipPath;
+      
+      localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
+      return task;
+    } catch (error) {
+      throw new Error('Failed to process file upload');
+    }
   },
 
   async revertTask(taskId: string): Promise<Task> {
@@ -133,27 +134,36 @@ export const mockApi = {
     const fileData = localStorage.getItem(`task_file_${taskId}`);
     if (!fileData) throw new Error('File not found');
     
-    const { fileName, fileData: base64Data } = JSON.parse(fileData);
+    const fileInfo = JSON.parse(fileData);
     
-    // Convert base64 to blob and download
+    // Simulate download for demonstration (in real app, this would download from server)
+    const blob = new Blob(['File content would be downloaded from server'], { type: 'application/zip' });
+    const url = URL.createObjectURL(blob);
+    
     const link = document.createElement('a');
-    link.href = base64Data;
-    link.download = fileName;
+    link.href = url;
+    link.download = fileInfo.fileName;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   },
 
   async clearHistory(): Promise<void> {
     await delay(300);
-    localStorage.removeItem(STORAGE_KEYS.TASKS);
-    // Clear all task files
-    const keys = Object.keys(localStorage);
-    keys.forEach(key => {
-      if (key.startsWith('task_file_')) {
-        localStorage.removeItem(key);
-      }
+    const tasks = await this.getTasks();
+    
+    // Only remove deleted tasks
+    const activeTasks = tasks.filter(task => !task.is_deleted);
+    const deletedTasks = tasks.filter(task => task.is_deleted);
+    
+    // Clear file data for deleted tasks only
+    deletedTasks.forEach(task => {
+      localStorage.removeItem(`task_file_${task.id}`);
     });
+    
+    // Keep only active tasks
+    localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(activeTasks));
   },
 
   async deleteTask(taskId: string): Promise<void> {

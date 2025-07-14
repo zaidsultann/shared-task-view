@@ -64,22 +64,33 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   };
 
   const handleClearHistory = async () => {
-    if (!confirm('Are you sure you want to clear all task history? This action cannot be undone.')) return;
+    const deletedTasksCount = tasks.filter(task => task.is_deleted).length;
+    
+    if (deletedTasksCount === 0) {
+      toast({
+        title: "No deleted tasks",
+        description: "There are no deleted tasks to clear",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!confirm(`Are you sure you want to permanently remove ${deletedTasksCount} deleted task(s)? This action cannot be undone.`)) return;
     
     try {
       const { mockApi } = await import('@/lib/mockApi');
       await mockApi.clearHistory();
       
       toast({
-        title: "History cleared",
-        description: "All tasks have been removed",
+        title: "Deleted tasks cleared",
+        description: `${deletedTasksCount} deleted tasks have been permanently removed`,
       });
       
       fetchTasks();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to clear history",
+        description: "Failed to clear deleted tasks",
         variant: "destructive",
       });
     }
@@ -175,9 +186,10 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                 variant="destructive"
                 size="sm"
                 onClick={handleClearHistory}
+                disabled={tasks.filter(task => task.is_deleted).length === 0}
               >
                 <Trash2 className="h-4 w-4" />
-                <span className="hidden sm:inline ml-2">Clear</span>
+                <span className="hidden sm:inline ml-2">Clear Deleted</span>
               </Button>
               
               <Button
