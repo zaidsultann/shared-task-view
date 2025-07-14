@@ -40,10 +40,6 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     setIsLoading(false);
   };
 
-  const handleQuickLogin = (user: string) => {
-    setUsername(user);
-    setPassword('dz4132');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-bg flex items-center justify-center p-4">
@@ -54,7 +50,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
             <img 
               src="/lovable-uploads/c516933f-21f1-40ae-869b-9c8b76ebe1dd.png" 
               alt="TaskBoard Logo" 
-              className="h-16 w-16 opacity-90"
+              className="h-24 w-24 opacity-90"
             />
           </div>
           <div>
@@ -126,31 +122,6 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
               </Button>
             </form>
 
-            {/* Quick Login */}
-            <div className="space-y-3">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-card px-2 text-muted-foreground">Quick login</span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                {['AS', 'TS', 'MW', 'ZS'].map((user) => (
-                  <Button
-                    key={user}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickLogin(user)}
-                    className="text-xs"
-                  >
-                    {user}
-                  </Button>
-                ))}
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>

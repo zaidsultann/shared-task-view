@@ -75,23 +75,13 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
     if (!task.zip_path) return;
     
     try {
-      const response = await fetch(`/api/tasks/${task.id}/download`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${task.business_name.replace(/\s+/g, '_')}.zip`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        
-        toast({
-          title: "Download started",
-          description: `Downloading ${task.business_name} deliverable`,
-        });
-      }
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.downloadTask(task.id);
+      
+      toast({
+        title: "Download started",
+        description: `Downloading ${task.business_name} deliverable`,
+      });
     } catch (error) {
       toast({
         title: "Download failed",
@@ -99,6 +89,27 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleRevert = async () => {
+    setIsLoading(true);
+    try {
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.revertTask(task.id);
+      
+      toast({
+        title: "Task reverted",
+        description: `${task.business_name} is now available for claiming`,
+      });
+      onUpdate();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to revert task",
+        variant: "destructive",
+      });
+    }
+    setIsLoading(false);
   };
 
   const getStatusBadge = () => {
@@ -184,15 +195,27 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
             )}
 
             {task.status === 'in_progress' && task.taken_by === currentUser && (
-              <Button
-                variant="warning"
-                size="sm"
-                onClick={() => setShowCompleteModal(true)}
-                className="flex-1"
-              >
-                <Upload className="h-3 w-3" />
-                Complete
-              </Button>
+              <>
+                <Button
+                  variant="warning"
+                  size="sm"
+                  onClick={() => setShowCompleteModal(true)}
+                  className="flex-1"
+                >
+                  <Upload className="h-3 w-3" />
+                  Complete
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRevert}
+                  disabled={isLoading}
+                  className="flex-1"
+                >
+                  <PlayCircle className="h-3 w-3" />
+                  Revert
+                </Button>
+              </>
             )}
 
             {task.status === 'completed' && task.zip_path && (

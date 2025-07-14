@@ -7,7 +7,8 @@ import {
   History, 
   Users, 
   RefreshCw,
-  BarChart3
+  BarChart3,
+  Trash2
 } from 'lucide-react';
 import { Task, User } from '@/types/Task';
 import KanbanBoard from './KanbanBoard';
@@ -57,6 +58,28 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
       toast({
         title: "Error",
         description: "Failed to logout",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleClearHistory = async () => {
+    if (!confirm('Are you sure you want to clear all task history? This action cannot be undone.')) return;
+    
+    try {
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.clearHistory();
+      
+      toast({
+        title: "History cleared",
+        description: "All tasks have been removed",
+      });
+      
+      fetchTasks();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to clear history",
         variant: "destructive",
       });
     }
@@ -146,6 +169,15 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
               >
                 <History className="h-4 w-4" />
                 <span className="hidden sm:inline ml-2">History</span>
+              </Button>
+              
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleClearHistory}
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="hidden sm:inline ml-2">Clear</span>
               </Button>
               
               <Button

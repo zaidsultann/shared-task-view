@@ -92,15 +92,68 @@ export const mockApi = {
     const task = tasks.find(t => t.id === taskId);
     if (!task) throw new Error('Task not found');
     
-    // Simulate file storage (in real app, this would upload to server)
-    const mockZipPath = `uploads/${zipFile.name}`;
+    // Store file as base64 for download
+    const fileData = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsDataURL(zipFile);
+    });
+    
+    const zipPath = `${taskId}_${zipFile.name}`;
+    
+    // Store file data in localStorage
+    localStorage.setItem(`task_file_${taskId}`, JSON.stringify({
+      fileName: zipFile.name,
+      fileData: fileData,
+      fileType: zipFile.type
+    }));
     
     task.status = 'completed';
     task.completed_at = Date.now();
-    task.zip_path = mockZipPath;
+    task.zip_path = zipPath;
     
     localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
     return task;
+  },
+
+  async revertTask(taskId: string): Promise<Task> {
+    await delay(300);
+    const tasks = await this.getTasks();
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) throw new Error('Task not found');
+    
+    task.status = 'open';
+    task.taken_by = undefined;
+    
+    localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
+    return task;
+  },
+
+  async downloadTask(taskId: string): Promise<void> {
+    const fileData = localStorage.getItem(`task_file_${taskId}`);
+    if (!fileData) throw new Error('File not found');
+    
+    const { fileName, fileData: base64Data } = JSON.parse(fileData);
+    
+    // Convert base64 to blob and download
+    const link = document.createElement('a');
+    link.href = base64Data;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  },
+
+  async clearHistory(): Promise<void> {
+    await delay(300);
+    localStorage.removeItem(STORAGE_KEYS.TASKS);
+    // Clear all task files
+    const keys = Object.keys(localStorage);
+    keys.forEach(key => {
+      if (key.startsWith('task_file_')) {
+        localStorage.removeItem(key);
+      }
+    });
   },
 
   async deleteTask(taskId: string): Promise<void> {
