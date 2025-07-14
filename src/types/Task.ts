@@ -7,7 +7,7 @@ export interface Task {
   created_by: string;
   taken_by?: string;
   completed_at?: number;
-  zip_path?: string;
+  zip_url?: string;
   is_deleted: boolean;
 }
 

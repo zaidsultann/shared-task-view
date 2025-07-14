@@ -77,8 +77,16 @@ const CompleteTaskModal = ({ isOpen, onClose, task, onComplete }: CompleteTaskMo
     setIsLoading(true);
 
     try {
-      const { mockApi } = await import('@/lib/mockApi');
-      await mockApi.completeTask(task.id, selectedFile);
+      const formData = new FormData();
+      formData.append('zip', selectedFile);
+
+      const res = await fetch(`http://localhost:8080/api/tasks/${task.id}/complete`, {
+        method: "PATCH",
+        credentials: "include",
+        body: formData
+      });
+      
+      if (!res.ok) throw new Error('Failed to complete task');
 
       toast({
         title: "Task completed!",

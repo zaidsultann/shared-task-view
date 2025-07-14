@@ -24,14 +24,19 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }: CreateTaskModalProp
     setIsLoading(true);
 
     try {
-      const { mockApi } = await import('@/lib/mockApi');
-      const currentUser = JSON.parse(localStorage.getItem('taskboard_user') || '{}');
-      
-      await mockApi.createTask({
-        business_name: businessName.trim(),
-        brief: brief.trim(),
-        created_by: currentUser.username,
+      const res = await fetch("http://localhost:8080/api/tasks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          business_name: businessName.trim(),
+          brief: brief.trim()
+        })
       });
+      
+      if (!res.ok) throw new Error('Failed to create task');
 
       toast({
         title: "Task created successfully!",

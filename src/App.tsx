@@ -17,9 +17,11 @@ const App = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { mockApi } = await import('@/lib/mockApi');
-        const userData = await mockApi.getCurrentUser();
-        if (userData) {
+        const res = await fetch("http://localhost:8080/api/auth/me", {
+          credentials: "include"
+        });
+        if (res.ok) {
+          const userData = await res.json();
           setUser(userData);
         }
       } catch (error) {

@@ -31,8 +31,11 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
   const handleClaim = async () => {
     setIsLoading(true);
     try {
-      const { mockApi } = await import('@/lib/mockApi');
-      await mockApi.claimTask(task.id, currentUser);
+      const res = await fetch(`http://localhost:8080/api/tasks/${task.id}/claim`, {
+        method: "PATCH",
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error('Failed to claim task');
       
       toast({
         title: "Task claimed!",
@@ -54,8 +57,11 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
     
     setIsLoading(true);
     try {
-      const { mockApi } = await import('@/lib/mockApi');
-      await mockApi.deleteTask(task.id);
+      const res = await fetch(`http://localhost:8080/api/tasks/${task.id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error('Failed to delete task');
       
       toast({
         title: "Task deleted",
@@ -73,11 +79,16 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
   };
 
   const handleDownload = async () => {
-    if (!task.zip_path) return;
+    if (!task.zip_url) return;
     
     try {
-      const { mockApi } = await import('@/lib/mockApi');
-      await mockApi.downloadTask(task.id);
+      // Create a temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = task.zip_url;
+      link.download = `${task.business_name.replace(/\s+/g, '_')}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       
       toast({
         title: "Download started",
@@ -95,8 +106,11 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
   const handleRevert = async () => {
     setIsLoading(true);
     try {
-      const { mockApi } = await import('@/lib/mockApi');
-      await mockApi.revertTask(task.id);
+      const res = await fetch(`http://localhost:8080/api/tasks/${task.id}/revert`, {
+        method: "PATCH",
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error('Failed to revert task');
       
       toast({
         title: "Task reverted",
@@ -242,7 +256,7 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
                 </>
               )}
 
-              {task.status === 'completed' && task.zip_path && (
+              {task.status === 'completed' && task.zip_url && (
                 <Button
                   variant="outline"
                   size="sm"

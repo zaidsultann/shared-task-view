@@ -33,8 +33,12 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
   const fetchTasks = async () => {
     try {
-      const { mockApi } = await import('@/lib/mockApi');
-      const data = await mockApi.getTasks();
+      const res = await fetch("http://localhost:8080/api/tasks", {
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error('Failed to fetch tasks');
+      
+      const data = await res.json();
       setTasks(data);
       setLastUpdate(Date.now());
     } catch (error) {
@@ -50,8 +54,12 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
   const handleLogout = async () => {
     try {
-      const { mockApi } = await import('@/lib/mockApi');
-      await mockApi.logout();
+      const res = await fetch("http://localhost:8080/api/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error('Failed to logout');
+      
       toast({
         title: "Logged out",
         description: "See you next time!",
@@ -81,8 +89,11 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     if (!confirm(`Are you sure you want to permanently remove ${deletedTasksCount} deleted task(s)? This action cannot be undone.`)) return;
     
     try {
-      const { mockApi } = await import('@/lib/mockApi');
-      await mockApi.clearHistory();
+      const res = await fetch("http://localhost:8080/api/tasks/clear-history", {
+        method: "DELETE",
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error('Failed to clear history');
       
       toast({
         title: "Deleted tasks cleared",
