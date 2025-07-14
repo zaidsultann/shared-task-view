@@ -18,7 +18,7 @@ export const auth = {
       .from('profiles')
       .select('username')
       .eq('user_id', data.user?.id)
-      .single()
+      .maybeSingle()
     
     return { username: profile?.username || username, user_id: data.user?.id }
   },
@@ -36,7 +36,7 @@ export const auth = {
       .from('profiles')
       .select('username')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
     
     return { username: profile?.username || 'Unknown', user_id: user.id }
   },
@@ -52,6 +52,7 @@ export const tasks = {
         created_by_profile:profiles!tasks_created_by_fkey(username),
         taken_by_profile:profiles!tasks_taken_by_fkey(username)
       `)
+      .eq('is_deleted', false)
       .order('created_at', { ascending: false })
 
     if (error) throw error

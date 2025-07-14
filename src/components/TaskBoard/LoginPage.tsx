@@ -61,7 +61,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
           .from('profiles')
           .select('username')
           .eq('user_id', data.user?.id)
-          .single();
+          .maybeSingle();
 
         const userData = { username: profile?.username || username };
         
