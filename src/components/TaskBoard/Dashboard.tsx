@@ -29,14 +29,10 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch('/api/tasks');
-      if (response.ok) {
-        const data = await response.json();
-        setTasks(data);
-        setLastUpdate(Date.now());
-      } else {
-        throw new Error('Failed to fetch tasks');
-      }
+      const { mockApi } = await import('@/lib/mockApi');
+      const data = await mockApi.getTasks();
+      setTasks(data);
+      setLastUpdate(Date.now());
     } catch (error) {
       toast({
         title: "Error",
@@ -50,17 +46,13 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/logout', {
-        method: 'POST',
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.logout();
+      toast({
+        title: "Logged out",
+        description: "See you next time!",
       });
-      
-      if (response.ok) {
-        toast({
-          title: "Logged out",
-          description: "See you next time!",
-        });
-        onLogout();
-      }
+      onLogout();
     } catch (error) {
       toast({
         title: "Error",

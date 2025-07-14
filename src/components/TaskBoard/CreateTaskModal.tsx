@@ -24,36 +24,25 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }: CreateTaskModalProp
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          business_name: businessName,
-          brief: brief,
-        }),
+      const { mockApi } = await import('@/lib/mockApi');
+      const currentUser = JSON.parse(localStorage.getItem('taskboard_user') || '{}');
+      
+      await mockApi.createTask({
+        business_name: businessName.trim(),
+        brief: brief.trim(),
+        created_by: currentUser.username,
       });
 
-      if (response.ok) {
-        toast({
-          title: "Task created successfully!",
-          description: `${businessName} has been added to the board`,
-        });
-        
-        // Reset form
-        setBusinessName('');
-        setBrief('');
-        onTaskCreated();
-        onClose();
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Failed to create task",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Task created successfully!",
+        description: `${businessName} has been added to the board`,
+      });
+      
+      // Reset form
+      setBusinessName('');
+      setBrief('');
+      onTaskCreated();
+      onClose();
     } catch (error) {
       toast({
         title: "Error",
