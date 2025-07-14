@@ -21,33 +21,18 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
+      const { mockApi } = await import('@/lib/mockApi');
+      const data = await mockApi.login(username, password);
+      
+      toast({
+        title: "Welcome back!",
+        description: `Logged in as ${data.username}`,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        toast({
-          title: "Welcome back!",
-          description: `Logged in as ${data.username}`,
-        });
-        onLogin(data);
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Login failed",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      onLogin(data);
     } catch (error) {
       toast({
-        title: "Connection error",
-        description: "Unable to connect to server",
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Invalid credentials",
         variant: "destructive",
       });
     }

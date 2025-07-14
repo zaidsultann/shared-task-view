@@ -17,9 +17,9 @@ const App = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/me');
-        if (response.ok) {
-          const userData = await response.json();
+        const { mockApi } = await import('@/lib/mockApi');
+        const userData = await mockApi.getCurrentUser();
+        if (userData) {
           setUser(userData);
         }
       } catch (error) {
