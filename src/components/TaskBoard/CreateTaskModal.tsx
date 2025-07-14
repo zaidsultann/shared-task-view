@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Building, FileText, Plus } from 'lucide-react';
 
 interface CreateTaskModalProps {
@@ -24,19 +25,20 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }: CreateTaskModalProp
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8080/api/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
           business_name: businessName.trim(),
-          brief: brief.trim()
+          brief: brief.trim(),
+          created_by: user.id
         })
-      });
-      
-      if (!res.ok) throw new Error('Failed to create task');
+        .select()
+        .single()
+
+      if (error) throw error
 
       toast({
         title: "Task created successfully!",

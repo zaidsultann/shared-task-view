@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Clock, 
   User, 
@@ -31,11 +32,21 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
   const handleClaim = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/tasks/${task.id}/claim`, {
-        method: "PATCH",
-        credentials: "include"
-      });
-      if (!res.ok) throw new Error('Failed to claim task');
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({
+          status: 'in_progress',
+          taken_by: user.id
+        })
+        .eq('id', task.id)
+        .eq('status', 'open')
+        .select()
+        .single()
+
+      if (error) throw error
       
       toast({
         title: "Task claimed!",
@@ -57,11 +68,18 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
     
     setIsLoading(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/tasks/${task.id}`, {
-        method: "DELETE",
-        credentials: "include"
-      });
-      if (!res.ok) throw new Error('Failed to delete task');
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({ is_deleted: true })
+        .eq('id', task.id)
+        .eq('created_by', user.id)
+        .select()
+        .single()
+
+      if (error) throw error
       
       toast({
         title: "Task deleted",
@@ -106,11 +124,23 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
   const handleRevert = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/tasks/${task.id}/revert`, {
-        method: "PATCH",
-        credentials: "include"
-      });
-      if (!res.ok) throw new Error('Failed to revert task');
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({
+          status: 'open',
+          taken_by: null,
+          completed_at: null,
+          zip_url: null
+        })
+        .eq('id', task.id)
+        .eq('taken_by', user.id)
+        .select()
+        .single()
+
+      if (error) throw error
       
       toast({
         title: "Task reverted",

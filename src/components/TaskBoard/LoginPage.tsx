@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { LogIn, User, Lock } from 'lucide-react';
 
 interface LoginPageProps {
@@ -20,24 +21,31 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username, password })
-      });
-
-      if (!res.ok) {
-        throw new Error("Invalid username or password");
+      // Use Supabase Auth with email format for demo
+      const email = `${username}@demo.com`
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: password || 'demo123'
+      })
+      
+      if (error) {
+        throw new Error("Invalid username or password")
       }
 
-      const data = await res.json();
+      // Get profile info
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', data.user?.id)
+        .single()
+
+      const userData = { username: profile?.username || username }
       
       toast({
         title: "Welcome back!",
-        description: `Logged in as ${data.username}`,
+        description: `Logged in as ${userData.username}`,
       });
-      onLogin(data);
+      onLogin(userData);
     } catch (error) {
       toast({
         title: "Login failed",

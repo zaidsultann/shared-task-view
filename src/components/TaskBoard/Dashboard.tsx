@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Plus, 
   LogOut, 
@@ -33,46 +34,62 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
   const fetchTasks = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/tasks", {
-        credentials: "include"
-      });
-      if (!res.ok) throw new Error('Failed to fetch tasks');
-      
-      const data = await res.json();
-      setTasks(data);
-      setLastUpdate(Date.now());
+      const { data: tasks, error } = await supabase
+        .from('tasks')
+        .select(`
+          *,
+          created_by_profile:profiles!tasks_created_by_fkey(username),
+          taken_by_profile:profiles!tasks_taken_by_fkey(username)
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      // Transform the data to match frontend expectations
+      const transformedTasks = tasks.map(task => ({
+        id: task.id,
+        business_name: task.business_name,
+        brief: task.brief,
+        status: task.status as 'open' | 'in_progress' | 'completed',
+        created_at: new Date(task.created_at).getTime(),
+        created_by: task.created_by_profile?.username || 'Unknown',
+        taken_by: task.taken_by_profile?.username,
+        completed_at: task.completed_at ? new Date(task.completed_at).getTime() : undefined,
+        zip_url: task.zip_url,
+        is_deleted: task.is_deleted
+      })) as Task[]
+
+      setTasks(transformedTasks)
+      setLastUpdate(Date.now())
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to load tasks",
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleLogout = async () => {
     try {
-      const res = await fetch("http://localhost:8080/api/auth/logout", {
-        method: "POST",
-        credentials: "include"
-      });
-      if (!res.ok) throw new Error('Failed to logout');
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
       
       toast({
         title: "Logged out",
         description: "See you next time!",
-      });
-      onLogout();
+      })
+      onLogout()
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to logout",
         variant: "destructive",
-      });
+      })
     }
-  };
+  }
 
   const handleClearHistory = async () => {
     const deletedTasksCount = tasks.filter(task => task.is_deleted).length;
@@ -89,16 +106,17 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     if (!confirm(`Are you sure you want to permanently remove ${deletedTasksCount} deleted task(s)? This action cannot be undone.`)) return;
     
     try {
-      const res = await fetch("http://localhost:8080/api/tasks/clear-history", {
-        method: "DELETE",
-        credentials: "include"
-      });
-      if (!res.ok) throw new Error('Failed to clear history');
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('is_deleted', true)
+
+      if (error) throw error
       
       toast({
         title: "Deleted tasks cleared",
         description: `${deletedTasksCount} deleted tasks have been permanently removed`,
-      });
+      })
       
       fetchTasks();
     } catch (error) {
