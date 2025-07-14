@@ -14,6 +14,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,34 +22,58 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     setIsLoading(true);
 
     try {
-      // Use Supabase Auth with email format for demo
-      const email = `${username}@demo.com`
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: password || 'demo123'
-      })
-      
-      if (error) {
-        throw new Error("Invalid username or password")
+      const email = `${username}@demo.com`;
+
+      if (isSignUp) {
+        // Sign up new user
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              username: username
+            }
+          }
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          onLogin({ username });
+          toast({
+            title: "Account created!",
+            description: `Welcome ${username}!`,
+          });
+        }
+      } else {
+        // Login existing user
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (error) {
+          throw new Error("Invalid username or password");
+        }
+
+        // Get profile info
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('user_id', data.user?.id)
+          .single();
+
+        const userData = { username: profile?.username || username };
+        
+        toast({
+          title: "Welcome back!",
+          description: `Logged in as ${userData.username}`,
+        });
+        onLogin(userData);
       }
-
-      // Get profile info
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('user_id', data.user?.id)
-        .single()
-
-      const userData = { username: profile?.username || username }
-      
-      toast({
-        title: "Welcome back!",
-        description: `Logged in as ${userData.username}`,
-      });
-      onLogin(userData);
     } catch (error) {
       toast({
-        title: "Login failed",
+        title: isSignUp ? "Signup failed" : "Login failed",
         description: error instanceof Error ? error.message : "Something went wrong",
         variant: "destructive",
       });
@@ -83,8 +108,12 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         <div className="bg-gradient-card rounded-2xl p-8 shadow-large border border-white/20 hover-lift">
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>
-              <p className="text-muted-foreground">Sign in to your account to continue</p>
+              <h2 className="text-2xl font-bold text-foreground">
+                {isSignUp ? "Create Account" : "Welcome back"}
+              </h2>
+              <p className="text-muted-foreground">
+                {isSignUp ? "Create a new account to get started" : "Sign in to your account to continue"}
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -130,16 +159,30 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                 {isLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Signing in...</span>
+                    <span>{isSignUp ? "Creating account..." : "Signing in..."}</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
                     <LogIn className="h-5 w-5" />
-                    <span>Sign In</span>
+                    <span>{isSignUp ? "Create Account" : "Sign In"}</span>
                   </div>
                 )}
               </Button>
             </form>
+
+            {/* Toggle between Login/Signup */}
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-primary hover:text-primary-700 font-medium transition-colors"
+                >
+                  {isSignUp ? "Sign In" : "Create Account"}
+                </button>
+              </p>
+            </div>
           </div>
         </div>
       </div>
