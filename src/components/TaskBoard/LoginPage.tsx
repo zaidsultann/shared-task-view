@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { auth } from '@/lib/api';
 import { LogIn, User, Lock } from 'lucide-react';
 
 interface LoginPageProps {
@@ -22,59 +22,18 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     setIsLoading(true);
 
     try {
-      const email = `${username}@demo.com`;
-
-      if (isSignUp) {
-        // Sign up new user
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username: username
-            }
-          }
-        });
-
-        if (error) throw error;
-
-        if (data.user) {
-          onLogin({ username });
-          toast({
-            title: "Account created!",
-            description: `Welcome ${username}!`,
-          });
-        }
-      } else {
-        // Login existing user
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (error) {
-          throw new Error("Invalid username or password");
-        }
-
-        // Get profile info
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('user_id', data.user?.id)
-          .maybeSingle();
-
-        const userData = { username: profile?.username || username };
-        
-        toast({
-          title: "Welcome back!",
-          description: `Logged in as ${userData.username}`,
-        });
-        onLogin(userData);
-      }
+      // Use the auth API from our lib
+      const userData = await auth.login(username, password);
+      
+      onLogin({ username: userData.username });
+      toast({
+        title: "Welcome!",
+        description: `Logged in as ${userData.username}`,
+      });
     } catch (error) {
       toast({
-        title: isSignUp ? "Signup failed" : "Login failed",
-        description: error instanceof Error ? error.message : "Something went wrong",
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Invalid credentials",
         variant: "destructive",
       });
     }
