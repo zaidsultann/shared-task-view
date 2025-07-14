@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { LogIn, User, Lock } from 'lucide-react';
 
@@ -40,62 +39,64 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     setIsLoading(false);
   };
 
-
   return (
     <div className="min-h-screen bg-gradient-bg flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-8 animate-fade-in">
         {/* Logo & Header */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-6">
           <div className="flex justify-center">
-            <img 
-              src="/lovable-uploads/c516933f-21f1-40ae-869b-9c8b76ebe1dd.png" 
-              alt="TaskBoard Logo" 
-              className="h-24 w-24 opacity-90"
-            />
+            <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-large hover-lift">
+              <img 
+                src="/lovable-uploads/c516933f-21f1-40ae-869b-9c8b76ebe1dd.png" 
+                alt="TaskBoard" 
+                className="w-12 h-12"
+              />
+            </div>
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">TaskBoard</h1>
-            <p className="text-muted-foreground mt-2">Collaborative task management</p>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent mb-2">
+              TaskBoard
+            </h1>
+            <p className="text-muted-foreground">Modern task management for productive teams</p>
           </div>
         </div>
 
         {/* Login Card */}
-        <Card className="bg-gradient-card border-border shadow-elevated">
-          <CardHeader className="space-y-2">
-            <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-            <CardDescription>
-              Sign in to your TaskBoard account
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-gradient-card rounded-2xl p-8 shadow-large border border-white/20 hover-lift">
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>
+              <p className="text-muted-foreground">Sign in to your account to continue</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username" className="text-sm font-medium text-foreground">Username</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="username"
                     type="text"
-                    placeholder="Enter username"
+                    placeholder="Enter your username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="pl-10 bg-background/50 backdrop-blur-sm"
+                    className="pl-10 bg-white/50 backdrop-blur-sm border-white/20 focus:border-primary focus:ring-primary/20"
                     required
                   />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter password"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 bg-background/50 backdrop-blur-sm"
+                    className="pl-10 bg-white/50 backdrop-blur-sm border-white/20 focus:border-primary focus:ring-primary/20"
                     required
                   />
                 </div>
@@ -103,27 +104,26 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full hover-lift"
                 disabled={isLoading}
                 variant="premium"
                 size="lg"
               >
                 {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    Signing in...
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Signing in...</span>
                   </div>
                 ) : (
-                  <>
-                    <LogIn className="h-4 w-4" />
-                    Sign In
-                  </>
+                  <div className="flex items-center justify-center gap-2">
+                    <LogIn className="h-5 w-5" />
+                    <span>Sign In</span>
+                  </div>
                 )}
               </Button>
             </form>
-
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

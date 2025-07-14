@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Clock, 
@@ -118,11 +116,11 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
   const getStatusBadge = () => {
     switch (task.status) {
       case 'open':
-        return <Badge className="bg-task-open text-success-foreground">Open</Badge>;
+        return <div className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">Open</div>;
       case 'in_progress':
-        return <Badge className="bg-task-progress text-warning-foreground">In Progress</Badge>;
+        return <div className="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">In Progress</div>;
       case 'completed':
-        return <Badge className="bg-task-complete text-primary-foreground">Completed</Badge>;
+        return <div className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">Completed</div>;
     }
   };
 
@@ -137,21 +135,28 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
 
   return (
     <>
-      <Card className="bg-gradient-card border-border hover:border-primary/30 transition-all duration-300 hover:shadow-elevated">
-        {/* Compact Header - Always Visible */}
-        <CardHeader 
-          className="pb-3 cursor-pointer hover:bg-muted/20 transition-colors"
+      <div className="bg-gradient-card rounded-xl shadow-soft border border-white/20 hover-lift transition-all duration-300">
+        {/* Compact Header */}
+        <div 
+          className="p-4 cursor-pointer hover:bg-white/30 transition-colors rounded-t-xl"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <Building className="h-4 w-4 text-primary flex-shrink-0" />
-              <h3 className="font-semibold text-card-foreground truncate">
-                {task.business_name}
-              </h3>
+            <div className="flex items-center space-x-3 flex-1 min-w-0">
+              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                <Building className="h-4 w-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-foreground truncate">
+                  {task.business_name}
+                </h3>
+                <p className="text-sm text-muted-foreground truncate">
+                  Created by {task.created_by}
+                </p>
+              </div>
               {getStatusBadge()}
             </div>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 flex-shrink-0">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0 ml-2">
               {isExpanded ? (
                 <ChevronUp className="h-4 w-4" />
               ) : (
@@ -159,14 +164,14 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
               )}
             </Button>
           </div>
-        </CardHeader>
+        </div>
 
         {/* Expandable Content */}
         {isExpanded && (
-          <CardContent className="pt-0 space-y-4">
+          <div className="px-4 pb-4 space-y-4 border-t border-white/10">
             {/* Task Brief */}
-            <div className="bg-muted/30 rounded-lg p-3">
-              <p className="text-sm text-muted-foreground leading-relaxed">
+            <div className="bg-white/50 rounded-lg p-3 border border-white/20">
+              <p className="text-sm text-foreground leading-relaxed">
                 {task.brief}
               </p>
             </div>
@@ -199,14 +204,14 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 pt-2 border-t border-border/50">
+            <div className="flex gap-2 pt-3 border-t border-white/10">
               {task.status === 'open' && (
                 <Button
                   variant="success"
                   size="sm"
                   onClick={handleClaim}
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 hover-lift"
                 >
                   <PlayCircle className="h-3 w-3" />
                   Claim Task
@@ -219,7 +224,7 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
                     variant="warning"
                     size="sm"
                     onClick={() => setShowCompleteModal(true)}
-                    className="flex-1"
+                    className="flex-1 hover-lift"
                   >
                     <Upload className="h-3 w-3" />
                     Complete
@@ -229,7 +234,7 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
                     size="sm"
                     onClick={handleRevert}
                     disabled={isLoading}
-                    className="flex-1"
+                    className="flex-1 hover-lift"
                   >
                     <PlayCircle className="h-3 w-3" />
                     Revert
@@ -242,7 +247,7 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
                   variant="outline"
                   size="sm"
                   onClick={handleDownload}
-                  className="flex-1"
+                  className="flex-1 hover-lift"
                 >
                   <Download className="h-3 w-3" />
                   Download
@@ -254,13 +259,14 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
                 size="sm"
                 onClick={handleDelete}
                 disabled={isLoading}
+                className="hover-lift"
               >
                 <Trash2 className="h-3 w-3" />
               </Button>
             </div>
-          </CardContent>
+          </div>
         )}
-      </Card>
+      </div>
 
       <CompleteTaskModal
         isOpen={showCompleteModal}
