@@ -20,8 +20,18 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     setIsLoading(true);
 
     try {
-      const { mockApi } = await import('@/lib/mockApi');
-      const data = await mockApi.login(username, password);
+      const res = await fetch("http://localhost:4000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!res.ok) {
+        throw new Error("Invalid username or password");
+      }
+
+      const data = await res.json();
       
       toast({
         title: "Welcome back!",
@@ -31,7 +41,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     } catch (error) {
       toast({
         title: "Login failed",
-        description: error instanceof Error ? error.message : "Invalid credentials",
+        description: error instanceof Error ? error.message : "Something went wrong",
         variant: "destructive",
       });
     }
