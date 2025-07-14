@@ -77,35 +77,21 @@ const CompleteTaskModal = ({ isOpen, onClose, task, onComplete }: CompleteTaskMo
     setIsLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('zipFile', selectedFile);
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.completeTask(task.id, selectedFile);
 
-      const response = await fetch(`/api/tasks/${task.id}/complete`, {
-        method: 'PATCH',
-        body: formData,
+      toast({
+        title: "Task completed!",
+        description: `${task.business_name} has been marked as completed`,
       });
-
-      if (response.ok) {
-        toast({
-          title: "Task completed!",
-          description: `${task.business_name} has been marked as completed`,
-        });
-        
-        setSelectedFile(null);
-        onComplete();
-        onClose();
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Failed to complete task",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      
+      setSelectedFile(null);
+      onComplete();
+      onClose();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to upload file",
+        description: "Failed to complete task",
         variant: "destructive",
       });
     }

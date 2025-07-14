@@ -30,25 +30,14 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
   const handleClaim = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/tasks/${task.id}/claim`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.claimTask(task.id, currentUser);
+      
+      toast({
+        title: "Task claimed!",
+        description: `You are now working on ${task.business_name}`,
       });
-
-      if (response.ok) {
-        toast({
-          title: "Task claimed!",
-          description: `You are now working on ${task.business_name}`,
-        });
-        onUpdate();
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Failed to claim task",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      onUpdate();
     } catch (error) {
       toast({
         title: "Error",
@@ -64,24 +53,14 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
     
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/tasks/${task.id}`, {
-        method: 'DELETE',
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.deleteTask(task.id);
+      
+      toast({
+        title: "Task deleted",
+        description: `${task.business_name} has been removed`,
       });
-
-      if (response.ok) {
-        toast({
-          title: "Task deleted",
-          description: `${task.business_name} has been removed`,
-        });
-        onUpdate();
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Failed to delete task",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
+      onUpdate();
     } catch (error) {
       toast({
         title: "Error",
