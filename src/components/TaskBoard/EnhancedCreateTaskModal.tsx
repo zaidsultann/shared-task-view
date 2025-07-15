@@ -176,7 +176,7 @@ export const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }: CreateTaskMo
       <BulkImportModal
         isOpen={bulkImportOpen}
         onClose={() => setBulkImportOpen(false)}
-        onSuccess={() => {
+        onTasksImported={() => {
           setBulkImportOpen(false)
           onTaskCreated()
           handleClose()
