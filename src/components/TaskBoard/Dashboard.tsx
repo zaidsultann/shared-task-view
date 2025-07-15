@@ -16,7 +16,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { Task, User } from '@/types/Task';
-import KanbanBoard from './KanbanBoard';
+import { EnhancedKanbanBoard } from './EnhancedKanbanBoard';
 import CreateTaskModal from './CreateTaskModal';
 import HistoryModal from './HistoryModal';
 import ArchiveModal from './ArchiveModal';
@@ -226,9 +226,9 @@ const Dashboard = ({ user }: DashboardProps) => {
         </div>
       </div>
 
-      {/* Kanban Board */}
+      {/* Enhanced Kanban Board */}
       <div>
-        <KanbanBoard
+        <EnhancedKanbanBoard
           tasks={tasks.filter(task => !task.is_deleted && !task.is_archived)}
           currentUser={user.username}
           onUpdate={fetchTasks}

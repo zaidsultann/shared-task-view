@@ -1,338 +1,309 @@
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Progress } from '@/components/ui/progress'
-import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useToast } from '@/hooks/use-toast'
+import { supabase } from '@/integrations/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
-import { tasks } from '@/lib/api'
+import { Upload, FileSpreadsheet, Database } from 'lucide-react'
 
-interface ImportTask {
+interface BulkImportModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onTasksImported: () => void
+}
+
+interface ImportRow {
   business_name: string
-  brief: string
   phone?: string
   address?: string
   note?: string
 }
 
-interface BulkImportModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSuccess: () => void
-}
-
-export const BulkImportModal = ({ isOpen, onClose, onSuccess }: BulkImportModalProps) => {
+export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImportModalProps) => {
   const [file, setFile] = useState<File | null>(null)
-  const [importing, setImporting] = useState(false)
-  const [previewData, setPreviewData] = useState<ImportTask[]>([])
-  const [progress, setProgress] = useState(0)
-  const [errors, setErrors] = useState<string[]>([])
+  const [preview, setPreview] = useState<ImportRow[]>([])
+  const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  const { authUser } = useAuth()
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0]
     if (!selectedFile) return
 
     setFile(selectedFile)
-    setErrors([])
-    setPreviewData([])
-
-    const fileType = selectedFile.name.toLowerCase()
-    
-    if (fileType.endsWith('.csv')) {
-      parseCSV(selectedFile)
-    } else if (fileType.endsWith('.xlsx') || fileType.endsWith('.xls')) {
-      parseExcel(selectedFile)
-    } else if (fileType.endsWith('.json')) {
-      parseJSON(selectedFile)
-    } else {
-      setErrors(['Please upload a CSV, Excel (.xlsx), or JSON file'])
-    }
+    parseFile(selectedFile)
   }
 
-  const parseCSV = (file: File) => {
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (result) => {
-        const data = result.data as any[]
-        const tasks = validateAndMapData(data)
-        setPreviewData(tasks)
-        
-        if (result.errors.length > 0) {
-          setErrors(result.errors.map(err => err.message))
+  const parseFile = (file: File) => {
+    const fileExtension = file.name.split('.').pop()?.toLowerCase()
+
+    if (fileExtension === 'csv') {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          processData(results.data as any[])
+        },
+        error: (error) => {
+          toast({
+            title: "Error parsing CSV",
+            description: error.message,
+            variant: "destructive",
+          })
         }
-      },
-      error: (error) => {
-        setErrors([`CSV parsing error: ${error.message}`])
-      }
-    })
-  }
-
-  const parseExcel = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer)
-        const workbook = XLSX.read(data, { type: 'array' })
-        const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-        const jsonData = XLSX.utils.sheet_to_json(worksheet)
-        
-        const tasks = validateAndMapData(jsonData as any[])
-        setPreviewData(tasks)
-      } catch (error) {
-        setErrors([`Excel parsing error: ${error}`])
-      }
-    }
-    reader.readAsArrayBuffer(file)
-  }
-
-  const parseJSON = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const jsonData = JSON.parse(e.target?.result as string)
-        const data = Array.isArray(jsonData) ? jsonData : [jsonData]
-        const tasks = validateAndMapData(data)
-        setPreviewData(tasks)
-      } catch (error) {
-        setErrors([`JSON parsing error: ${error}`])
-      }
-    }
-    reader.readAsText(file)
-  }
-
-  const validateAndMapData = (data: any[]): ImportTask[] => {
-    const validTasks: ImportTask[] = []
-    const newErrors: string[] = []
-
-    data.forEach((row, index) => {
-      const rowNum = index + 1
-      
-      // Map common field variations
-      const business_name = row.business_name || row['Business Name'] || row.company || row.business || ''
-      const brief = row.brief || row.description || row['Description'] || row.details || ''
-      const phone = row.phone || row['Phone'] || row.telephone || row.contact || ''
-      const address = row.address || row['Address'] || row.location || ''
-      const note = row.note || row.notes || row['Notes'] || row.comment || ''
-
-      if (!business_name.trim()) {
-        newErrors.push(`Row ${rowNum}: Business name is required`)
-        return
-      }
-
-      if (!brief.trim()) {
-        newErrors.push(`Row ${rowNum}: Brief/description is required`)
-        return
-      }
-
-      validTasks.push({
-        business_name: business_name.trim(),
-        brief: brief.trim(),
-        phone: phone.trim() || undefined,
-        address: address.trim() || undefined,
-        note: note.trim() || undefined
       })
-    })
+    } else if (['xlsx', 'xls'].includes(fileExtension || '')) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer)
+          const workbook = XLSX.read(data, { type: 'array' })
+          const firstSheetName = workbook.SheetNames[0]
+          const worksheet = workbook.Sheets[firstSheetName]
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+          
+          // Convert to objects with headers
+          const headers = jsonData[0] as string[]
+          const rows = jsonData.slice(1).map(row => {
+            const obj: any = {}
+            headers.forEach((header, index) => {
+              obj[header] = (row as any[])[index] || ''
+            })
+            return obj
+          })
+          
+          processData(rows)
+        } catch (error) {
+          toast({
+            title: "Error parsing Excel file",
+            description: "Please ensure the file is a valid Excel file",
+            variant: "destructive",
+          })
+        }
+      }
+      reader.readAsArrayBuffer(file)
+    } else if (fileExtension === 'json') {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        try {
+          const jsonData = JSON.parse(e.target?.result as string)
+          processData(Array.isArray(jsonData) ? jsonData : [jsonData])
+        } catch (error) {
+          toast({
+            title: "Error parsing JSON",
+            description: "Please ensure the file contains valid JSON",
+            variant: "destructive",
+          })
+        }
+      }
+      reader.readAsText(file)
+    } else {
+      toast({
+        title: "Unsupported file type",
+        description: "Please upload a CSV, Excel, or JSON file",
+        variant: "destructive",
+      })
+    }
+  }
 
-    setErrors(newErrors)
-    return validTasks
+  const processData = (data: any[]) => {
+    const normalizedData = data.map(row => {
+      const normalizedRow: ImportRow = {
+        business_name: '',
+        phone: '',
+        address: '',
+        note: ''
+      }
+
+      // Case-insensitive header mapping
+      Object.keys(row).forEach(key => {
+        const lowerKey = key.toLowerCase().trim()
+        const value = row[key]?.toString().trim() || ''
+
+        if (lowerKey.includes('business') && lowerKey.includes('name')) {
+          normalizedRow.business_name = value
+        } else if (lowerKey.includes('phone')) {
+          normalizedRow.phone = value
+        } else if (lowerKey.includes('address')) {
+          normalizedRow.address = value
+        } else if (lowerKey.includes('note')) {
+          normalizedRow.note = value
+        }
+      })
+
+      return normalizedRow
+    }).filter(row => row.business_name) // Only include rows with business name
+
+    setPreview(data.length > 5 ? normalizedData.slice(0, 5) : normalizedData)
   }
 
   const handleImport = async () => {
-    if (previewData.length === 0) {
-      toast({
-        title: "No Data",
-        description: "No valid tasks found to import",
-        variant: "destructive"
-      })
-      return
-    }
+    if (!file || !authUser) return
 
-    setImporting(true)
-    setProgress(0)
-
+    setIsLoading(true)
     try {
-      // Import in batches to avoid overwhelming the server
-      const batchSize = 10
-      const batches = []
+      // Re-parse the entire file for import
+      let allData: ImportRow[] = []
       
-      for (let i = 0; i < previewData.length; i += batchSize) {
-        batches.push(previewData.slice(i, i + batchSize))
+      if (file.name.endsWith('.csv')) {
+        await new Promise((resolve) => {
+          Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+              allData = results.data.map((row: any) => ({
+                business_name: row['Business Name'] || row['business_name'] || '',
+                phone: row['Phone'] || row['phone'] || '',
+                address: row['Address'] || row['address'] || '',
+                note: row['Note'] || row['note'] || ''
+              })).filter((row: ImportRow) => row.business_name)
+              resolve(void 0)
+            }
+          })
+        })
       }
+      
+      // Insert tasks in batches
+      const tasksToInsert = allData.map(row => ({
+        business_name: row.business_name,
+        brief: `Imported task for ${row.business_name}`,
+        phone: row.phone || null,
+        address: row.address || null,
+        note: row.note || null,
+        status: 'open',
+        created_by: authUser?.username || 'unknown',
+        created_at: new Date().toISOString()
+      }))
 
-      let completed = 0
-      for (const batch of batches) {
-        await tasks.bulkCreate(batch)
-        completed += batch.length
-        setProgress((completed / previewData.length) * 100)
-      }
+      const { error } = await supabase
+        .from('tasks')
+        .insert(tasksToInsert)
+
+      if (error) throw error
 
       toast({
-        title: "Import Successful",
-        description: `Successfully imported ${previewData.length} tasks`,
+        title: "Import successful",
+        description: `Imported ${tasksToInsert.length} tasks`,
       })
 
-      onSuccess()
+      onTasksImported()
       onClose()
-      resetModal()
+      setFile(null)
+      setPreview([])
     } catch (error) {
       console.error('Import error:', error)
       toast({
-        title: "Import Failed",
-        description: "There was an error importing the tasks. Please try again.",
-        variant: "destructive"
+        title: "Import failed",
+        description: "Please check your file format and try again",
+        variant: "destructive",
       })
     } finally {
-      setImporting(false)
-      setProgress(0)
-    }
-  }
-
-  const resetModal = () => {
-    setFile(null)
-    setPreviewData([])
-    setErrors([])
-    setProgress(0)
-    setImporting(false)
-  }
-
-  const handleClose = () => {
-    if (!importing) {
-      resetModal()
-      onClose()
+      setIsLoading(false)
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
+            <Database className="h-5 w-5" />
             Bulk Import Tasks
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-auto space-y-6 py-4">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="file">Upload File</Label>
-              <Input
-                id="file"
-                type="file"
-                accept=".csv,.xlsx,.xls,.json"
-                onChange={handleFileChange}
-                disabled={importing}
-                className="mt-1"
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Supported formats: CSV, Excel (.xlsx), JSON
-              </p>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="p-3 bg-muted rounded-lg">
+              <h4 className="font-medium mb-2">Supported Formats</h4>
+              <ul className="space-y-1">
+                <li>• CSV files (.csv)</li>
+                <li>• Excel files (.xlsx, .xls)</li>
+                <li>• JSON files (.json)</li>
+              </ul>
             </div>
-
-            {importing && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Importing tasks...</span>
-                  <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
-                </div>
-                <Progress value={progress} />
-              </div>
-            )}
-
-            {errors.length > 0 && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="space-y-1">
-                    {errors.map((error, index) => (
-                      <div key={index}>{error}</div>
-                    ))}
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {previewData.length > 0 && (
-              <Alert>
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Found {previewData.length} valid tasks ready to import
-                </AlertDescription>
-              </Alert>
-            )}
+            <div className="p-3 bg-muted rounded-lg">
+              <h4 className="font-medium mb-2">Required Headers</h4>
+              <ul className="space-y-1">
+                <li>• <strong>Business Name</strong> (required)</li>
+                <li>• Phone (optional)</li>
+              </ul>
+            </div>
+            <div className="p-3 bg-muted rounded-lg">
+              <h4 className="font-medium mb-2">Optional Headers</h4>
+              <ul className="space-y-1">
+                <li>• Address</li>
+                <li>• Note</li>
+              </ul>
+            </div>
           </div>
 
-          {previewData.length > 0 && (
+          <div className="space-y-4">
+            <Label htmlFor="file-upload">Upload File</Label>
+            <Input
+              id="file-upload"
+              type="file"
+              accept=".csv,.xlsx,.xls,.json"
+              onChange={handleFileChange}
+              className="cursor-pointer"
+            />
+          </div>
+
+          {preview.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Preview</h3>
+              <h4 className="font-medium">Preview (First 5 rows)</h4>
               <div className="border rounded-lg overflow-hidden">
-                <div className="max-h-60 overflow-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="p-2 text-left">Business Name</th>
-                        <th className="p-2 text-left">Brief</th>
-                        <th className="p-2 text-left">Phone</th>
-                        <th className="p-2 text-left">Address</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {previewData.slice(0, 10).map((task, index) => (
-                        <tr key={index} className="border-t">
-                          <td className="p-2">{task.business_name}</td>
-                          <td className="p-2">{task.brief}</td>
-                          <td className="p-2">{task.phone || '-'}</td>
-                          <td className="p-2">{task.address || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {previewData.length > 10 && (
-                    <div className="p-2 text-center text-muted-foreground bg-muted/50">
-                      ... and {previewData.length - 10} more tasks
-                    </div>
-                  )}
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Business Name</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Address</TableHead>
+                      <TableHead>Note</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {preview.map((row, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{row.business_name}</TableCell>
+                        <TableCell>{row.phone}</TableCell>
+                        <TableCell>{row.address}</TableCell>
+                        <TableCell>{row.note}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           )}
 
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Required Fields</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <strong>Business Name:</strong> Required field containing the business name
-              </div>
-              <div>
-                <strong>Brief/Description:</strong> Required field describing the task
-              </div>
-              <div>
-                <strong>Phone:</strong> Optional phone number field
-              </div>
-              <div>
-                <strong>Address:</strong> Optional address field (will be geocoded)
-              </div>
-            </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleImport} 
+              disabled={!file || preview.length === 0 || isLoading}
+              className="flex items-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4" />
+                  Import {preview.length} Tasks
+                </>
+              )}
+            </Button>
           </div>
-        </div>
-
-        <div className="flex justify-end gap-2 border-t pt-4">
-          <Button variant="outline" onClick={handleClose} disabled={importing}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleImport} 
-            disabled={previewData.length === 0 || importing || errors.length > 0}
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Import {previewData.length} Tasks
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

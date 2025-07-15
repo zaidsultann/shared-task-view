@@ -159,8 +159,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_task_feedback: {
+        Args: {
+          task_id_param: string
+          comment_param: string
+          user_param: string
+          version_param?: number
+        }
+        Returns: undefined
+      }
+      approve_task: {
+        Args: { task_id_param: string; approved_by_param: string }
+        Returns: undefined
+      }
       auto_archive_old_tasks: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      upload_task_version: {
+        Args: {
+          task_id_param: string
+          file_url_param: string
+          uploaded_by_param: string
+        }
         Returns: undefined
       }
     }
