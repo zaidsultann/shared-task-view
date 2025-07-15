@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { auth } from '@/lib/api';
 import { LogIn, User, Lock } from 'lucide-react';
 
 interface LoginPageProps {
@@ -13,6 +14,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,28 +22,18 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
     setIsLoading(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username, password })
-      });
-
-      if (!res.ok) {
-        throw new Error("Invalid username or password");
-      }
-
-      const data = await res.json();
+      // Use the auth API from our lib
+      const userData = await auth.login(username, password);
       
+      onLogin({ username: userData.username });
       toast({
-        title: "Welcome back!",
-        description: `Logged in as ${data.username}`,
+        title: "Welcome!",
+        description: `Logged in as ${userData.username}`,
       });
-      onLogin(data);
     } catch (error) {
       toast({
         title: "Login failed",
-        description: error instanceof Error ? error.message : "Something went wrong",
+        description: error instanceof Error ? error.message : "Invalid credentials",
         variant: "destructive",
       });
     }
@@ -75,8 +67,12 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         <div className="bg-gradient-card rounded-2xl p-8 shadow-large border border-white/20 hover-lift">
           <div className="space-y-6">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>
-              <p className="text-muted-foreground">Sign in to your account to continue</p>
+              <h2 className="text-2xl font-bold text-foreground">
+                Welcome back
+              </h2>
+              <p className="text-muted-foreground">
+                Sign in to your account to continue
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -132,6 +128,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                 )}
               </Button>
             </form>
+
           </div>
         </div>
       </div>
