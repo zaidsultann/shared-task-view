@@ -34,10 +34,13 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
   const fetchTasks = async () => {
     try {
+      console.log('Fetching all tasks for dashboard...')
       const taskData = await tasksApi.getAll()
+      console.log('Dashboard received tasks:', taskData)
       setTasks(taskData as Task[])
       setLastUpdate(Date.now())
     } catch (error) {
+      console.error('Dashboard fetch error:', error)
       toast({
         title: "Error",
         description: "Failed to load tasks",

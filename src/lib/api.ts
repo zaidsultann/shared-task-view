@@ -91,6 +91,7 @@ export const auth = {
 // Tasks
 export const tasks = {
   getAll: async () => {
+    console.log('API: Fetching all tasks...')
     const { data: tasks, error } = await supabase
       .from('tasks')
       .select(`
@@ -100,10 +101,14 @@ export const tasks = {
       `)
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    console.log('API: Raw tasks from Supabase:', tasks)
+    if (error) {
+      console.error('API: Error fetching tasks:', error)
+      throw error
+    }
 
     // Transform the data to match frontend expectations
-    return tasks.map(task => ({
+    const transformedTasks = tasks.map(task => ({
       id: task.id,
       business_name: task.business_name,
       brief: task.brief,
@@ -115,6 +120,9 @@ export const tasks = {
       zip_url: task.zip_url,
       is_deleted: task.is_deleted
     }))
+
+    console.log('API: Transformed tasks:', transformedTasks)
+    return transformedTasks
   },
 
   create: async (taskData: { business_name: string; brief: string }) => {
@@ -299,12 +307,16 @@ export const tasks = {
   },
 
   clearHistory: async () => {
-    const { error } = await supabase
+    console.log('API: Clearing deleted tasks...')
+    const { data, error } = await supabase
       .from('tasks')
       .delete()
       .eq('is_deleted', true)
+      .select()
 
+    console.log('API: Clear history result:', { data, error })
     if (error) throw error
+    return data
   },
 }
 
