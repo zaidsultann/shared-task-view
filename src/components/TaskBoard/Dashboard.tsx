@@ -54,23 +54,6 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      await auth.logout()
-      
-      toast({
-        title: "Logged out",
-        description: "See you next time!",
-      })
-      onLogout()
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to logout",
-        variant: "destructive",
-      })
-    }
-  }
 
   const handleClearHistory = async () => {
     const deletedTasksCount = tasks.filter(task => task.is_deleted).length;
@@ -237,15 +220,6 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                 <span className="hidden md:inline ml-2">New Task</span>
               </Button>
               
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="hover-lift text-red-600 hover:text-red-700"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden md:inline ml-2">Logout</span>
-              </Button>
             </div>
           </div>
         </div>

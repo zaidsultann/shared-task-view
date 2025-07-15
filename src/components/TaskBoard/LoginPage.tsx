@@ -135,10 +135,6 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
               </Button>
             </form>
 
-            <div className="text-center text-sm text-muted-foreground">
-              <p>Demo users: AS, TS, MW, ZS</p>
-              <p>Password: dz4132</p>
-            </div>
           </div>
         </div>
       </div>
