@@ -172,6 +172,8 @@ export const tasks = {
       }
     }
 
+    console.log('Claiming task:', { taskId, userId })
+
     const { data, error } = await supabase
       .from('tasks')
       .update({
@@ -183,6 +185,7 @@ export const tasks = {
       .select()
       .single()
 
+    console.log('Claim result:', { data, error })
     if (error) throw error
     return data
   },
@@ -281,6 +284,8 @@ export const tasks = {
       }
     }
 
+    console.log('Deleting task:', { taskId, userId })
+
     const { data, error } = await supabase
       .from('tasks')
       .update({ is_deleted: true })
@@ -289,6 +294,7 @@ export const tasks = {
       .select()
       .single()
 
+    console.log('Delete result:', { data, error })
     if (error) throw error
     return data
   },
