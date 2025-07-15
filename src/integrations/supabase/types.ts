@@ -46,6 +46,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          is_archived: boolean
           is_deleted: boolean
           status: string
           taken_by: string | null
@@ -59,6 +60,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          is_archived?: boolean
           is_deleted?: boolean
           status?: string
           taken_by?: string | null
@@ -72,6 +74,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          is_archived?: boolean
           is_deleted?: boolean
           status?: string
           taken_by?: string | null
@@ -100,7 +103,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      auto_archive_old_tasks: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

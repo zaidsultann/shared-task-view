@@ -12,7 +12,8 @@ import {
   Upload,
   Building,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Archive
 } from 'lucide-react';
 import { Task } from '@/types/Task';
 import CompleteTaskModal from './CompleteTaskModal';
@@ -43,6 +44,26 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
       toast({
         title: "Error",
         description: "Failed to claim task",
+        variant: "destructive",
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const handleArchive = async () => {
+    setIsLoading(true);
+    try {
+      await tasksApi.archive(task.id);
+      
+      toast({
+        title: "Task archived!",
+        description: `${task.business_name} has been moved to archive`,
+      });
+      onUpdate();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to archive task",
         variant: "destructive",
       });
     }
@@ -245,16 +266,30 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
                 </>
               )}
 
-              {task.status === 'completed' && task.zip_url && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownload}
-                  className="flex-1 hover-lift"
-                >
-                  <Download className="h-3 w-3" />
-                  Download
-                </Button>
+              {task.status === 'completed' && (
+                <div className="flex gap-2 flex-1">
+                  {task.zip_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownload}
+                      className="flex-1 hover-lift"
+                    >
+                      <Download className="h-3 w-3" />
+                      Download
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleArchive}
+                    disabled={isLoading}
+                    className="flex-1 hover-lift"
+                  >
+                    <Archive className="h-3 w-3" />
+                    Archive
+                  </Button>
+                </div>
               )}
 
               <Button

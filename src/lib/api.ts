@@ -118,7 +118,8 @@ export const tasks = {
       taken_by: task.taken_by_profile?.username,
       completed_at: task.completed_at ? new Date(task.completed_at).getTime() : undefined,
       zip_url: task.zip_url,
-      is_deleted: task.is_deleted
+      is_deleted: task.is_deleted,
+      is_archived: task.is_archived || false
     }))
 
     console.log('API: Transformed tasks:', transformedTasks)
@@ -315,6 +316,61 @@ export const tasks = {
       .select()
 
     console.log('API: Clear history result:', { data, error })
+    if (error) throw error
+    return data
+  },
+
+  // Archive operations
+  archive: async (taskId: string) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({ is_archived: true })
+      .eq('id', taskId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  unarchive: async (taskId: string) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({ is_archived: false })
+      .eq('id', taskId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  bulkArchive: async (taskIds: string[]) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({ is_archived: true })
+      .in('id', taskIds)
+      .select()
+
+    if (error) throw error
+    return data
+  },
+
+  bulkDelete: async (taskIds: string[]) => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .delete()
+      .in('id', taskIds)
+      .select()
+
+    if (error) throw error
+    return data
+  },
+
+  autoArchiveOldTasks: async () => {
+    const { data, error } = await supabase
+      .rpc('auto_archive_old_tasks')
+
     if (error) throw error
     return data
   },

@@ -6,6 +6,7 @@ import {
   Plus, 
   LogOut, 
   History, 
+  Archive,
   Users, 
   RefreshCw,
   BarChart3,
@@ -18,6 +19,7 @@ import { Task, User } from '@/types/Task';
 import KanbanBoard from './KanbanBoard';
 import CreateTaskModal from './CreateTaskModal';
 import HistoryModal from './HistoryModal';
+import ArchiveModal from './ArchiveModal';
 
 interface DashboardProps {
   user: User;
@@ -28,6 +30,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const { toast } = useToast();
@@ -102,13 +105,14 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   };
 
   const getTaskStats = () => {
-    const activeTasks = tasks.filter(task => !task.is_deleted);
+    const activeTasks = tasks.filter(task => !task.is_deleted && !task.is_archived);
     return {
       total: activeTasks.length,
       open: activeTasks.filter(task => task.status === 'open').length,
       inProgress: activeTasks.filter(task => task.status === 'in_progress').length,
       completed: activeTasks.filter(task => task.status === 'completed').length,
       myTasks: activeTasks.filter(task => task.taken_by === user.username || task.created_by === user.username).length,
+      archived: tasks.filter(task => task.is_archived && !task.is_deleted).length,
     };
   };
 
@@ -203,6 +207,16 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
               </Button>
               
               <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowArchiveModal(true)}
+                className="hover-lift"
+              >
+                <Archive className="h-4 w-4" />
+                <span className="hidden md:inline ml-2">Archive ({stats.archived})</span>
+              </Button>
+              
+              <Button
                 variant="destructive"
                 size="sm"
                 onClick={handleClearHistory}
@@ -288,7 +302,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
           {/* Kanban Board */}
           <div className="animate-scale-in">
             <KanbanBoard
-              tasks={tasks}
+              tasks={tasks.filter(task => !task.is_deleted && !task.is_archived)}
               currentUser={user.username}
               onUpdate={fetchTasks}
             />
@@ -308,6 +322,14 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
         onClose={() => setShowHistoryModal(false)}
         tasks={tasks}
         currentUser={user.username}
+      />
+
+      <ArchiveModal
+        isOpen={showArchiveModal}
+        onClose={() => setShowArchiveModal(false)}
+        tasks={tasks}
+        currentUser={user.username}
+        onUpdate={fetchTasks}
       />
 
       {/* Status Indicator */}

@@ -9,6 +9,7 @@ export interface Task {
   completed_at?: number;
   zip_url?: string;
   is_deleted: boolean;
+  is_archived: boolean;
 }
 
 export interface User {

@@ -63,7 +63,8 @@ export const mockApi = {
       taken_by: undefined,
       completed_at: undefined,
       zip_url: undefined,
-      is_deleted: false
+      is_deleted: false,
+      is_archived: false
     };
     
     tasks.push(newTask);
