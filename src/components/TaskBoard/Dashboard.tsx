@@ -235,50 +235,50 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20">
         <div className="space-y-8">
           {/* Welcome Section */}
           <div className="text-center space-y-4 animate-fade-in">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
+            <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
               Task Management Dashboard
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
               Organize, track, and complete your tasks efficiently. Stay productive with our modern task management system.
             </p>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-slide-up">
-            <div className="bg-gradient-card rounded-xl p-6 text-center hover-lift shadow-soft border border-white/20">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Circle className="h-6 w-6 text-white" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 animate-slide-up">
+            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover-lift shadow-soft border border-white/20">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <Circle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div className="text-2xl font-bold text-green-600">{stats.open}</div>
-              <div className="text-sm text-muted-foreground">Open Tasks</div>
+              <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.open}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Open Tasks</div>
             </div>
             
-            <div className="bg-gradient-card rounded-xl p-6 text-center hover-lift shadow-soft border border-white/20">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Clock className="h-6 w-6 text-white" />
+            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover-lift shadow-soft border border-white/20">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div className="text-2xl font-bold text-amber-600">{stats.inProgress}</div>
-              <div className="text-sm text-muted-foreground">In Progress</div>
+              <div className="text-xl sm:text-2xl font-bold text-amber-600">{stats.inProgress}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">In Progress</div>
             </div>
             
-            <div className="bg-gradient-card rounded-xl p-6 text-center hover-lift shadow-soft border border-white/20">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <CheckCircle className="h-6 w-6 text-white" />
+            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover-lift shadow-soft border border-white/20">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div className="text-2xl font-bold text-blue-600">{stats.completed}</div>
-              <div className="text-sm text-muted-foreground">Completed</div>
+              <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.completed}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Completed</div>
             </div>
             
-            <div className="bg-gradient-card rounded-xl p-6 text-center hover-lift shadow-soft border border-white/20">
-              <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Users className="h-6 w-6 text-white" />
+            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover-lift shadow-soft border border-white/20">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-primary rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div className="text-2xl font-bold text-primary-600">{stats.myTasks}</div>
-              <div className="text-sm text-muted-foreground">My Tasks</div>
+              <div className="text-xl sm:text-2xl font-bold text-primary-600">{stats.myTasks}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">My Tasks</div>
             </div>
           </div>
 

@@ -85,24 +85,24 @@ const HistoryModal = ({ isOpen, onClose, tasks, currentUser }: HistoryModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl h-[80vh] bg-gradient-card border-border">
+      <DialogContent className="sm:max-w-4xl h-[85vh] sm:h-[80vh] bg-gradient-card border-border mx-2 sm:mx-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <History className="h-5 w-5 text-primary" />
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <History className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             Task History
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 flex-1 flex flex-col min-h-0">
+        <div className="space-y-3 sm:space-y-4 flex-1 flex flex-col min-h-0">
           {/* Filters */}
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search tasks, businesses, or users..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-background/50 backdrop-blur-sm"
+                className="pl-10 bg-background/50 backdrop-blur-sm text-sm"
               />
             </div>
             
@@ -110,10 +110,11 @@ const HistoryModal = ({ isOpen, onClose, tasks, currentUser }: HistoryModalProps
               variant={showDeleted ? "destructive" : "outline"}
               size="sm"
               onClick={() => setShowDeleted(!showDeleted)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-xs sm:text-sm"
             >
               {showDeleted ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              {showDeleted ? 'Hide' : 'Show'} Deleted
+              <span className="hidden sm:inline">{showDeleted ? 'Hide' : 'Show'} Deleted</span>
+              <span className="sm:hidden">{showDeleted ? 'Hide' : 'Show'}</span>
             </Button>
           </div>
 
@@ -130,74 +131,76 @@ const HistoryModal = ({ isOpen, onClose, tasks, currentUser }: HistoryModalProps
                 </div>
               ) : (
                 filteredTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className={`
-                      p-4 rounded-lg border transition-all duration-200 
-                      ${task.is_deleted 
-                        ? 'bg-background/30 border-destructive/30 opacity-60' 
-                        : 'bg-gradient-card border-border hover:border-primary/30'
-                      }
-                    `}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4 text-primary flex-shrink-0" />
-                        <h3 className="font-semibold text-card-foreground">
-                          {task.business_name}
-                        </h3>
-                        {task.is_deleted && (
-                          <Trash2 className="h-4 w-4 text-destructive flex-shrink-0" />
+                    <div
+                      key={task.id}
+                      className={`
+                        p-3 sm:p-4 rounded-lg border transition-all duration-200 
+                        ${task.is_deleted 
+                          ? 'bg-background/30 border-destructive/30 opacity-60' 
+                          : 'bg-gradient-card border-border hover:border-primary/30'
+                        }
+                      `}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <Building className="h-4 w-4 text-primary flex-shrink-0" />
+                          <h3 className="font-semibold text-card-foreground text-sm sm:text-base truncate">
+                            {task.business_name}
+                          </h3>
+                          {task.is_deleted && (
+                            <Trash2 className="h-4 w-4 text-destructive flex-shrink-0" />
+                          )}
+                        </div>
+                        <div className="flex-shrink-0">
+                          {getStatusBadge(task)}
+                        </div>
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3 line-clamp-2">
+                        {task.brief}
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <User className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">Created by {task.created_by}</span>
+                        </div>
+                        
+                        {task.taken_by && (
+                          <div className="flex items-center gap-2">
+                            <User className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">Claimed by {task.taken_by}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">Created {formatDate(task.created_at)}</span>
+                        </div>
+                        
+                        {task.completed_at && (
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3 flex-shrink-0" />
+                            <span className="truncate">Completed {formatDate(task.completed_at)}</span>
+                          </div>
                         )}
                       </div>
-                      {getStatusBadge(task)}
-                    </div>
 
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                      {task.brief}
-                    </p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <User className="h-3 w-3" />
-                        <span>Created by {task.created_by}</span>
-                      </div>
-                      
-                      {task.taken_by && (
-                        <div className="flex items-center gap-2">
-                          <User className="h-3 w-3" />
-                          <span>Claimed by {task.taken_by}</span>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-3 w-3" />
-                        <span>Created {formatDate(task.created_at)}</span>
-                      </div>
-                      
-                      {task.completed_at && (
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-3 w-3" />
-                          <span>Completed {formatDate(task.completed_at)}</span>
+                      {/* Download button for completed tasks */}
+                      {task.status === 'completed' && task.zip_url && !task.is_deleted && (
+                        <div className="mt-3 pt-3 border-t border-border/50">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownload(task)}
+                            className="text-xs w-full sm:w-auto"
+                          >
+                            <Download className="h-3 w-3 mr-1" />
+                            Download Deliverable
+                          </Button>
                         </div>
                       )}
                     </div>
-
-                    {/* Download button for completed tasks */}
-                    {task.status === 'completed' && task.zip_url && !task.is_deleted && (
-                      <div className="mt-3 pt-3 border-t border-border/50">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownload(task)}
-                          className="text-xs"
-                        >
-                          <Download className="h-3 w-3 mr-1" />
-                          Download Deliverable
-                        </Button>
-                      </div>
-                    )}
-                  </div>
                 ))
               )}
             </div>
