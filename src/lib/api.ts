@@ -159,13 +159,24 @@ export const tasks = {
 
   claim: async (taskId: string) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
+    
+    // Get user ID from auth or mock session
+    let userId = user?.id
+    if (!userId) {
+      const mockSession = localStorage.getItem('mockUserSession')
+      if (mockSession) {
+        const session = JSON.parse(mockSession)
+        userId = session.user_id
+      } else {
+        throw new Error('Not authenticated')
+      }
+    }
 
     const { data, error } = await supabase
       .from('tasks')
       .update({
         status: 'in_progress',
-        taken_by: user.id
+        taken_by: userId
       })
       .eq('id', taskId)
       .eq('status', 'open')
@@ -178,10 +189,21 @@ export const tasks = {
 
   complete: async (taskId: string, zipFile: File) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
+    
+    // Get user ID from auth or mock session
+    let userId = user?.id
+    if (!userId) {
+      const mockSession = localStorage.getItem('mockUserSession')
+      if (mockSession) {
+        const session = JSON.parse(mockSession)
+        userId = session.user_id
+      } else {
+        throw new Error('Not authenticated')
+      }
+    }
 
-    // Upload file to Supabase Storage
-    const fileName = `${taskId}-${Date.now()}-${zipFile.name}`
+    // Upload file to Supabase Storage with demos/ prefix
+    const fileName = `demos/${Date.now()}_${zipFile.name}`
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('taskboard-uploads')
       .upload(fileName, zipFile, {
@@ -204,7 +226,7 @@ export const tasks = {
         zip_url: urlData.publicUrl
       })
       .eq('id', taskId)
-      .eq('taken_by', user.id)
+      .eq('taken_by', userId)
       .select()
       .single()
 
@@ -214,7 +236,18 @@ export const tasks = {
 
   revert: async (taskId: string) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
+    
+    // Get user ID from auth or mock session
+    let userId = user?.id
+    if (!userId) {
+      const mockSession = localStorage.getItem('mockUserSession')
+      if (mockSession) {
+        const session = JSON.parse(mockSession)
+        userId = session.user_id
+      } else {
+        throw new Error('Not authenticated')
+      }
+    }
 
     const { data, error } = await supabase
       .from('tasks')
@@ -225,7 +258,7 @@ export const tasks = {
         zip_url: null
       })
       .eq('id', taskId)
-      .eq('taken_by', user.id)
+      .eq('taken_by', userId)
       .select()
       .single()
 
@@ -235,13 +268,24 @@ export const tasks = {
 
   delete: async (taskId: string) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
+    
+    // Get user ID from auth or mock session
+    let userId = user?.id
+    if (!userId) {
+      const mockSession = localStorage.getItem('mockUserSession')
+      if (mockSession) {
+        const session = JSON.parse(mockSession)
+        userId = session.user_id
+      } else {
+        throw new Error('Not authenticated')
+      }
+    }
 
     const { data, error } = await supabase
       .from('tasks')
       .update({ is_deleted: true })
       .eq('id', taskId)
-      .eq('created_by', user.id)
+      .eq('created_by', userId)
       .select()
       .single()
 
