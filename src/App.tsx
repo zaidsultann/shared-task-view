@@ -3,38 +3,36 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
 import LoginPage from "./components/TaskBoard/LoginPage";
 import { EnhancedTaskBoard } from "./components/TaskBoard/EnhancedTaskBoard";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<{ username: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth event:', event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
+    // Check if user session exists in localStorage
+    const checkAuth = () => {
+      try {
+        const sessionData = localStorage.getItem('mockUserSession');
+        if (sessionData) {
+          const session = JSON.parse(sessionData);
+          setUser({ username: session.username });
+        }
+      } catch (error) {
+        console.log('No valid session found');
       }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
       setIsLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    checkAuth();
   }, []);
+
+  const handleLogin = (userData: { username: string }) => {
+    setUser(userData);
+  };
 
   if (isLoading) {
     return (
@@ -52,10 +50,10 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        {session && user ? (
+        {user ? (
           <EnhancedTaskBoard />
         ) : (
-          <LoginPage />
+          <LoginPage onLogin={handleLogin} />
         )}
       </TooltipProvider>
     </QueryClientProvider>

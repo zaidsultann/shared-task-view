@@ -3,77 +3,43 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { LogIn, User, Lock, UserPlus } from 'lucide-react';
+import { auth } from '@/lib/api';
+import { LogIn, User, Lock } from 'lucide-react';
 
-const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+interface LoginPageProps {
+  onLogin?: (user: { username: string }) => void;
+}
+
+const LoginPage = ({ onLogin }: LoginPageProps) => {
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   
   const { toast } = useToast();
-
-  const cleanupAuthState = () => {
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Clean up existing state
-      cleanupAuthState();
+      // Use the auth API from our lib
+      const userData = await auth.login(username, password);
       
-      if (isSignUp) {
-        // Sign up flow
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              username: username
-            }
-          }
-        });
-
-        if (error) throw error;
-
-        if (data.user) {
-          toast({
-            title: "Account created successfully!",
-            description: "Please check your email to verify your account.",
-          });
-        }
-      } else {
-        // Sign in flow
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-
-        if (data.user) {
-          toast({
-            title: "Welcome back!",
-            description: `Logged in successfully`,
-          });
-          // Force page reload for clean state
-          window.location.href = '/';
-        }
+      if (onLogin) {
+        onLogin({ username: userData.username });
       }
-    } catch (error: any) {
+      
       toast({
-        title: isSignUp ? "Sign up failed" : "Login failed",
-        description: error.message || "An error occurred",
+        title: "Welcome!",
+        description: `Logged in as ${userData.username}`,
+      });
+
+      // Force page reload for clean state
+      window.location.href = '/';
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Invalid credentials",
         variant: "destructive",
       });
     }
@@ -103,47 +69,29 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Login/Signup Card */}
+        {/* Login Card */}
         <div className="bg-gradient-card rounded-2xl p-8 shadow-large border border-white/20 hover-lift">
           <div className="space-y-6">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-bold text-foreground">
-                {isSignUp ? 'Create Account' : 'Welcome back'}
+                Welcome back
               </h2>
               <p className="text-muted-foreground">
-                {isSignUp ? 'Sign up to get started' : 'Sign in to your account to continue'}
+                Sign in to your account to continue
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {isSignUp && (
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm font-medium text-foreground">Username</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="username"
-                      type="text"
-                      placeholder="Enter your username"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="pl-10 bg-white/50 backdrop-blur-sm border-white/20 focus:border-primary focus:ring-primary/20"
-                      required={isSignUp}
-                    />
-                  </div>
-                </div>
-              )}
-
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-foreground">Email</Label>
+                <Label htmlFor="username" className="text-sm font-medium text-foreground">Username</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     className="pl-10 bg-white/50 backdrop-blur-sm border-white/20 focus:border-primary focus:ring-primary/20"
                     required
                   />
@@ -176,26 +124,20 @@ const LoginPage = () => {
                 {isLoading ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>{isSignUp ? 'Creating Account...' : 'Signing in...'}</span>
+                    <span>Signing in...</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    {isSignUp ? <UserPlus className="h-5 w-5" /> : <LogIn className="h-5 w-5" />}
-                    <span>{isSignUp ? 'Create Account' : 'Sign In'}</span>
+                    <LogIn className="h-5 w-5" />
+                    <span>Sign In</span>
                   </div>
                 )}
               </Button>
             </form>
 
-            <div className="text-center">
-              <Button
-                variant="ghost"
-                onClick={() => setIsSignUp(!isSignUp)}
-                disabled={isLoading}
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-              </Button>
+            <div className="text-center text-sm text-muted-foreground">
+              <p>Demo users: AS, TS, MW, ZS</p>
+              <p>Password: dz4132</p>
             </div>
           </div>
         </div>
