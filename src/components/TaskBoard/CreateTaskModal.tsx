@@ -38,9 +38,6 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }: CreateTaskModalProp
       // Reset form
       setBusinessName('');
       setBrief('');
-      setPhone('');
-      setAddress('');
-      setNote('');
       onTaskCreated();
       onClose();
     } catch (error) {

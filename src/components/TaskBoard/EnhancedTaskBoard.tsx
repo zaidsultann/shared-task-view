@@ -87,7 +87,7 @@ export const EnhancedTaskBoard = () => {
           </TabsContent>
 
           <TabsContent value="tasks">
-            <Dashboard tasks={tasks} onTaskUpdate={refreshTasks} />
+            <Dashboard user={{username: authUser?.username || 'Unknown'}} onLogout={handleLogout} />
           </TabsContent>
 
           <TabsContent value="map">
