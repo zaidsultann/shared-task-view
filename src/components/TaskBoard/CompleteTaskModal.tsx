@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { tasks as tasksApi } from '@/lib/api';
 import { Upload, File, CheckCircle, X } from 'lucide-react';
 import { Task } from '@/types/Task';
 
@@ -78,49 +78,7 @@ const CompleteTaskModal = ({ isOpen, onClose, task, onComplete }: CompleteTaskMo
     setIsLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      // Get user ID from auth or mock session
-      let userId = user?.id
-      if (!userId) {
-        const mockSession = localStorage.getItem('mockUserSession')
-        if (mockSession) {
-          const session = JSON.parse(mockSession)
-          userId = session.user_id
-        } else {
-          throw new Error('Not authenticated')
-        }
-      }
-
-      // Upload file to Supabase Storage with demos/ prefix
-      const fileName = `demos/${Date.now()}_${selectedFile.name}`
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('taskboard-uploads')
-        .upload(fileName, selectedFile, {
-          contentType: selectedFile.type || 'application/zip'
-        })
-
-      if (uploadError) throw uploadError
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('taskboard-uploads')
-        .getPublicUrl(fileName)
-
-      // Update task
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          zip_url: urlData.publicUrl
-        })
-        .eq('id', task.id)
-        .eq('taken_by', userId)
-        .select()
-        .single()
-
-      if (error) throw error
+      await tasksApi.complete(task.id, selectedFile);
 
       toast({
         title: "Task completed!",
