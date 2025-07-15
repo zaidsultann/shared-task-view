@@ -14,8 +14,10 @@ export const auth = {
 
     // Check if it's a test user first
     if (mockUsers[username] && password === 'dz4132') {
-      // Create a mock session for testing
-      return { username, user_id: mockUsers[username] }
+      // Create a mock session for testing and store in localStorage
+      const session = { username, user_id: mockUsers[username] }
+      localStorage.setItem('mockUserSession', JSON.stringify(session))
+      return session
     }
 
     // Try real Supabase auth
@@ -117,17 +119,21 @@ export const tasks = {
   },
 
   create: async (taskData: { business_name: string; brief: string }) => {
-    // Get current user from Supabase auth or use mock
+    // Get current user from Supabase auth or use mock session from localStorage
     const { data: { user } } = await supabase.auth.getUser()
     
-    // If no authenticated user, we need to determine the user ID somehow
-    // For demo purposes, we'll use a stored user ID or default to ZS
+    // If no authenticated user, try to get mock session from localStorage
     let userId = user?.id
     
     if (!userId) {
-      // Check if we have a mock user session stored (you'd implement this in your app state)
-      // For now, default to ZS user for testing
-      userId = '44444444-4444-4444-4444-444444444444'
+      const mockSession = localStorage.getItem('mockUserSession')
+      if (mockSession) {
+        const session = JSON.parse(mockSession)
+        userId = session.user_id
+      } else {
+        // Default to ZS user for testing
+        userId = '44444444-4444-4444-4444-444444444444'
+      }
     }
 
     console.log('Creating task with userId:', userId, 'taskData:', taskData);

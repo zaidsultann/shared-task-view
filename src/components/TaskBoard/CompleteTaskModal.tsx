@@ -79,10 +79,21 @@ const CompleteTaskModal = ({ isOpen, onClose, task, onComplete }: CompleteTaskMo
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
+      
+      // Get user ID from auth or mock session
+      let userId = user?.id
+      if (!userId) {
+        const mockSession = localStorage.getItem('mockUserSession')
+        if (mockSession) {
+          const session = JSON.parse(mockSession)
+          userId = session.user_id
+        } else {
+          throw new Error('Not authenticated')
+        }
+      }
 
-      // Upload file to Supabase Storage
-      const fileName = `${task.id}-${Date.now()}-${selectedFile.name}`
+      // Upload file to Supabase Storage with demos/ prefix
+      const fileName = `demos/${Date.now()}_${selectedFile.name}`
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('taskboard-uploads')
         .upload(fileName, selectedFile, {
@@ -105,7 +116,7 @@ const CompleteTaskModal = ({ isOpen, onClose, task, onComplete }: CompleteTaskMo
           zip_url: urlData.publicUrl
         })
         .eq('id', task.id)
-        .eq('taken_by', user.id)
+        .eq('taken_by', userId)
         .select()
         .single()
 
