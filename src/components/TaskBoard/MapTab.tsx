@@ -1,7 +1,7 @@
 import 'leaflet/dist/leaflet.css'
 import { useState, useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import { Icon } from 'leaflet'
+import L from 'leaflet'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -14,8 +14,8 @@ import { tasks as tasksApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 
 // Fix Leaflet default markers
-delete (Icon.Default.prototype as any)._getIconUrl
-Icon.Default.mergeOptions({
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -226,7 +226,7 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
   }
 
   const createCustomIcon = (color: string) => {
-    return new Icon({
+    return new L.Icon({
       iconUrl: `data:image/svg+xml;base64,${btoa(`
         <svg width="25" height="41" viewBox="0 0 25 41" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12.5 0C5.59375 0 0 5.59375 0 12.5C0 21.875 12.5 41 12.5 41C12.5 41 25 21.875 25 12.5C25 5.59375 19.4062 0 12.5 0ZM12.5 17.1875C9.84375 17.1875 7.8125 15.1562 7.8125 12.5C7.8125 9.84375 9.84375 7.8125 12.5 7.8125C15.1562 7.8125 17.1875 9.84375 17.1875 12.5C17.1875 15.1562 15.1562 17.1875 12.5 17.1875Z" fill="${color}"/>
@@ -285,45 +285,47 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
       </div>
 
       <div className="h-[600px] rounded-lg overflow-hidden border">
-        <MapContainer
-          center={mapCenter}
-          zoom={mapTasks.length > 0 ? 10 : 13}
-          style={{ height: '100%', width: '100%' }}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          
-          {mapTasks.map((task) => (
-            <Marker
-              key={task.id}
-              position={[task.latitude!, task.longitude!]}
-              icon={createCustomIcon(getMarkerColor(task.status))}
-            >
-              <Popup>
-                <div className="p-2 min-w-[200px]">
-                  <h3 className="font-semibold text-sm mb-2">{task.business_name}</h3>
-                  <p className="text-xs text-muted-foreground mb-2">{task.brief}</p>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div 
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: getMarkerColor(task.status) }}
-                    />
-                    <span className="text-xs capitalize">{task.status.replace('_', ' ')}</span>
+        {typeof window !== 'undefined' && (
+          <MapContainer
+            center={mapCenter}
+            zoom={mapTasks.length > 0 ? 10 : 13}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            
+            {mapTasks.map((task) => (
+              <Marker
+                key={task.id}
+                position={[task.latitude!, task.longitude!]}
+                icon={createCustomIcon(getMarkerColor(task.status))}
+              >
+                <Popup>
+                  <div className="p-2 min-w-[200px]">
+                    <h3 className="font-semibold text-sm mb-2">{task.business_name}</h3>
+                    <p className="text-xs text-muted-foreground mb-2">{task.brief}</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div 
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: getMarkerColor(task.status) }}
+                      />
+                      <span className="text-xs capitalize">{task.status.replace('_', ' ')}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => handleTaskClick(task)}
+                      className="w-full text-xs"
+                    >
+                      View Details
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => handleTaskClick(task)}
-                    className="w-full text-xs"
-                  >
-                    View Details
-                  </Button>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        )}
       </div>
 
       <TaskModal
