@@ -4,46 +4,37 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Session, User } from "@supabase/supabase-js";
 import LoginPage from "./components/TaskBoard/LoginPage";
-import Dashboard from "./components/TaskBoard/Dashboard";
-import { User } from "./types/Task";
+import { EnhancedTaskBoard } from "./components/TaskBoard/EnhancedTaskBoard";
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user is already logged in
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('user_id', user.id)
-            .single()
-          
-          setUser({ username: profile?.username || 'Unknown' })
-        }
-      } catch (error) {
-        console.log('No active session')
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth event:', event, session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
       }
-      setIsLoading(false)
-    }
+    );
 
-    checkAuth()
-  }, [])
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
 
-  const handleLogin = (userData: User) => {
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-  };
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (isLoading) {
     return (
@@ -61,10 +52,10 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        {user ? (
-          <Dashboard user={user} onLogout={handleLogout} />
+        {session && user ? (
+          <EnhancedTaskBoard />
         ) : (
-          <LoginPage onLogin={handleLogin} />
+          <LoginPage />
         )}
       </TooltipProvider>
     </QueryClientProvider>
