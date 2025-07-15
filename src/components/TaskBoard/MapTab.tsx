@@ -1,6 +1,5 @@
 import 'leaflet/dist/leaflet.css'
-import { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { useState, useEffect, useRef } from 'react'
 import L from 'leaflet'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -51,12 +50,6 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
     try {
       await tasksApi.updateStatus(editedTask.id, editedTask.status, editedTask.status_color)
       
-      // Update task note if changed
-      if (editedTask.note !== task.note) {
-        // In a real implementation, you'd have an updateTask API method
-        console.log('Note updated:', editedTask.note)
-      }
-
       toast({
         title: "Task Updated",
         description: "Task status and details have been updated successfully."
@@ -200,10 +193,13 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
 }
 
 export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
+  const mapRef = useRef<HTMLDivElement>(null)
+  const mapInstanceRef = useRef<L.Map | null>(null)
+  const markersRef = useRef<L.Marker[]>([])
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  // Filter tasks for map display (only show those with coordinates and specific statuses)
+  // Filter tasks for map display
   const mapTasks = tasks.filter(task => 
     task.latitude && 
     task.longitude && 
@@ -247,16 +243,90 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
     onTaskUpdate()
   }
 
-  // Default center (you can adjust this to your preferred location)
-  const defaultCenter: [number, number] = [40.7589, -73.9851] // New York City
+  // Initialize map
+  useEffect(() => {
+    if (!mapRef.current || typeof window === 'undefined') return
 
-  // Calculate map center based on available tasks
-  const mapCenter: [number, number] = mapTasks.length > 0
-    ? [
-        mapTasks.reduce((sum, task) => sum + (task.latitude || 0), 0) / mapTasks.length,
-        mapTasks.reduce((sum, task) => sum + (task.longitude || 0), 0) / mapTasks.length
-      ]
-    : defaultCenter
+    // Default center
+    const defaultCenter: [number, number] = [40.7589, -73.9851] // New York City
+    
+    // Calculate map center based on available tasks
+    const mapCenter: [number, number] = mapTasks.length > 0
+      ? [
+          mapTasks.reduce((sum, task) => sum + (task.latitude || 0), 0) / mapTasks.length,
+          mapTasks.reduce((sum, task) => sum + (task.longitude || 0), 0) / mapTasks.length
+        ]
+      : defaultCenter
+
+    // Create map
+    const map = L.map(mapRef.current).setView(mapCenter, mapTasks.length > 0 ? 10 : 13)
+    mapInstanceRef.current = map
+
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map)
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove()
+        mapInstanceRef.current = null
+      }
+    }
+  }, [])
+
+  // Update markers when tasks change
+  useEffect(() => {
+    if (!mapInstanceRef.current) return
+
+    // Clear existing markers
+    markersRef.current.forEach(marker => {
+      mapInstanceRef.current?.removeLayer(marker)
+    })
+    markersRef.current = []
+
+    // Add new markers
+    mapTasks.forEach(task => {
+      if (task.latitude && task.longitude) {
+        const marker = L.marker([task.latitude, task.longitude], {
+          icon: createCustomIcon(getMarkerColor(task.status))
+        })
+
+        marker.bindPopup(`
+          <div style="padding: 8px; min-width: 200px;">
+            <h3 style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">${task.business_name}</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 8px;">${task.brief}</p>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${getMarkerColor(task.status)};"></div>
+              <span style="font-size: 12px; text-transform: capitalize;">${task.status.replace('_', ' ')}</span>
+            </div>
+            <button onclick="window.dispatchEvent(new CustomEvent('taskClick', { detail: '${task.id}' }))" style="width: 100%; padding: 6px 12px; font-size: 12px; background-color: #000; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
+              View Details
+            </button>
+          </div>
+        `)
+
+        marker.addTo(mapInstanceRef.current)
+        markersRef.current.push(marker)
+      }
+    })
+  }, [mapTasks])
+
+  // Handle task click events from popup
+  useEffect(() => {
+    const handleTaskClickEvent = (event: any) => {
+      const taskId = event.detail
+      const task = mapTasks.find(t => t.id === taskId)
+      if (task) {
+        handleTaskClick(task)
+      }
+    }
+
+    window.addEventListener('taskClick', handleTaskClickEvent)
+    return () => {
+      window.removeEventListener('taskClick', handleTaskClickEvent)
+    }
+  }, [mapTasks])
 
   return (
     <div className="space-y-6">
@@ -285,68 +355,7 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
       </div>
 
       <div className="h-[600px] rounded-lg overflow-hidden border">
-        {typeof window !== 'undefined' && (
-          <MapContainer
-            center={mapCenter}
-            zoom={mapTasks.length > 0 ? 10 : 13}
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            
-            {mapTasks.map((task) => (
-              <Marker
-                key={task.id}
-                position={[task.latitude!, task.longitude!]}
-                icon={createCustomIcon(getMarkerColor(task.status))}
-                eventHandlers={{
-                  click: () => handleTaskClick(task)
-                }}
-              >
-                <Popup>
-                  <div>
-                    <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' }}>
-                      {task.business_name}
-                    </h3>
-                    <p style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                      {task.brief}
-                    </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                      <div 
-                        style={{ 
-                          width: '8px', 
-                          height: '8px', 
-                          borderRadius: '50%',
-                          backgroundColor: getMarkerColor(task.status)
-                        }}
-                      />
-                      <span style={{ fontSize: '12px', textTransform: 'capitalize' }}>
-                        {task.status.replace('_', ' ')}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => handleTaskClick(task)}
-                      style={{
-                        width: '100%',
-                        padding: '6px 12px',
-                        fontSize: '12px',
-                        backgroundColor: '#000',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      View Details
-                    </button>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
-        )}
+        <div ref={mapRef} style={{ height: '100%', width: '100%' }} />
       </div>
 
       <TaskModal
