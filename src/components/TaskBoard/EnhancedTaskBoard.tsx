@@ -48,49 +48,54 @@ export const EnhancedTaskBoard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+      {/* Clean Header */}
+      <div className="border-b bg-white/80 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">TaskBoard</h1>
-              <p className="text-muted-foreground">Welcome back, {authUser?.username}</p>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <BarChart3 className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-foreground">Business Operations</h1>
+                <p className="text-sm text-muted-foreground">Welcome back, {authUser?.username}</p>
+              </div>
             </div>
-            <Button variant="outline" onClick={handleLogout}>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
               <LogOut className="mr-2 h-4 w-4" />
-              Logout
+              Log out
             </Button>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto px-6 py-8">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/50">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <BarChart3 className="h-4 w-4" />
-              Main Dashboard
+              Dashboard
             </TabsTrigger>
-            <TabsTrigger value="tasks" className="flex items-center gap-2">
+            <TabsTrigger value="tasks" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Kanban className="h-4 w-4" />
-              Task Management
+              Tasks
             </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center gap-2">
+            <TabsTrigger value="map" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Map className="h-4 w-4" />
-              Central Map
+              Map
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="dashboard">
+          <TabsContent value="dashboard" className="space-y-6">
             <MainDashboard tasks={tasks} />
           </TabsContent>
 
-          <TabsContent value="tasks">
-            <Dashboard user={{username: authUser?.username || 'Unknown'}} onLogout={handleLogout} />
+          <TabsContent value="tasks" className="space-y-6">
+            <Dashboard user={{username: authUser?.username || 'Unknown'}} />
           </TabsContent>
 
-          <TabsContent value="map">
+          <TabsContent value="map" className="space-y-6">
             <MapTab tasks={tasks} onTaskUpdate={refreshTasks} />
           </TabsContent>
         </Tabs>
