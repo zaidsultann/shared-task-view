@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { tasks as tasksApi } from '@/lib/api';
 import { Building, FileText, Plus } from 'lucide-react';
 
 interface CreateTaskModalProps {
@@ -25,9 +24,13 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }: CreateTaskModalProp
     setIsLoading(true);
 
     try {
-      await tasksApi.create({
+      const { mockApi } = await import('@/lib/mockApi');
+      const currentUser = JSON.parse(localStorage.getItem('taskboard_user') || '{}');
+      
+      await mockApi.createTask({
         business_name: businessName.trim(),
-        brief: brief.trim()
+        brief: brief.trim(),
+        created_by: currentUser.username,
       });
 
       toast({

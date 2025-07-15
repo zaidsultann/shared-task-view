@@ -62,7 +62,7 @@ export const mockApi = {
       created_by: taskData.created_by,
       taken_by: undefined,
       completed_at: undefined,
-      zip_url: undefined,
+      zip_path: undefined,
       is_deleted: false
     };
     
@@ -108,7 +108,7 @@ export const mockApi = {
       
       task.status = 'completed';
       task.completed_at = Date.now();
-      task.zip_url = zipPath;
+      task.zip_path = zipPath;
       
       localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
       return task;

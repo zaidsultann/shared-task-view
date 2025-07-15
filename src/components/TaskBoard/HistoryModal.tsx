@@ -68,16 +68,21 @@ const HistoryModal = ({ isOpen, onClose, tasks, currentUser }: HistoryModalProps
   };
 
   const handleDownload = async (task: Task) => {
-    if (!task.zip_url) return;
+    if (!task.zip_path) return;
     
     try {
-      // Create a temporary link and trigger download from Supabase Storage
-      const link = document.createElement('a');
-      link.href = task.zip_url;
-      link.download = `${task.business_name.replace(/\s+/g, '_')}.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const response = await fetch(`/api/tasks/${task.id}/download`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${task.business_name.replace(/\s+/g, '_')}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
     } catch (error) {
       console.error('Download failed:', error);
     }
@@ -184,7 +189,7 @@ const HistoryModal = ({ isOpen, onClose, tasks, currentUser }: HistoryModalProps
                     </div>
 
                     {/* Download button for completed tasks */}
-                    {task.status === 'completed' && task.zip_url && !task.is_deleted && (
+                    {task.status === 'completed' && task.zip_path && !task.is_deleted && (
                       <div className="mt-3 pt-3 border-t border-border/50">
                         <Button
                           variant="outline"

@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Upload, File, CheckCircle, X } from 'lucide-react';
 import { Task } from '@/types/Task';
 
@@ -78,38 +77,8 @@ const CompleteTaskModal = ({ isOpen, onClose, task, onComplete }: CompleteTaskMo
     setIsLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      // Upload file to Supabase Storage
-      const fileName = `${task.id}-${Date.now()}-${selectedFile.name}`
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('taskboard-uploads')
-        .upload(fileName, selectedFile, {
-          contentType: selectedFile.type || 'application/zip'
-        })
-
-      if (uploadError) throw uploadError
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('taskboard-uploads')
-        .getPublicUrl(fileName)
-
-      // Update task
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          zip_url: urlData.publicUrl
-        })
-        .eq('id', task.id)
-        .eq('taken_by', user.id)
-        .select()
-        .single()
-
-      if (error) throw error
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.completeTask(task.id, selectedFile);
 
       toast({
         title: "Task completed!",

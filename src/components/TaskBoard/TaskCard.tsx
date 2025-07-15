@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { 
   Clock, 
   User, 
@@ -32,21 +31,8 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
   const handleClaim = async () => {
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({
-          status: 'in_progress',
-          taken_by: user.id
-        })
-        .eq('id', task.id)
-        .eq('status', 'open')
-        .select()
-        .single()
-
-      if (error) throw error
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.claimTask(task.id, currentUser);
       
       toast({
         title: "Task claimed!",
@@ -68,18 +54,8 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
     
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({ is_deleted: true })
-        .eq('id', task.id)
-        .eq('created_by', user.id)
-        .select()
-        .single()
-
-      if (error) throw error
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.deleteTask(task.id);
       
       toast({
         title: "Task deleted",
@@ -97,16 +73,11 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
   };
 
   const handleDownload = async () => {
-    if (!task.zip_url) return;
+    if (!task.zip_path) return;
     
     try {
-      // Create a temporary link and trigger download
-      const link = document.createElement('a');
-      link.href = task.zip_url;
-      link.download = `${task.business_name.replace(/\s+/g, '_')}.zip`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.downloadTask(task.id);
       
       toast({
         title: "Download started",
@@ -124,23 +95,8 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
   const handleRevert = async () => {
     setIsLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const { data, error } = await supabase
-        .from('tasks')
-        .update({
-          status: 'open',
-          taken_by: null,
-          completed_at: null,
-          zip_url: null
-        })
-        .eq('id', task.id)
-        .eq('taken_by', user.id)
-        .select()
-        .single()
-
-      if (error) throw error
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.revertTask(task.id);
       
       toast({
         title: "Task reverted",
@@ -286,7 +242,7 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
                 </>
               )}
 
-              {task.status === 'completed' && task.zip_url && (
+              {task.status === 'completed' && task.zip_path && (
                 <Button
                   variant="outline"
                   size="sm"

@@ -3,7 +3,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import LoginPage from "./components/TaskBoard/LoginPage";
 import Dashboard from "./components/TaskBoard/Dashboard";
 import { User } from "./types/Task";
@@ -18,24 +17,19 @@ const App = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('user_id', user.id)
-            .single()
-          
-          setUser({ username: profile?.username || 'Unknown' })
+        const { mockApi } = await import('@/lib/mockApi');
+        const userData = await mockApi.getCurrentUser();
+        if (userData) {
+          setUser(userData);
         }
       } catch (error) {
-        console.log('No active session')
+        console.log('No active session');
       }
-      setIsLoading(false)
-    }
+      setIsLoading(false);
+    };
 
-    checkAuth()
-  }, [])
+    checkAuth();
+  }, []);
 
   const handleLogin = (userData: User) => {
     setUser(userData);

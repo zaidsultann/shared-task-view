@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { tasks as tasksApi, auth } from '@/lib/api';
 import { 
   Plus, 
   LogOut, 
@@ -34,37 +33,38 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
   const fetchTasks = async () => {
     try {
-      const taskData = await tasksApi.getAll()
-      setTasks(taskData as Task[])
-      setLastUpdate(Date.now())
+      const { mockApi } = await import('@/lib/mockApi');
+      const data = await mockApi.getTasks();
+      setTasks(data);
+      setLastUpdate(Date.now());
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to load tasks",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleLogout = async () => {
     try {
-      await auth.logout()
-      
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.logout();
       toast({
         title: "Logged out",
         description: "See you next time!",
-      })
-      onLogout()
+      });
+      onLogout();
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to logout",
         variant: "destructive",
-      })
+      });
     }
-  }
+  };
 
   const handleClearHistory = async () => {
     const deletedTasksCount = tasks.filter(task => task.is_deleted).length;
@@ -81,12 +81,13 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     if (!confirm(`Are you sure you want to permanently remove ${deletedTasksCount} deleted task(s)? This action cannot be undone.`)) return;
     
     try {
-      await tasksApi.clearHistory()
+      const { mockApi } = await import('@/lib/mockApi');
+      await mockApi.clearHistory();
       
       toast({
         title: "Deleted tasks cleared",
         description: `${deletedTasksCount} deleted tasks have been permanently removed`,
-      })
+      });
       
       fetchTasks();
     } catch (error) {
