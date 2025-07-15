@@ -13,8 +13,13 @@ import {
   Trash2,
   Circle,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Upload,
+  ShieldCheck,
+  TrendingUp
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Task, User } from '@/types/Task';
 import { EnhancedKanbanBoard } from './EnhancedKanbanBoard';
 import CreateTaskModal from './CreateTaskModal';
@@ -88,11 +93,19 @@ const Dashboard = ({ user }: DashboardProps) => {
 
   const getTaskStats = () => {
     const activeTasks = tasks.filter(task => !task.is_deleted && !task.is_archived);
+    const inProgressTasks = activeTasks.filter(task => task.status === 'in_progress' || task.status === 'in_progress_no_file' || task.status === 'awaiting_approval');
+    const needsUpload = activeTasks.filter(task => task.status === 'in_progress_no_file').length;
+    const awaitingApproval = activeTasks.filter(task => task.status === 'awaiting_approval').length;
+    const completedTasks = activeTasks.filter(task => task.status === 'completed').length;
+    
     return {
       total: activeTasks.length,
       open: activeTasks.filter(task => task.status === 'open').length,
-      inProgress: activeTasks.filter(task => task.status === 'in_progress').length,
-      completed: activeTasks.filter(task => task.status === 'completed').length,
+      inProgress: inProgressTasks.length,
+      needsUpload,
+      awaitingApproval,
+      completed: completedTasks,
+      completionRate: activeTasks.length > 0 ? (completedTasks / activeTasks.length) * 100 : 0,
       myTasks: activeTasks.filter(task => task.taken_by === user.username || task.created_by === user.username).length,
       archived: tasks.filter(task => task.is_archived && !task.is_deleted).length,
     };
@@ -122,6 +135,14 @@ const Dashboard = ({ user }: DashboardProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold text-primary">Task Management Dashboard</h1>
+        <p className="text-muted-foreground">
+          Organize, track, and complete your tasks efficiently. Stay productive with our modern task management system.
+        </p>
+      </div>
+
       {/* Action Buttons Row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -224,6 +245,76 @@ const Dashboard = ({ user }: DashboardProps) => {
           <div className="text-2xl font-bold text-primary">{stats.myTasks}</div>
           <div className="text-sm text-muted-foreground">My Tasks</div>
         </div>
+      </div>
+
+      {/* Analytics Section */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Progress Analytics
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>Completion Rate</span>
+                <span>{stats.completionRate.toFixed(1)}%</span>
+              </div>
+              <Progress value={stats.completionRate} />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Completed:</span>
+                <span className="ml-2 font-medium">{stats.completed}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Remaining:</span>
+                <span className="ml-2 font-medium">{stats.total - stats.completed}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>In Progress Breakdown</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {stats.needsUpload > 0 && (
+              <div className="border border-orange-200 rounded-lg p-3 bg-orange-50/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Upload className="h-4 w-4 text-orange-600" />
+                    <span className="text-sm font-medium">Needs Upload</span>
+                  </div>
+                  <span className="text-orange-600 font-bold">{stats.needsUpload}</span>
+                </div>
+              </div>
+            )}
+            
+            {stats.awaitingApproval > 0 && (
+              <div className="border border-yellow-200 rounded-lg p-3 bg-yellow-50/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-yellow-600" />
+                    <span className="text-sm font-medium">Awaiting Approval</span>
+                  </div>
+                  <span className="text-yellow-600 font-bold">{stats.awaitingApproval}</span>
+                </div>
+              </div>
+            )}
+            
+            {stats.needsUpload === 0 && stats.awaitingApproval === 0 && (
+              <div className="text-center text-muted-foreground py-8">
+                <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No tasks in progress workflow</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Enhanced Kanban Board */}
