@@ -40,48 +40,104 @@ export type Database = {
       }
       tasks: {
         Row: {
+          address: string | null
+          approved_at: string | null
+          approved_by: string | null
           brief: string
           business_name: string
+          claimed_by: string | null
           completed_at: string | null
           created_at: string
           created_by: string
+          current_file_url: string | null
+          feedback: Json | null
+          has_feedback: boolean | null
           id: string
           is_archived: boolean
           is_deleted: boolean
+          latitude: number | null
+          longitude: number | null
+          note: string | null
+          phone: string | null
           status: string
+          status_color: string | null
           taken_by: string | null
           updated_at: string
+          version_number: number | null
+          versions: Json | null
           zip_url: string | null
         }
         Insert: {
+          address?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           brief: string
           business_name: string
+          claimed_by?: string | null
           completed_at?: string | null
           created_at?: string
           created_by: string
+          current_file_url?: string | null
+          feedback?: Json | null
+          has_feedback?: boolean | null
           id?: string
           is_archived?: boolean
           is_deleted?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          note?: string | null
+          phone?: string | null
           status?: string
+          status_color?: string | null
           taken_by?: string | null
           updated_at?: string
+          version_number?: number | null
+          versions?: Json | null
           zip_url?: string | null
         }
         Update: {
+          address?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           brief?: string
           business_name?: string
+          claimed_by?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string
+          current_file_url?: string | null
+          feedback?: Json | null
+          has_feedback?: boolean | null
           id?: string
           is_archived?: boolean
           is_deleted?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          note?: string | null
+          phone?: string | null
           status?: string
+          status_color?: string | null
           taken_by?: string | null
           updated_at?: string
+          version_number?: number | null
+          versions?: Json | null
           zip_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "tasks_claimed_by_fkey"
+            columns: ["claimed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "tasks_created_by_fkey"
             columns: ["created_by"]

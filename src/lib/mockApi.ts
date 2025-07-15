@@ -49,7 +49,7 @@ export const mockApi = {
     return tasksStr ? JSON.parse(tasksStr) : [];
   },
 
-  async createTask(taskData: { business_name: string; brief: string; created_by: string }): Promise<Task> {
+  async createTask(taskData: { business_name: string; brief: string; phone?: string; address?: string; note?: string; created_by: string }): Promise<Task> {
     await delay(500);
     
     const tasks = await this.getTasks();
@@ -57,12 +57,26 @@ export const mockApi = {
       id: Date.now().toString(),
       business_name: taskData.business_name,
       brief: taskData.brief,
+      phone: taskData.phone,
+      address: taskData.address,
+      note: taskData.note,
       status: 'open',
       created_at: Date.now(),
       created_by: taskData.created_by,
       taken_by: undefined,
+      claimed_by: undefined,
+      approved_by: undefined,
       completed_at: undefined,
+      approved_at: undefined,
       zip_url: undefined,
+      current_file_url: undefined,
+      versions: [],
+      feedback: [],
+      has_feedback: false,
+      version_number: 1,
+      latitude: undefined,
+      longitude: undefined,
+      status_color: 'red',
       is_deleted: false,
       is_archived: false
     };

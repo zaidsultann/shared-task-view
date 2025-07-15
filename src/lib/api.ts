@@ -1,5 +1,6 @@
 // API utility functions using Supabase
 import { supabase } from '@/integrations/supabase/client'
+import { Task, FileVersion, FeedbackItem } from '@/types/Task'
 
 // Authentication
 export const auth = {
@@ -108,16 +109,30 @@ export const tasks = {
     }
 
     // Transform the data to match frontend expectations
-    const transformedTasks = tasks.map(task => ({
+    const transformedTasks: Task[] = tasks.map(task => ({
       id: task.id,
       business_name: task.business_name,
       brief: task.brief,
-      status: task.status,
+      phone: task.phone,
+      address: task.address,
+      note: task.note,
+      status: task.status as Task['status'],
       created_at: new Date(task.created_at).getTime(),
       created_by: task.created_by_profile?.username || 'Unknown',
       taken_by: task.taken_by_profile?.username,
+      claimed_by: task.claimed_by,
+      approved_by: task.approved_by,
       completed_at: task.completed_at ? new Date(task.completed_at).getTime() : undefined,
+      approved_at: task.approved_at ? new Date(task.approved_at).getTime() : undefined,
       zip_url: task.zip_url,
+      current_file_url: task.current_file_url,
+      versions: (task.versions as unknown as FileVersion[]) || [],
+      feedback: (task.feedback as unknown as FeedbackItem[]) || [],
+      has_feedback: task.has_feedback || false,
+      version_number: task.version_number || 1,
+      latitude: task.latitude,
+      longitude: task.longitude,
+      status_color: task.status_color || 'red',
       is_deleted: task.is_deleted,
       is_archived: task.is_archived || false
     }))
@@ -126,7 +141,7 @@ export const tasks = {
     return transformedTasks
   },
 
-  create: async (taskData: { business_name: string; brief: string }) => {
+  create: async (taskData: { business_name: string; brief: string; phone?: string; address?: string; note?: string }) => {
     // Get current user from Supabase auth or use mock session from localStorage
     const { data: { user } } = await supabase.auth.getUser()
     
@@ -151,6 +166,9 @@ export const tasks = {
       .insert({
         business_name: taskData.business_name,
         brief: taskData.brief,
+        phone: taskData.phone,
+        address: taskData.address,
+        note: taskData.note,
         created_by: userId
       })
       .select()
@@ -374,6 +392,201 @@ export const tasks = {
     if (error) throw error
     return data
   },
+
+  // Enhanced status flow methods
+  upload: async (taskId: string, zipFile: File) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    let userId = user?.id
+    if (!userId) {
+      const mockSession = localStorage.getItem('mockUserSession')
+      if (mockSession) {
+        const session = JSON.parse(mockSession)
+        userId = session.user_id
+      } else {
+        throw new Error('Not authenticated')
+      }
+    }
+
+    // Upload file to Supabase Storage
+    const fileName = `demos/${Date.now()}_${zipFile.name}`
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('taskboard-uploads')
+      .upload(fileName, zipFile, {
+        contentType: zipFile.type || 'application/zip'
+      })
+
+    if (uploadError) throw uploadError
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('taskboard-uploads')
+      .getPublicUrl(fileName)
+
+    // Update task to awaiting_approval status with file
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({
+        status: 'awaiting_approval',
+        current_file_url: urlData.publicUrl
+      })
+      .eq('id', taskId)
+      .eq('taken_by', userId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  approve: async (taskId: string) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    let userId = user?.id
+    if (!userId) {
+      const mockSession = localStorage.getItem('mockUserSession')
+      if (mockSession) {
+        const session = JSON.parse(mockSession)
+        userId = session.user_id
+      } else {
+        throw new Error('Not authenticated')
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({
+        status: 'completed',
+        approved_by: userId,
+        approved_at: new Date().toISOString(),
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', taskId)
+      .eq('status', 'awaiting_approval')
+      .select()
+      .single()
+
+    if (error) throw error
+
+    // Geocode the address if completed and address exists
+    if (data.address && !data.latitude) {
+      try {
+        await supabase.functions.invoke('geocode', {
+          body: { address: data.address, taskId }
+        })
+      } catch (geocodeError) {
+        console.warn('Geocoding failed:', geocodeError)
+      }
+    }
+
+    return data
+  },
+
+  addFeedback: async (taskId: string, comment: string, version: number) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    let username = 'Unknown'
+    if (user?.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      username = profile?.username || 'Unknown'
+    } else {
+      const mockSession = localStorage.getItem('mockUserSession')
+      if (mockSession) {
+        const session = JSON.parse(mockSession)
+        username = session.username
+      }
+    }
+
+    // Get current task
+    const { data: currentTask, error: fetchError } = await supabase
+      .from('tasks')
+      .select('feedback')
+      .eq('id', taskId)
+      .single()
+
+    if (fetchError) throw fetchError
+
+    const currentFeedback = (currentTask.feedback as unknown as FeedbackItem[]) || []
+    const newFeedback: FeedbackItem = {
+      user: username,
+      comment,
+      version,
+      created_at: Date.now()
+    }
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({
+        feedback: [...currentFeedback, newFeedback] as any
+      })
+      .eq('id', taskId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  updateStatus: async (taskId: string, status: Task['status'], statusColor?: string) => {
+    const updateData: any = { status }
+    if (statusColor) updateData.status_color = statusColor
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update(updateData)
+      .eq('id', taskId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  bulkCreate: async (tasksData: Array<{ business_name: string; brief: string; phone?: string; address?: string; note?: string }>) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    let userId = user?.id
+    if (!userId) {
+      const mockSession = localStorage.getItem('mockUserSession')
+      if (mockSession) {
+        const session = JSON.parse(mockSession)
+        userId = session.user_id
+      } else {
+        userId = '44444444-4444-4444-4444-444444444444' // Default to ZS
+      }
+    }
+
+    const tasksToInsert = tasksData.map(task => ({
+      ...task,
+      created_by: userId
+    }))
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert(tasksToInsert)
+      .select()
+
+    if (error) throw error
+    return data
+  },
+
+  geocodeTask: async (taskId: string, address: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('geocode', {
+        body: { address, taskId }
+      })
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('Geocoding failed:', error)
+      throw error
+    }
+  }
 }
 
 export default { auth, tasks }
