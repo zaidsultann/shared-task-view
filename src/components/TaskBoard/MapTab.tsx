@@ -301,25 +301,46 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
                 key={task.id}
                 position={[task.latitude!, task.longitude!]}
                 icon={createCustomIcon(getMarkerColor(task.status))}
+                eventHandlers={{
+                  click: () => handleTaskClick(task)
+                }}
               >
                 <Popup>
-                  <div className="p-2 min-w-[200px]">
-                    <h3 className="font-semibold text-sm mb-2">{task.business_name}</h3>
-                    <p className="text-xs text-muted-foreground mb-2">{task.brief}</p>
-                    <div className="flex items-center gap-2 mb-2">
+                  <div>
+                    <h3 style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '14px' }}>
+                      {task.business_name}
+                    </h3>
+                    <p style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                      {task.brief}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                       <div 
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: getMarkerColor(task.status) }}
+                        style={{ 
+                          width: '8px', 
+                          height: '8px', 
+                          borderRadius: '50%',
+                          backgroundColor: getMarkerColor(task.status)
+                        }}
                       />
-                      <span className="text-xs capitalize">{task.status.replace('_', ' ')}</span>
+                      <span style={{ fontSize: '12px', textTransform: 'capitalize' }}>
+                        {task.status.replace('_', ' ')}
+                      </span>
                     </div>
-                    <Button
-                      size="sm"
+                    <button
                       onClick={() => handleTaskClick(task)}
-                      className="w-full text-xs"
+                      style={{
+                        width: '100%',
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        backgroundColor: '#000',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
                     >
                       View Details
-                    </Button>
+                    </button>
                   </div>
                 </Popup>
               </Marker>
