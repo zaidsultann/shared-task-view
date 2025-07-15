@@ -181,12 +181,12 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={fetchTasks}
-                className="hover-lift"
+                className="hover-lift p-2"
                 title="Refresh"
               >
                 <RefreshCw className="h-4 w-4" />
@@ -199,7 +199,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                 className="hover-lift"
               >
                 <History className="h-4 w-4" />
-                <span className="hidden sm:inline ml-2">History</span>
+                <span className="hidden md:inline ml-2">History</span>
               </Button>
               
               <Button
@@ -210,7 +210,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                 className="hover-lift"
               >
                 <Trash2 className="h-4 w-4" />
-                <span className="hidden sm:inline ml-2">Clear Deleted</span>
+                <span className="hidden md:inline ml-2">Clear Deleted</span>
               </Button>
               
               <Button
@@ -220,7 +220,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                 className="hover-lift"
               >
                 <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline ml-2">New Task</span>
+                <span className="hidden md:inline ml-2">New Task</span>
               </Button>
               
               <Button
@@ -230,7 +230,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                 className="hover-lift text-red-600 hover:text-red-700"
               >
                 <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline ml-2">Logout</span>
+                <span className="hidden md:inline ml-2">Logout</span>
               </Button>
             </div>
           </div>
@@ -238,49 +238,49 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20">
-        <div className="space-y-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pb-32">
+        <div className="space-y-6 sm:space-y-8">
           {/* Welcome Section */}
-          <div className="text-center space-y-4 animate-fade-in">
-            <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
+          <div className="text-center space-y-3 sm:space-y-4 animate-fade-in">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
               Task Management Dashboard
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-xs sm:text-sm md:text-base px-4">
               Organize, track, and complete your tasks efficiently. Stay productive with our modern task management system.
             </p>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 animate-slide-up">
-            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover-lift shadow-soft border border-white/20">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
-                <Circle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4 animate-slide-up px-2 sm:px-0">
+            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 text-center hover-lift shadow-soft border border-white/20">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <Circle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.open}</div>
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-green-600">{stats.open}</div>
               <div className="text-xs sm:text-sm text-muted-foreground">Open Tasks</div>
             </div>
             
-            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover-lift shadow-soft border border-white/20">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
-                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 text-center hover-lift shadow-soft border border-white/20">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-amber-600">{stats.inProgress}</div>
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-amber-600">{stats.inProgress}</div>
               <div className="text-xs sm:text-sm text-muted-foreground">In Progress</div>
             </div>
             
-            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover-lift shadow-soft border border-white/20">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
-                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 text-center hover-lift shadow-soft border border-white/20">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.completed}</div>
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600">{stats.completed}</div>
               <div className="text-xs sm:text-sm text-muted-foreground">Completed</div>
             </div>
             
-            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-4 sm:p-6 text-center hover-lift shadow-soft border border-white/20">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-primary rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
-                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            <div className="bg-gradient-card rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 text-center hover-lift shadow-soft border border-white/20">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-gradient-primary rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-primary-600">{stats.myTasks}</div>
+              <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary-600">{stats.myTasks}</div>
               <div className="text-xs sm:text-sm text-muted-foreground">My Tasks</div>
             </div>
           </div>

@@ -45,7 +45,7 @@ const KanbanBoard = ({ tasks, currentUser, onUpdate }: KanbanBoardProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 pb-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 pb-16 px-2 sm:px-0">
       {columns.map((column) => {
         const Icon = column.icon;
         
