@@ -841,6 +841,29 @@ export const tasks = {
       console.error('Geocoding failed:', error)
       throw error
     }
+  },
+
+  // Add function to update map status
+  updateMapStatus: async (taskId: string, mapStatus: string) => {
+    console.log('API: Updating map status:', { taskId, mapStatus })
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({
+        map_status: mapStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', taskId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('API: Map status update failed:', error)
+      throw error
+    }
+
+    console.log('API: Map status updated successfully:', data)
+    return data
   }
 }
 

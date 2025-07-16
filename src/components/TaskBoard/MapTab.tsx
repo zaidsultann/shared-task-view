@@ -48,11 +48,12 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await tasksApi.updateStatus(editedTask.id, editedTask.status, editedTask.status_color)
+      // Update map_status instead of task status
+      await tasksApi.updateMapStatus(editedTask.id, editedTask.map_status || 'pending')
       
       toast({
         title: "Task Updated",
-        description: "Task status and details have been updated successfully."
+        description: "Task status has been updated successfully."
       })
       
       onUpdate(editedTask)
@@ -77,10 +78,11 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
   }
 
   const statusOptions = [
-    { value: 'awaiting_payment', label: 'Awaiting Payment', color: 'yellow' },
+    { value: 'pending', label: 'Not Visited', color: 'red' },
+    { value: 'payment_pending', label: 'Payment Pending', color: 'yellow' },
     { value: 'follow_up', label: 'Follow Up', color: 'blue' },
     { value: 'not_interested', label: 'Not Interested', color: 'gray' },
-    { value: 'completed', label: 'Completed', color: 'green' }
+    { value: 'approved', label: 'Approved', color: 'green' }
   ]
 
   return (
@@ -118,15 +120,13 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
           </div>
 
           <div>
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status">Map Status</Label>
             <Select 
-              value={editedTask.status} 
-              onValueChange={(value: Task['status']) => {
-                const option = statusOptions.find(opt => opt.value === value)
+              value={editedTask.map_status || 'pending'} 
+              onValueChange={(value: string) => {
                 setEditedTask({
                   ...editedTask,
-                  status: value,
-                  status_color: option?.color || 'red'
+                  map_status: value
                 })
               }}
             >
@@ -142,7 +142,8 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
                         style={{ 
                           backgroundColor: option.color === 'yellow' ? '#eab308' : 
                                          option.color === 'blue' ? '#3b82f6' :
-                                         option.color === 'gray' ? '#6b7280' : '#22c55e'
+                                         option.color === 'gray' ? '#6b7280' : 
+                                         option.color === 'green' ? '#22c55e' : '#ef4444'
                         }}
                       />
                       {option.label}
@@ -199,25 +200,29 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  // Filter tasks for map display
+  // Filter tasks for map display - show completed tasks that aren't green or gray
   const mapTasks = tasks.filter(task => 
     task.latitude && 
     task.longitude && 
     !task.is_deleted && 
     !task.is_archived &&
-    ['awaiting_payment', 'follow_up', 'not_interested'].includes(task.status)
+    task.status === 'completed' &&
+    !['completed_approved', 'not_interested'].includes(task.map_status || task.status)
   )
 
-  const getMarkerColor = (status: string) => {
+  const getMarkerColor = (task: Task) => {
+    const status = task.map_status || 'pending'
     switch (status) {
-      case 'awaiting_payment':
+      case 'payment_pending':
         return '#eab308' // yellow
       case 'follow_up':
         return '#3b82f6' // blue  
       case 'not_interested':
         return '#6b7280' // gray
+      case 'approved':
+        return '#22c55e' // green - but these won't show on map
       default:
-        return '#ef4444' // red
+        return '#ef4444' // red - not visited/pending
     }
   }
 
@@ -289,7 +294,7 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
     mapTasks.forEach(task => {
       if (task.latitude && task.longitude) {
         const marker = L.marker([task.latitude, task.longitude], {
-          icon: createCustomIcon(getMarkerColor(task.status))
+          icon: createCustomIcon(getMarkerColor(task))
         })
 
         marker.bindPopup(`
@@ -297,8 +302,8 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
             <h3 style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">${task.business_name}</h3>
             <p style="font-size: 12px; color: #666; margin-bottom: 8px;">${task.brief}</p>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-              <div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${getMarkerColor(task.status)};"></div>
-              <span style="font-size: 12px; text-transform: capitalize;">${task.status.replace('_', ' ')}</span>
+              <div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${getMarkerColor(task)};"></div>
+              <span style="font-size: 12px; text-transform: capitalize;">${(task.map_status || 'pending').replace('_', ' ')}</span>
             </div>
             <button onclick="window.dispatchEvent(new CustomEvent('taskClick', { detail: '${task.id}' }))" style="width: 100%; padding: 6px 12px; font-size: 12px; background-color: #000; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
               View Details
@@ -332,24 +337,24 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Task Map</h2>
+          <h2 className="text-2xl font-bold">Business Map</h2>
           <p className="text-muted-foreground">
-            Showing {mapTasks.length} tasks with locations
+            Showing {mapTasks.length} completed businesses with locations
           </p>
         </div>
         
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <span>Not Visited</span>
+          </div>
+          <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-yellow-500" />
-            <span>Awaiting Payment</span>
+            <span>Payment Pending</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-blue-500" />
             <span>Follow Up</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-gray-500" />
-            <span>Not Interested</span>
           </div>
         </div>
       </div>
