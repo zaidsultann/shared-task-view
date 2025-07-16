@@ -286,30 +286,77 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
     setExpandedTasks(newExpanded)
   }
 
+  const getStatusBadge = (task: Task) => {
+    switch (task.status) {
+      case 'open':
+        return <Badge className="bg-green-500 text-white text-xs">Open</Badge>;
+      case 'in_progress_no_file':
+        return <Badge className="bg-orange-500 text-white text-xs">Needs Upload</Badge>;
+      case 'in_progress_with_file':
+      case 'awaiting_approval':
+        return <Badge className="bg-yellow-500 text-white text-xs">Awaiting Approval</Badge>;
+      case 'feedback_needed':
+        return <Badge className="bg-red-500 text-white flex items-center gap-1 text-xs">
+          <Bell className="h-3 w-3" />
+          Changes Needed
+        </Badge>;
+      case 'completed':
+        return <Badge className="bg-blue-500 text-white text-xs">Completed</Badge>;
+      default:
+        return <Badge variant="secondary" className="text-xs">{task.status}</Badge>;
+    }
+  }
+
   const EnhancedTaskCard = ({ task }: { task: Task }) => {
     const isExpanded = expandedTasks.has(task.id)
     
     return (
       <TooltipProvider>
         <Collapsible open={isExpanded} onOpenChange={() => toggleTaskExpansion(task.id)}>
-          <div className="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-200 overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-200 overflow-hidden min-h-[140px]">
             {/* Collapsible Header */}
-            <CollapsibleTrigger className="w-full p-4 sm:p-5 text-left hover:bg-gray-50/50 transition-colors">
-              <div className="flex items-center justify-between">
+            <CollapsibleTrigger className="w-full p-4 sm:p-5 text-left hover:bg-gray-50/50 transition-colors min-h-[140px] flex items-center">
+              <div className="flex items-center justify-between h-full w-full">
                 <div className="flex items-center space-x-4 min-w-0 flex-1">
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Building className="h-5 w-5 text-blue-600" />
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Building className="h-6 w-6 text-blue-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-gray-900 text-base leading-tight mb-1">
+                    <h3 className="font-semibold text-gray-900 text-lg leading-tight mb-2">
                       {task.business_name}
                     </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                      {task.brief.slice(0, 60)}...
+                    <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed mb-2">
+                      {task.brief.slice(0, 80)}...
                     </p>
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <span>Created by {task.created_by}</span>
+                      {task.taken_by && <span>• Claimed by {task.taken_by}</span>}
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-center gap-2">
+                  {getStatusBadge(task)}
+                  {task.status === 'completed' && task.map_status && (
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium" style={{
+                      backgroundColor: task.map_status === 'green' ? '#dcfce7' :
+                                     task.map_status === 'yellow' ? '#fef3c7' :
+                                     task.map_status === 'red' ? '#fee2e2' : '#f3f4f6',
+                      color: task.map_status === 'green' ? '#166534' :
+                            task.map_status === 'yellow' ? '#92400e' :
+                            task.map_status === 'red' ? '#991b1b' : '#374151'
+                    }}>
+                      <div className={`w-2 h-2 rounded-full ${
+                        task.map_status === 'green' ? 'bg-green-500' :
+                        task.map_status === 'yellow' ? 'bg-yellow-500' :
+                        task.map_status === 'red' ? 'bg-red-500' :
+                        'bg-gray-500'
+                      }`}></div>
+                      {task.map_status === 'green' ? 'Follow Up' :
+                       task.map_status === 'yellow' ? 'Pending' :
+                       task.map_status === 'red' ? 'Not Interested' :
+                       'Unknown'}
+                    </div>
+                  )}
                   {task.status === 'completed' && (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -330,11 +377,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                       </TooltipContent>
                     </Tooltip>
                   )}
-                  {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
-                  )}
+                  <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                 </div>
               </div>
             </CollapsibleTrigger>
