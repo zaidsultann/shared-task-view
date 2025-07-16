@@ -295,7 +295,8 @@ const Dashboard = ({ user }: DashboardProps) => {
       <div>
         <EnhancedKanbanBoard
           tasks={tasks.filter(task => !task.is_deleted && !task.is_archived)}
-          currentUser={user.username}
+          currentUser={user.user_id}
+          currentUsername={user.username}
           onUpdate={fetchTasks}
         />
       </div>

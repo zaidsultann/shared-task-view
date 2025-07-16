@@ -22,10 +22,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface TaskCardProps {
   task: Task;
   currentUser: string;
+  currentUserId: string;
   onUpdate: () => void;
 }
 
-const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
+const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps) => {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

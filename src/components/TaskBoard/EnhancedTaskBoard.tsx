@@ -91,7 +91,7 @@ export const EnhancedTaskBoard = () => {
           </TabsContent>
 
           <TabsContent value="tasks" className="space-y-4 sm:space-y-6">
-            <Dashboard user={{username: authUser?.username || 'Unknown'}} />
+            <Dashboard user={{username: authUser?.username || 'Unknown', user_id: authUser?.user_id || ''}} />
           </TabsContent>
 
           <TabsContent value="map" className="space-y-4 sm:space-y-6">

@@ -16,10 +16,11 @@ import { Circle, Clock, CheckCircle, Bell, Upload, MessageSquare, ThumbsUp, Eye,
 interface EnhancedKanbanBoardProps {
   tasks: Task[]
   currentUser: string
+  currentUsername: string
   onUpdate: () => void
 }
 
-export const EnhancedKanbanBoard = ({ tasks, currentUser, onUpdate }: EnhancedKanbanBoardProps) => {
+export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpdate }: EnhancedKanbanBoardProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
@@ -130,7 +131,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, onUpdate }: EnhancedKa
         body: {
           task_id: selectedTask.id,
           file_url: publicUrl,
-          uploaded_by: currentUser
+          uploaded_by: currentUsername
         }
       })
 
@@ -166,7 +167,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, onUpdate }: EnhancedKa
         body: {
           task_id: selectedTask.id,
           comment: feedbackText.trim(),
-          user: currentUser,
+          user: currentUsername,
           for_version: selectedTask.versions?.length || 1
         }
       })
@@ -199,7 +200,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, onUpdate }: EnhancedKa
       const { error } = await supabase.functions.invoke('approve_task', {
         body: {
           task_id: task.id,
-          approved_by: currentUser
+          approved_by: currentUsername
         }
       })
 
@@ -294,7 +295,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, onUpdate }: EnhancedKa
             </Button>
           )}
           
-          {(task.status === 'in_progress_no_file' && task.taken_by === currentUser) && (
+          {(task.status === 'in_progress_no_file' && task.taken_by === currentUsername) && (
             <Button
               onClick={() => {
                 setSelectedTask(task)

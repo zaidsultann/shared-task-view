@@ -102,6 +102,7 @@ const KanbanBoard = ({ tasks, currentUser, onUpdate }: KanbanBoardProps) => {
                       <TaskCard
                         task={task}
                         currentUser={currentUser}
+                        currentUserId={currentUser}
                         onUpdate={onUpdate}
                       />
                     </div>
