@@ -813,16 +813,21 @@ export const tasks = {
     const approvedTask = data[0]
     console.log('API: Task approved successfully:', approvedTask.business_name)
 
-    // Geocode the address if completed and address exists but no coordinates
+    // Automatically geocode the address if completed and address exists but no coordinates
     if (approvedTask.address && !approvedTask.latitude) {
-      console.log('API: Geocoding address:', approvedTask.address)
+      console.log('API: Auto-geocoding address for approved task:', approvedTask.address)
       try {
-        await supabase.functions.invoke('geocode', {
+        const { data: geocodeResult, error: geocodeError } = await supabase.functions.invoke('geocode', {
           body: { address: approvedTask.address, taskId }
         })
-        console.log('API: Geocoding initiated for approved task')
+        
+        if (geocodeError) {
+          console.warn('API: Auto-geocoding failed:', geocodeError)
+        } else {
+          console.log('API: Auto-geocoding successful:', geocodeResult)
+        }
       } catch (geocodeError) {
-        console.warn('API: Geocoding failed:', geocodeError)
+        console.warn('API: Auto-geocoding exception:', geocodeError)
       }
     }
 

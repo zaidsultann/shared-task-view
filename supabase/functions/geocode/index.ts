@@ -22,28 +22,94 @@ serve(async (req) => {
       );
     }
 
-    // Geocode using OpenStreetMap Nominatim API (free, no API key required)
-    const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&addressdetails=1`;
+    // Try multiple geocoding strategies
+    let geocodeData: any[] = [];
+    let lastError = '';
     
-    console.log('Geocoding address:', address);
-    console.log('Nominatim URL:', nominatimUrl);
+    // Strategy 1: Try the full address
+    try {
+      console.log('Geocoding strategy 1: Full address -', address);
+      const fullUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&addressdetails=1`;
+      
+      const response = await fetch(fullUrl, {
+        headers: {
+          'User-Agent': 'TaskBoard App/1.0'
+        }
+      });
 
-    const geocodeResponse = await fetch(nominatimUrl, {
-      headers: {
-        'User-Agent': 'TaskBoard App/1.0'
+      if (response.ok) {
+        geocodeData = await response.json();
       }
-    });
-
-    if (!geocodeResponse.ok) {
-      throw new Error('Failed to geocode address');
+    } catch (error) {
+      lastError = 'Full address search failed';
+      console.log('Strategy 1 failed:', error);
     }
 
-    const geocodeData = await geocodeResponse.json();
+    // Strategy 2: If no results, try without unit number
+    if (!geocodeData || geocodeData.length === 0) {
+      try {
+        // Remove unit/suite numbers and try again
+        const cleanedAddress = address
+          .replace(/unit #?\d+/gi, '')
+          .replace(/suite #?\d+/gi, '')
+          .replace(/apt #?\d+/gi, '')
+          .replace(/apartment #?\d+/gi, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+          
+        if (cleanedAddress !== address) {
+          console.log('Geocoding strategy 2: Cleaned address -', cleanedAddress);
+          const cleanedUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cleanedAddress)}&format=json&limit=1&addressdetails=1`;
+          
+          const response = await fetch(cleanedUrl, {
+            headers: {
+              'User-Agent': 'TaskBoard App/1.0'
+            }
+          });
+
+          if (response.ok) {
+            geocodeData = await response.json();
+          }
+        }
+      } catch (error) {
+        lastError = 'Cleaned address search failed';
+        console.log('Strategy 2 failed:', error);
+      }
+    }
+
+    // Strategy 3: If still no results, try just street name and city
+    if (!geocodeData || geocodeData.length === 0) {
+      try {
+        // Extract just the street and city parts
+        const parts = address.split(',');
+        if (parts.length >= 2) {
+          const streetPart = parts[0].replace(/\d+\s*/, '').trim(); // Remove street number
+          const cityPart = parts[parts.length - 2].trim(); // Get city (second to last part)
+          const basicAddress = `${streetPart}, ${cityPart}`;
+          
+          console.log('Geocoding strategy 3: Basic address -', basicAddress);
+          const basicUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(basicAddress)}&format=json&limit=1&addressdetails=1`;
+          
+          const response = await fetch(basicUrl, {
+            headers: {
+              'User-Agent': 'TaskBoard App/1.0'
+            }
+          });
+
+          if (response.ok) {
+            geocodeData = await response.json();
+          }
+        }
+      } catch (error) {
+        lastError = 'Basic address search failed';
+        console.log('Strategy 3 failed:', error);
+      }
+    }
     
     if (!geocodeData || geocodeData.length === 0) {
-      console.log('No geocoding results found for address:', address);
+      console.log('All geocoding strategies failed for address:', address);
       return new Response(
-        JSON.stringify({ error: 'No location found for this address' }),
+        JSON.stringify({ error: `No location found for this address. Tried multiple search strategies. ${lastError}` }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

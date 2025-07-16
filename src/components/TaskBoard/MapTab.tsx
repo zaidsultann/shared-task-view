@@ -199,6 +199,7 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
   const markersRef = useRef<L.Marker[]>([])
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const { toast } = useToast()
 
   // Filter tasks for map display - only completed tasks with addresses, exclude green/gray statuses
   const mapTasks = tasks.filter(task => 
@@ -403,17 +404,41 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
                 const tasksToGeocode = tasks.filter(t => t.status === 'completed' && t.address && !t.latitude)
                 console.log('Geocoding tasks:', tasksToGeocode.length)
                 
+                let successCount = 0
+                let failedTasks: string[] = []
+                
                 for (const task of tasksToGeocode) {
                   try {
                     console.log('Geocoding:', task.business_name, task.address)
                     await tasksApi.geocodeTask(task.id, task.address)
-                  } catch (error) {
+                    successCount++
+                    
+                    toast({
+                      title: "Address Geocoded",
+                      description: `Successfully located ${task.business_name}`
+                    })
+                  } catch (error: any) {
                     console.error('Failed to geocode:', task.business_name, error)
+                    failedTasks.push(task.business_name)
+                    
+                    toast({
+                      title: "Geocoding Failed", 
+                      description: `Couldn't locate ${task.business_name}: ${error.message || 'Address not found'}`,
+                      variant: "destructive"
+                    })
                   }
                 }
                 
+                // Show summary toast
+                if (successCount > 0) {
+                  toast({
+                    title: "Geocoding Complete",
+                    description: `Successfully geocoded ${successCount} addresses${failedTasks.length > 0 ? `. Failed: ${failedTasks.length}` : ''}`
+                  })
+                }
+                
                 // Refresh to show new pins
-                setTimeout(() => onTaskUpdate(), 2000)
+                setTimeout(() => onTaskUpdate(), 1000)
               }}
               variant="outline"
               size="sm"
