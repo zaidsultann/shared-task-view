@@ -321,7 +321,10 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
           {task.status === 'open' && (
             <>
               <Button
-                onClick={() => handleClaimTask(task)}
+                onClick={() => {
+                  console.log('BUTTON CLICKED! Task:', task.business_name)
+                  handleClaimTask(task)
+                }}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9"
               >
                 Claim Task
