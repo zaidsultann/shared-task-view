@@ -436,158 +436,169 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
                 {/* Action buttons */}
                 <div className="flex gap-2 pt-2">
-          {task.status === 'open' && (
-            <>
-              <Button
-                onClick={() => {
-                  console.log('BUTTON CLICKED! Task:', task.business_name)
-                  handleClaimTask(task)
-                }}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs lg:text-sm h-8 lg:h-9"
-              >
-                Claim Task
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleDeleteTask(task)}
-                className="h-8 lg:h-9 px-2 lg:px-3"
-              >
-                <Trash2 className="h-3 w-3 lg:h-4 lg:w-4" />
-              </Button>
-            </>
-          )}
-          
-          {(task.status === 'in_progress_no_file' && task.taken_by === currentUsername) && (
-            <div className="flex gap-2 w-full">
-              <Button
-                onClick={() => {
-                  setSelectedTask(task)
-                  setShowUploadModal(true)
-                }}
-                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs lg:text-sm h-8 lg:h-9"
-              >
-                <Upload className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
-                Upload
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleRevertTask(task)}
-                className="h-8 lg:h-9 px-2 lg:px-3"
-              >
-                <RotateCcw className="h-3 w-3 lg:h-4 lg:w-4" />
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleDeleteTask(task)}
-                className="h-8 lg:h-9 px-2 lg:px-3"
-              >
-                <Trash2 className="h-3 w-3 lg:h-4 lg:w-4" />
-              </Button>
-            </div>
-          )}
-          
-          {(task.status === 'in_progress_with_file' || task.status === 'awaiting_approval') && (
-            <div className="space-y-2 w-full">
-              {/* First row: View and Feedback buttons */}
-              <div className="flex gap-2">
-                {task.current_file_url && (
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(task.current_file_url, '_blank')}
-                    className="flex-1 text-xs lg:text-sm h-8 lg:h-9"
-                  >
-                    <Eye className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
-                    View File
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedTask(task)
-                    setShowFeedbackModal(true)
-                  }}
-                  size="sm"
-                  className="h-8 lg:h-9 px-2 lg:px-3"
-                >
-                  <MessageSquare className="h-3 w-3 lg:h-4 lg:w-4" />
-                </Button>
-              </div>
-              
-              {/* Second row: Approve and Delete buttons */}
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleApproveTask(task)}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9"
-                >
-                  <ThumbsUp className="h-4 w-4 mr-2" />
-                  Approve
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDeleteTask(task)}
-                  className="h-9 px-3"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+                  {/* Open Tasks */}
+                  {task.status === 'open' && (
+                    <>
+                      <Button
+                        onClick={() => {
+                          console.log('BUTTON CLICKED! Task:', task.business_name)
+                          handleClaimTask(task)
+                        }}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9"
+                      >
+                        Claim Task
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteTask(task)}
+                        className="h-9 px-3"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  
+                  {/* Needs Upload */}
+                  {(task.status === 'in_progress_no_file' && task.taken_by === currentUsername) && (
+                    <>
+                      <Button
+                        onClick={() => {
+                          setSelectedTask(task)
+                          setShowUploadModal(true)
+                        }}
+                        className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload File
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteTask(task)}
+                        className="h-9 px-3"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  
+                  {/* Awaiting Approval */}
+                  {(task.status === 'in_progress_with_file' || task.status === 'awaiting_approval') && (
+                    <div className="flex flex-col gap-2 w-full">
+                      {/* First row: View and Feedback buttons */}
+                      <div className="flex gap-2">
+                        {task.current_file_url && (
+                          <Button
+                            variant="outline"
+                            onClick={() => window.open(task.current_file_url, '_blank')}
+                            className="flex-1 text-sm h-9"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View File
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedTask(task)
+                            setShowFeedbackModal(true)
+                          }}
+                          size="sm"
+                          className="h-9 px-3"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      {/* Second row: Approve and Delete buttons */}
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleApproveTask(task)}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9"
+                        >
+                          <ThumbsUp className="h-4 w-4 mr-2" />
+                          Approve
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteTask(task)}
+                          className="h-9 px-3"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
-          {task.status === 'feedback_needed' && (
-            <div className="space-y-2 w-full">
-              {/* Show feedback */}
-              {task.feedback && task.feedback.length > 0 && (
-                <div className="bg-red-50 p-2 rounded text-xs">
-                  <strong>Latest feedback:</strong> {task.feedback[task.feedback.length - 1]?.comment}
-                </div>
-              )}
-              <div className="flex gap-2">
-                {task.taken_by === currentUsername && (
-                  <Button
-                    onClick={() => {
-                      setSelectedTask(task)
-                      setShowUploadModal(true)
-                    }}
-                    className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Re-upload
-                  </Button>
-                )}
-                {task.current_file_url && (
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(task.current_file_url, '_blank')}
-                    className="flex-1 text-sm h-9"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
+                  {/* Changes Needed */}
+                  {task.status === 'feedback_needed' && (
+                    <div className="flex flex-col gap-2 w-full">
+                      {/* Show feedback */}
+                      {task.feedback && task.feedback.length > 0 && (
+                        <div className="bg-red-50 p-3 rounded-lg text-sm border-l-4 border-red-200">
+                          <p className="font-medium text-red-800 mb-1">Latest Feedback:</p>
+                          <p className="text-red-700">{task.feedback[task.feedback.length - 1]?.comment}</p>
+                        </div>
+                      )}
+                      
+                      <div className="flex gap-2">
+                        {task.taken_by === currentUsername && (
+                          <Button
+                            onClick={() => {
+                              setSelectedTask(task)
+                              setShowUploadModal(true)
+                            }}
+                            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Re-upload
+                          </Button>
+                        )}
+                        {task.current_file_url && (
+                          <Button
+                            variant="outline"
+                            onClick={() => window.open(task.current_file_url, '_blank')}
+                            className="flex-1 text-sm h-9"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View File
+                          </Button>
+                        )}
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteTask(task)}
+                          className="h-9 px-3"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
-          {task.status === 'completed' && task.current_file_url && (
-            <Button
-              variant="outline"
-              onClick={() => window.open(task.current_file_url, '_blank')}
-              className="w-full text-sm h-9"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-           )}
+                  {/* Completed */}
+                  {task.status === 'completed' && (
+                    <div className="flex gap-2 w-full">
+                      {task.current_file_url && (
+                        <Button
+                          variant="outline"
+                          onClick={() => window.open(task.current_file_url, '_blank')}
+                          className="flex-1 text-sm h-9"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      )}
+                    </div>
+                   )}
                 </div>
               </div>
-            </CollapsibleContent>
-          </div>
-        </Collapsible>
-      </TooltipProvider>
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+        </TooltipProvider>
     )
   }
 
