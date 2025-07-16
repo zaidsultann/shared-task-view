@@ -58,6 +58,7 @@ export type Database = {
           is_deleted: boolean
           latitude: number | null
           longitude: number | null
+          map_status: string | null
           note: string | null
           phone: string | null
           status: string
@@ -88,6 +89,7 @@ export type Database = {
           is_deleted?: boolean
           latitude?: number | null
           longitude?: number | null
+          map_status?: string | null
           note?: string | null
           phone?: string | null
           status?: string
@@ -118,6 +120,7 @@ export type Database = {
           is_deleted?: boolean
           latitude?: number | null
           longitude?: number | null
+          map_status?: string | null
           note?: string | null
           phone?: string | null
           status?: string
