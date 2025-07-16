@@ -13,9 +13,10 @@ import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { tasks as tasksApi } from '@/lib/api'
-import { Circle, Clock, CheckCircle, Bell, Upload, MessageSquare, ThumbsUp, Eye, Building, User, Trash2, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react'
+import { Circle, Clock, CheckCircle, Bell, Upload, MessageSquare, ThumbsUp, Eye, Building, User, Trash2, RotateCcw, ChevronDown, ChevronRight, Download } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface EnhancedKanbanBoardProps {
   tasks: Task[]
@@ -267,6 +268,35 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
       })
     }
   }
+
+  const handleMapStatusUpdate = async (taskId: string, newStatus: string) => {
+    try {
+      console.log('EnhancedKanbanBoard: Updating map status:', { taskId, newStatus })
+      await tasksApi.updateMapStatus(taskId, newStatus)
+      console.log('EnhancedKanbanBoard: Map status updated successfully, calling onUpdate...')
+
+      toast({
+        title: "Status Updated",
+        description: `Map status updated to ${newStatus === 'blue' ? 'Follow-up' :
+                     newStatus === 'yellow' ? 'Payment pending' :
+                     newStatus === 'red' ? 'Not visited' :
+                     newStatus === 'green' ? 'Approved' :
+                     newStatus === 'gray' ? 'Not interested' : 'Unknown'}`,
+      })
+
+      // Force immediate refresh
+      await onUpdate()
+      console.log('EnhancedKanbanBoard: onUpdate completed after map status update')
+    } catch (error) {
+      console.error('EnhancedKanbanBoard: Error updating map status:', error)
+      toast({
+        title: "Update Failed",
+        description: "Failed to update status. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
   const formatDate = (dateString: string | number) => {
     const date = typeof dateString === 'string' ? new Date(dateString) : new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -328,57 +358,8 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                     </h3>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  {/* Only show map status for completed tasks */}
-                  {task.status === 'completed' && task.map_status && (
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium" style={{
-                      backgroundColor: task.map_status === 'blue' ? '#dbeafe' :
-                                     task.map_status === 'yellow' ? '#fef3c7' :
-                                     task.map_status === 'red' ? '#fee2e2' :
-                                     task.map_status === 'green' ? '#dcfce7' :
-                                     task.map_status === 'gray' ? '#f3f4f6' : '#f3f4f6',
-                      color: task.map_status === 'blue' ? '#1e40af' :
-                            task.map_status === 'yellow' ? '#92400e' :
-                            task.map_status === 'red' ? '#991b1b' :
-                            task.map_status === 'green' ? '#166534' :
-                            task.map_status === 'gray' ? '#374151' : '#374151'
-                    }}>
-                      <div className={`w-2 h-2 rounded-full ${
-                        task.map_status === 'blue' ? 'bg-blue-500' :
-                        task.map_status === 'yellow' ? 'bg-yellow-500' :
-                        task.map_status === 'red' ? 'bg-red-500' :
-                        task.map_status === 'green' ? 'bg-green-500' :
-                        task.map_status === 'gray' ? 'bg-gray-500' :
-                        'bg-gray-400'
-                      }`}></div>
-                      {task.map_status === 'blue' ? 'Follow-up' :
-                       task.map_status === 'yellow' ? 'Payment pending' :
-                       task.map_status === 'red' ? 'Not visited' :
-                       task.map_status === 'green' ? 'Approved' :
-                       task.map_status === 'gray' ? 'Not interested' :
-                       'Unknown'}
-                    </div>
-                  )}
-                  {task.status === 'completed' && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setRevertConfirmTask(task)
-                          }}
-                          className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-50"
-                        >
-                          <RotateCcw className="h-3 w-3" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Revert Task</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
+                <div className="flex items-center gap-2">
+                  {/* Clean header for completed tasks - only show chevron */}
                   <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                 </div>
               </div>
@@ -387,6 +368,13 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
             {/* Collapsible Content */}
             <CollapsibleContent>
               <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-4 border-t bg-gray-50/30">
+                {/* Status Badge - moved inside dropdown for completed tasks */}
+                {task.status === 'completed' && (
+                  <div className="pt-3">
+                    <Badge className="bg-blue-500 text-white text-xs">Completed</Badge>
+                  </div>
+                )}
+                
                 {/* Task brief */}
                 <div className="text-sm text-gray-700 pt-3">
                   {task.brief}
@@ -594,17 +582,86 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
                   {/* Completed */}
                   {task.status === 'completed' && (
-                    <div className="flex gap-2 w-full">
-                      {task.current_file_url && (
-                        <Button
-                          variant="outline"
-                          onClick={() => window.open(task.current_file_url, '_blank')}
-                          className="flex-1 text-sm h-9"
+                    <div className="flex flex-col gap-3 w-full">
+                      {/* Status Dropdown */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-gray-700">Map Status</Label>
+                        <Select
+                          value={task.map_status || 'red'}
+                          onValueChange={(value) => handleMapStatusUpdate(task.id, value)}
                         >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      )}
+                          <SelectTrigger className="w-full h-9 bg-white border-2 border-gray-200 hover:border-gray-300 transition-colors">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border-2 border-gray-200 shadow-lg z-50">
+                            <SelectItem value="red" className="hover:bg-gray-100">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                Not visited (pending)
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="yellow" className="hover:bg-gray-100">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                Payment pending
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="blue" className="hover:bg-gray-100">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                Follow-up
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="green" className="hover:bg-gray-100">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                Approved (hidden from map)
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="gray" className="hover:bg-gray-100">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                                Not interested (hidden from map)
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Buttons Row */}
+                      <div className="flex gap-2">
+                        {/* Download Button */}
+                        {task.current_file_url && (
+                          <Button
+                            variant="outline"
+                            onClick={() => window.open(task.current_file_url, '_blank')}
+                            className="flex-1 text-sm h-9"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                          </Button>
+                        )}
+                        
+                        {/* Revert Button - moved inside dropdown body */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setRevertConfirmTask(task)
+                              }}
+                              className="h-9 w-9 p-0 text-orange-600 hover:bg-orange-50"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Revert Task</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                     </div>
                    )}
                 </div>
