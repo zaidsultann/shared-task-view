@@ -9,22 +9,18 @@ import {
   Archive,
   Users, 
   RefreshCw,
-  BarChart3,
   Trash2,
   Circle,
   Clock,
   CheckCircle,
-  Upload,
-  ShieldCheck,
-  TrendingUp
+  Upload
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Task, User } from '@/types/Task';
 import { EnhancedKanbanBoard } from './EnhancedKanbanBoard';
 import CreateTaskModal from './CreateTaskModal';
 import HistoryModal from './HistoryModal';
 import ArchiveModal from './ArchiveModal';
+import { BulkImportModal } from './BulkImportModal';
 
 interface DashboardProps {
   user: User;
@@ -35,8 +31,10 @@ const Dashboard = ({ user }: DashboardProps) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
+  const [isDragOver, setIsDragOver] = useState(false);
   const { toast } = useToast();
 
   const fetchTasks = async () => {
@@ -94,21 +92,51 @@ const Dashboard = ({ user }: DashboardProps) => {
   const getTaskStats = () => {
     const activeTasks = tasks.filter(task => !task.is_deleted && !task.is_archived);
     const inProgressTasks = activeTasks.filter(task => task.status === 'in_progress' || task.status === 'in_progress_no_file' || task.status === 'awaiting_approval');
-    const needsUpload = activeTasks.filter(task => task.status === 'in_progress_no_file').length;
-    const awaitingApproval = activeTasks.filter(task => task.status === 'awaiting_approval').length;
     const completedTasks = activeTasks.filter(task => task.status === 'completed').length;
     
     return {
       total: activeTasks.length,
       open: activeTasks.filter(task => task.status === 'open').length,
       inProgress: inProgressTasks.length,
-      needsUpload,
-      awaitingApproval,
       completed: completedTasks,
-      completionRate: activeTasks.length > 0 ? (completedTasks / activeTasks.length) * 100 : 0,
       myTasks: activeTasks.filter(task => task.taken_by === user.username || task.created_by === user.username).length,
       archived: tasks.filter(task => task.is_archived && !task.is_deleted).length,
     };
+  };
+
+  // Drag and drop handlers
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragOver(false);
+    
+    const droppedFile = event.dataTransfer.files?.[0];
+    if (!droppedFile) return;
+
+    const allowedTypes = ['.csv', '.xlsx', '.xls', '.json'];
+    const fileExtension = '.' + droppedFile.name.split('.').pop()?.toLowerCase();
+    
+    if (!allowedTypes.includes(fileExtension)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a CSV, Excel, or JSON file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setShowBulkImportModal(true);
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
   };
 
   useEffect(() => {
@@ -134,12 +162,28 @@ const Dashboard = ({ user }: DashboardProps) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div 
+      className={`space-y-6 transition-all duration-300 ${isDragOver ? 'bg-primary/5 ring-2 ring-primary ring-dashed' : ''}`}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+    >
+      {/* Drag overlay */}
+      {isDragOver && (
+        <div className="fixed inset-0 z-50 bg-primary/10 backdrop-blur-sm flex items-center justify-center pointer-events-none">
+          <div className="bg-card border-2 border-dashed border-primary rounded-lg p-8 text-center">
+            <Upload className="h-12 w-12 mx-auto mb-4 text-primary" />
+            <h3 className="text-lg font-semibold mb-2">Drop your file to import tasks</h3>
+            <p className="text-muted-foreground">Supports CSV, Excel, and JSON files</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-primary">Task Management Dashboard</h1>
         <p className="text-muted-foreground">
-          Organize, track, and complete your tasks efficiently. Stay productive with our modern task management system.
+          Organize, track, and complete your tasks efficiently. Drag and drop files to import tasks.
         </p>
       </div>
 
@@ -212,109 +256,39 @@ const Dashboard = ({ user }: DashboardProps) => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-card rounded-lg border p-4 text-center">
-          <div className="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mx-auto mb-3">
-            <Circle className="h-5 w-5" />
+      {/* Simple Stats Cards Grid */}
+      <div className="grid grid-cols-4 gap-6">
+        <div className="bg-card rounded-xl border p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <Circle className="h-6 w-6" />
           </div>
-          <div className="text-2xl font-bold text-green-600">{stats.open}</div>
-          <div className="text-sm text-muted-foreground">Open Tasks</div>
+          <div className="text-3xl font-bold text-green-600 mb-1">{stats.open}</div>
+          <div className="text-sm text-muted-foreground font-medium">Open Tasks</div>
         </div>
         
-        <div className="bg-card rounded-lg border p-4 text-center">
-          <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center mx-auto mb-3">
-            <Clock className="h-5 w-5" />
+        <div className="bg-card rounded-xl border p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <Clock className="h-6 w-6" />
           </div>
-          <div className="text-2xl font-bold text-amber-600">{stats.inProgress}</div>
-          <div className="text-sm text-muted-foreground">In Progress</div>
+          <div className="text-3xl font-bold text-amber-600 mb-1">{stats.inProgress}</div>
+          <div className="text-sm text-muted-foreground font-medium">In Progress</div>
         </div>
         
-        <div className="bg-card rounded-lg border p-4 text-center">
-          <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mx-auto mb-3">
-            <CheckCircle className="h-5 w-5" />
+        <div className="bg-card rounded-xl border p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="h-6 w-6" />
           </div>
-          <div className="text-2xl font-bold text-blue-600">{stats.completed}</div>
-          <div className="text-sm text-muted-foreground">Completed</div>
+          <div className="text-3xl font-bold text-blue-600 mb-1">{stats.completed}</div>
+          <div className="text-sm text-muted-foreground font-medium">Completed</div>
         </div>
         
-        <div className="bg-card rounded-lg border p-4 text-center">
-          <div className="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center mx-auto mb-3">
-            <Users className="h-5 w-5" />
+        <div className="bg-card rounded-xl border p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+            <Users className="h-6 w-6" />
           </div>
-          <div className="text-2xl font-bold text-primary">{stats.myTasks}</div>
-          <div className="text-sm text-muted-foreground">My Tasks</div>
+          <div className="text-3xl font-bold text-primary mb-1">{stats.myTasks}</div>
+          <div className="text-sm text-muted-foreground font-medium">My Tasks</div>
         </div>
-      </div>
-
-      {/* Analytics Section */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Progress Analytics
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span>Completion Rate</span>
-                <span>{stats.completionRate.toFixed(1)}%</span>
-              </div>
-              <Progress value={stats.completionRate} />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Completed:</span>
-                <span className="ml-2 font-medium">{stats.completed}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Remaining:</span>
-                <span className="ml-2 font-medium">{stats.total - stats.completed}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>In Progress Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {stats.needsUpload > 0 && (
-              <div className="border border-orange-200 rounded-lg p-3 bg-orange-50/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Upload className="h-4 w-4 text-orange-600" />
-                    <span className="text-sm font-medium">Needs Upload</span>
-                  </div>
-                  <span className="text-orange-600 font-bold">{stats.needsUpload}</span>
-                </div>
-              </div>
-            )}
-            
-            {stats.awaitingApproval > 0 && (
-              <div className="border border-yellow-200 rounded-lg p-3 bg-yellow-50/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-yellow-600" />
-                    <span className="text-sm font-medium">Awaiting Approval</span>
-                  </div>
-                  <span className="text-yellow-600 font-bold">{stats.awaitingApproval}</span>
-                </div>
-              </div>
-            )}
-            
-            {stats.needsUpload === 0 && stats.awaitingApproval === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No tasks in progress workflow</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {/* Enhanced Kanban Board */}
@@ -331,6 +305,15 @@ const Dashboard = ({ user }: DashboardProps) => {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onTaskCreated={fetchTasks}
+      />
+
+      <BulkImportModal
+        isOpen={showBulkImportModal}
+        onClose={() => setShowBulkImportModal(false)}
+        onTasksImported={() => {
+          setShowBulkImportModal(false);
+          fetchTasks();
+        }}
       />
 
       <HistoryModal
