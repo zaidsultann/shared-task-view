@@ -533,7 +533,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 mb-6">
         {columns.map((column) => {
           const Icon = column.icon
           

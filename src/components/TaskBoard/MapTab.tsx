@@ -419,31 +419,31 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
   }, [mapTasks])
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold">Business Map</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold">Business Map</h2>
+          <p className="text-sm text-muted-foreground">
             Showing {mapTasks.length} completed businesses requiring follow-up
             {tasks.filter(t => t.status === 'completed' && t.address && !t.latitude).length > 0 && (
-              <span className="text-orange-600 ml-2">
+              <span className="text-orange-600 block sm:inline sm:ml-2">
                 ({tasks.filter(t => t.status === 'completed' && t.address && !t.latitude).length} need geocoding)
               </span>
             )}
           </p>
         </div>
         
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500" />
             <span>Not Visited</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500" />
+            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-500" />
             <span>Payment Pending</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-blue-500" />
+            <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-500" />
             <span>Follow Up</span>
           </div>
           

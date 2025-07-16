@@ -256,38 +256,38 @@ const Dashboard = ({ user }: DashboardProps) => {
         </div>
       </div>
 
-      {/* Simple Stats Cards Grid */}
-      <div className="grid grid-cols-4 gap-6">
-        <div className="bg-card rounded-xl border p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Circle className="h-6 w-6" />
+      {/* Simple Stats Cards Grid - Mobile Optimized */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="bg-card rounded-xl border p-3 sm:p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-8 h-8 sm:w-12 sm:h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-4">
+            <Circle className="h-4 w-4 sm:h-6 sm:w-6" />
           </div>
-          <div className="text-3xl font-bold text-green-600 mb-1">{stats.open}</div>
-          <div className="text-sm text-muted-foreground font-medium">Open Tasks</div>
+          <div className="text-xl sm:text-3xl font-bold text-green-600 mb-1">{stats.open}</div>
+          <div className="text-xs sm:text-sm text-muted-foreground font-medium">Open Tasks</div>
         </div>
         
-        <div className="bg-card rounded-xl border p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Clock className="h-6 w-6" />
+        <div className="bg-card rounded-xl border p-3 sm:p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-8 h-8 sm:w-12 sm:h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-4">
+            <Clock className="h-4 w-4 sm:h-6 sm:w-6" />
           </div>
-          <div className="text-3xl font-bold text-amber-600 mb-1">{stats.inProgress}</div>
-          <div className="text-sm text-muted-foreground font-medium">In Progress</div>
+          <div className="text-xl sm:text-3xl font-bold text-amber-600 mb-1">{stats.inProgress}</div>
+          <div className="text-xs sm:text-sm text-muted-foreground font-medium">In Progress</div>
         </div>
         
-        <div className="bg-card rounded-xl border p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="h-6 w-6" />
+        <div className="bg-card rounded-xl border p-3 sm:p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-8 h-8 sm:w-12 sm:h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-4">
+            <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6" />
           </div>
-          <div className="text-3xl font-bold text-blue-600 mb-1">{stats.completed}</div>
-          <div className="text-sm text-muted-foreground font-medium">Completed</div>
+          <div className="text-xl sm:text-3xl font-bold text-blue-600 mb-1">{stats.completed}</div>
+          <div className="text-xs sm:text-sm text-muted-foreground font-medium">Completed</div>
         </div>
         
-        <div className="bg-card rounded-xl border p-6 text-center shadow-sm hover:shadow-md transition-shadow">
-          <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Users className="h-6 w-6" />
+        <div className="bg-card rounded-xl border p-3 sm:p-6 text-center shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-8 h-8 sm:w-12 sm:h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mx-auto mb-2 sm:mb-4">
+            <Users className="h-4 w-4 sm:h-6 sm:w-6" />
           </div>
-          <div className="text-3xl font-bold text-primary mb-1">{stats.myTasks}</div>
-          <div className="text-sm text-muted-foreground font-medium">My Tasks</div>
+          <div className="text-xl sm:text-3xl font-bold text-primary mb-1">{stats.myTasks}</div>
+          <div className="text-xs sm:text-sm text-muted-foreground font-medium">My Tasks</div>
         </div>
       </div>
 
