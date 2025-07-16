@@ -368,10 +368,26 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
             {/* Collapsible Content */}
             <CollapsibleContent>
               <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-4 border-t bg-gray-50/30">
-                {/* Status Badge - moved inside dropdown for completed tasks */}
+                {/* Map Status Badge - only for completed tasks */}
                 {task.status === 'completed' && (
                   <div className="pt-3">
-                    <Badge className="bg-blue-500 text-white text-xs">Completed</Badge>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${
+                        task.map_status === 'blue' ? 'bg-blue-500' :
+                        task.map_status === 'yellow' ? 'bg-yellow-500' :
+                        task.map_status === 'red' ? 'bg-red-500' :
+                        task.map_status === 'green' ? 'bg-green-500' :
+                        task.map_status === 'gray' ? 'bg-gray-500' :
+                        'bg-red-500'
+                      }`}></div>
+                      <Badge variant="outline" className="text-xs">
+                        {task.map_status === 'blue' ? 'Follow Up' :
+                         task.map_status === 'yellow' ? 'Pending Payment' :
+                         task.map_status === 'red' ? 'Not Visited' :
+                         task.map_status === 'green' ? 'Complete' :
+                         task.map_status === 'gray' ? 'Not Interested' : 'Not Visited'}
+                      </Badge>
+                    </div>
                   </div>
                 )}
                 
@@ -405,32 +421,10 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                       <span>Completed {formatDate(task.completed_at)}</span>
                     </div>
                   )}
-                </div>
+                 </div>
 
-                {/* Status indicator for completed tasks */}
-                {task.status === 'completed' && task.map_status && (
-                  <div className="flex items-center gap-2 pt-2 border-t">
-                    <div className={`w-2 h-2 rounded-full ${
-                      task.map_status === 'blue' ? 'bg-blue-500' :
-                      task.map_status === 'yellow' ? 'bg-yellow-500' :
-                      task.map_status === 'red' ? 'bg-red-500' :
-                      task.map_status === 'green' ? 'bg-green-500' :
-                      task.map_status === 'gray' ? 'bg-gray-500' :
-                      'bg-gray-400'
-                    }`}></div>
-                    <span className="text-xs text-gray-500">
-                      Status: {task.map_status === 'blue' ? 'Follow-up' :
-                               task.map_status === 'yellow' ? 'Payment pending' :
-                               task.map_status === 'red' ? 'Not visited' :
-                               task.map_status === 'green' ? 'Approved' :
-                               task.map_status === 'gray' ? 'Not interested' :
-                               'Unknown'}
-                    </span>
-                  </div>
-                )}
-
-                {/* Action buttons */}
-                <div className="flex gap-2 pt-2">
+                 {/* Action buttons */}
+                 <div className="flex gap-2 pt-2">
                   {/* Open Tasks */}
                   {task.status === 'open' && (
                     <>
