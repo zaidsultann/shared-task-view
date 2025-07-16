@@ -87,7 +87,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg mx-4 max-h-[90vh] overflow-y-auto z-[9999]">
         <DialogHeader className="pb-4">
           <DialogTitle className="flex items-center gap-3 text-xl">
             <div 
@@ -352,20 +352,16 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
         })
 
         marker.bindPopup(`
-          <div style="padding: 12px; min-width: 180px; font-family: system-ui;">
-            <h3 style="font-weight: 600; margin: 0 0 8px 0; font-size: 15px; color: #1a1a1a;">${task.business_name}</h3>
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-              <div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${getMarkerColor(task)};"></div>
-              <span style="font-size: 12px; color: #666; text-transform: capitalize;">${(task.map_status || 'pending').replace('_', ' ')}</span>
-            </div>
+          <div style="padding: 8px; min-width: 140px; font-family: system-ui;">
+            <h3 style="font-weight: 600; margin: 0 0 4px 0; font-size: 14px; color: #1a1a1a;">${task.business_name}</h3>
             <button onclick="window.dispatchEvent(new CustomEvent('taskClick', { detail: '${task.id}' }))" 
-                    style="width: 100%; padding: 8px 12px; font-size: 12px; background: #000; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
-              View Details
+                    style="width: 100%; padding: 6px 10px; font-size: 11px; background: #000; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
+              View
             </button>
           </div>
         `, {
           closeButton: true,
-          maxWidth: 200,
+          maxWidth: 160,
           className: 'custom-popup'
         })
 

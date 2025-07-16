@@ -25,9 +25,15 @@ serve(async (req) => {
     // Clean and format the address for better geocoding accuracy
     let formattedAddress = address.trim();
     
-    // Add Canada if not present for Canadian addresses
-    if (formattedAddress.includes('ON') && !formattedAddress.includes('Canada')) {
-      formattedAddress += ', Canada';
+    // Add Canada if not present and detect Canadian addresses
+    if (!formattedAddress.toLowerCase().includes('canada')) {
+      if (formattedAddress.includes('ON') || 
+          formattedAddress.toLowerCase().includes('ontario') ||
+          formattedAddress.toLowerCase().includes('mississauga') ||
+          formattedAddress.toLowerCase().includes('toronto') ||
+          formattedAddress.toLowerCase().includes('etobicoke')) {
+        formattedAddress += ', Ontario, Canada';
+      }
     }
     
     console.log('Original address:', address);
@@ -37,10 +43,10 @@ serve(async (req) => {
     let geocodeData: any[] = [];
     let lastError = '';
     
-    // Strategy 1: Try the full formatted address
+    // Strategy 1: Try the full formatted address with Canadian focus
     try {
       console.log('Geocoding strategy 1: Full formatted address -', formattedAddress);
-      const fullUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(formattedAddress)}&format=json&limit=1&addressdetails=1&countrycodes=ca`;
+      const fullUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(formattedAddress)}&format=json&limit=3&addressdetails=1&countrycodes=ca&viewbox=-95.152819,41.675105,-74.320068,56.859611&bounded=1`;
       
       const response = await fetch(fullUrl, {
         headers: {
@@ -49,9 +55,17 @@ serve(async (req) => {
       });
 
       if (response.ok) {
-        geocodeData = await response.json();
-        if (geocodeData && geocodeData.length > 0) {
+        const results = await response.json();
+        if (results && results.length > 0) {
+          // Find the most specific result (highest importance or most specific display_name)
+          geocodeData = [results.find(r => 
+            r.display_name.toLowerCase().includes('ontario') ||
+            r.display_name.toLowerCase().includes('mississauga') ||
+            r.display_name.toLowerCase().includes('toronto')
+          ) || results[0]];
+          
           console.log('Strategy 1 SUCCESS - Found coordinates:', geocodeData[0].lat, geocodeData[0].lon);
+          console.log('Strategy 1 - Display name:', geocodeData[0].display_name);
         }
       }
     } catch (error) {
