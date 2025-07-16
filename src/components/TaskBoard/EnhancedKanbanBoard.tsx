@@ -92,16 +92,20 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
   const handleClaimTask = async (task: Task) => {
     try {
+      console.log('EnhancedKanbanBoard: Claiming task:', task.id)
       await tasksApi.claim(task.id)
+      console.log('EnhancedKanbanBoard: Task claimed successfully, calling onUpdate...')
 
       toast({
         title: "Task claimed",
         description: "You can now upload files for this task",
       })
 
-      onUpdate()
+      // Force immediate refresh
+      await onUpdate()
+      console.log('EnhancedKanbanBoard: onUpdate completed after claim')
     } catch (error) {
-      console.error('Error claiming task:', error)
+      console.error('EnhancedKanbanBoard: Error claiming task:', error)
       toast({
         title: "Error",
         description: "Failed to claim task",
@@ -115,7 +119,9 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
     setIsSubmitting(true)
     try {
+      console.log('EnhancedKanbanBoard: Uploading file for task:', selectedTask.id)
       await tasksApi.uploadFile(selectedTask.id, uploadFile)
+      console.log('EnhancedKanbanBoard: File uploaded successfully, calling onUpdate...')
 
       toast({
         title: "File uploaded",
@@ -125,9 +131,12 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
       setShowUploadModal(false)
       setSelectedTask(null)
       setUploadFile(null)
-      onUpdate()
+      
+      // Force immediate refresh
+      await onUpdate()
+      console.log('EnhancedKanbanBoard: onUpdate completed after upload')
     } catch (error) {
-      console.error('Error uploading file:', error)
+      console.error('EnhancedKanbanBoard: Error uploading file:', error)
       toast({
         title: "Upload failed",
         description: "Please try again",
@@ -143,7 +152,9 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
     setIsSubmitting(true)
     try {
+      console.log('EnhancedKanbanBoard: Adding feedback for task:', selectedTask.id)
       await tasksApi.addFeedback(selectedTask.id, feedbackText.trim())
+      console.log('EnhancedKanbanBoard: Feedback added successfully, calling onUpdate...')
 
       toast({
         title: "Feedback added",
@@ -153,9 +164,12 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
       setShowFeedbackModal(false)
       setSelectedTask(null)
       setFeedbackText('')
-      onUpdate()
+      
+      // Force immediate refresh
+      await onUpdate()
+      console.log('EnhancedKanbanBoard: onUpdate completed after feedback')
     } catch (error) {
-      console.error('Error adding feedback:', error)
+      console.error('EnhancedKanbanBoard: Error adding feedback:', error)
       toast({
         title: "Error",
         description: "Failed to add feedback",
@@ -168,16 +182,20 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
   const handleApproveTask = async (task: Task) => {
     try {
+      console.log('EnhancedKanbanBoard: Approving task:', task.id)
       await tasksApi.approveTask(task.id)
+      console.log('EnhancedKanbanBoard: Task approved successfully, calling onUpdate...')
 
       toast({
         title: "Task approved",
         description: "Task moved to completed",
       })
 
-      onUpdate()
+      // Force immediate refresh
+      await onUpdate()
+      console.log('EnhancedKanbanBoard: onUpdate completed after approval')
     } catch (error) {
-      console.error('Error approving task:', error)
+      console.error('EnhancedKanbanBoard: Error approving task:', error)
       toast({
         title: "Error",
         description: "Failed to approve task",

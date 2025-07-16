@@ -42,14 +42,20 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
   const handleClaim = async () => {
     setIsLoading(true);
     try {
+      console.log('Claiming task:', task.id);
       await tasksApi.claim(task.id);
+      console.log('Task claimed successfully, calling onUpdate...');
       
       toast({
         title: "Task claimed!",
         description: `Task moved to "Needs Upload". You can now upload files.`,
       });
-      onUpdate();
+      
+      // Force immediate refresh
+      await onUpdate();
+      console.log('onUpdate completed');
     } catch (error) {
+      console.error('Error claiming task:', error);
       toast({
         title: "Error",
         description: "Failed to claim task",
@@ -64,7 +70,9 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
     
     setIsLoading(true);
     try {
+      console.log('Uploading file for task:', task.id);
       await tasksApi.uploadFile(task.id, uploadFile);
+      console.log('File uploaded successfully, calling onUpdate...');
       
       toast({
         title: "File uploaded!",
@@ -72,8 +80,12 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
       });
       setShowUploadModal(false);
       setUploadFile(null);
-      onUpdate();
+      
+      // Force immediate refresh
+      await onUpdate();
+      console.log('onUpdate completed after upload');
     } catch (error) {
+      console.error('Error uploading file:', error);
       toast({
         title: "Upload failed",
         description: "Please try again",
@@ -88,7 +100,9 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
     
     setIsLoading(true);
     try {
+      console.log('Adding feedback for task:', task.id);
       await tasksApi.addFeedback(task.id, feedbackText.trim());
+      console.log('Feedback added successfully, calling onUpdate...');
       
       toast({
         title: "Feedback sent!",
@@ -96,8 +110,12 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
       });
       setShowFeedbackModal(false);
       setFeedbackText('');
-      onUpdate();
+      
+      // Force immediate refresh
+      await onUpdate();
+      console.log('onUpdate completed after feedback');
     } catch (error) {
+      console.error('Error adding feedback:', error);
       toast({
         title: "Error",
         description: "Failed to send feedback",
@@ -110,14 +128,20 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
   const handleApprove = async () => {
     setIsLoading(true);
     try {
+      console.log('Approving task:', task.id);
       await tasksApi.approveTask(task.id);
+      console.log('Task approved successfully, calling onUpdate...');
       
       toast({
         title: "Task approved!",
         description: `${task.business_name} has been completed`,
       });
-      onUpdate();
+      
+      // Force immediate refresh
+      await onUpdate();
+      console.log('onUpdate completed after approval');
     } catch (error) {
+      console.error('Error approving task:', error);
       toast({
         title: "Error",
         description: "Failed to approve task",
