@@ -864,6 +864,33 @@ export const tasks = {
 
     console.log('API: Map status updated successfully:', data)
     return data
+  },
+
+  // Add revert functionality
+  revertTask: async (taskId: string) => {
+    console.log('API: Reverting task:', taskId)
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({
+        status: 'in_progress',
+        approved_by: null,
+        approved_at: null,
+        completed_at: null,
+        map_status: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', taskId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('API: Revert failed:', error)
+      throw error
+    }
+
+    console.log('API: Task reverted successfully:', data)
+    return data
   }
 }
 

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -28,6 +29,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
   const [feedbackText, setFeedbackText] = useState('')
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [revertConfirmTask, setRevertConfirmTask] = useState<Task | null>(null)
   const { toast } = useToast()
   const { authUser } = useAuth()
 
@@ -240,23 +242,24 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
   const handleRevertTask = async (task: Task) => {
     try {
       console.log('EnhancedKanbanBoard: Reverting task:', task.id)
-      await tasksApi.revert(task.id)
+      await tasksApi.revertTask(task.id)
       console.log('EnhancedKanbanBoard: Task reverted successfully, calling onUpdate...')
 
       toast({
-        title: "Task reverted",
-        description: "Task moved back to open",
+        title: "Task Reverted",
+        description: `${task.business_name} has been moved back to In Progress.`,
       })
 
       // Force immediate refresh
       await onUpdate()
+      setRevertConfirmTask(null)
       console.log('EnhancedKanbanBoard: onUpdate completed after revert')
     } catch (error) {
       console.error('EnhancedKanbanBoard: Error reverting task:', error)
       toast({
-        title: "Error",
-        description: "Failed to revert task",
-        variant: "destructive",
+        title: "Revert Failed",
+        description: "Failed to revert task. Please try again.",
+        variant: "destructive"
       })
     }
   }
@@ -460,15 +463,27 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
             </div>
           )}
 
-          {task.status === 'completed' && task.current_file_url && (
-            <Button
-              variant="outline"
-              onClick={() => window.open(task.current_file_url, '_blank')}
-              className="flex-1 text-sm h-9"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Download
-            </Button>
+          {task.status === 'completed' && (
+            <div className="flex gap-2 w-full">
+              {task.current_file_url && (
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(task.current_file_url, '_blank')}
+                  className="flex-1 text-sm h-9"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => setRevertConfirmTask(task)}
+                className="flex-1 text-sm h-9 text-orange-600 border-orange-200 hover:bg-orange-50"
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Revert
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -588,6 +603,28 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Revert Confirmation Modal */}
+      <AlertDialog open={!!revertConfirmTask} onOpenChange={() => setRevertConfirmTask(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revert Task to In Progress</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to revert "{revertConfirmTask?.business_name}" back to In Progress? 
+              This will remove it from the Completed section and any map pins.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => revertConfirmTask && handleRevertTask(revertConfirmTask)}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              Revert Task
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

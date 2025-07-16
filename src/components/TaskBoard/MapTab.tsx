@@ -200,14 +200,16 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  // Filter tasks for map display - show completed tasks that aren't green or gray
+  // Filter tasks for map display - only completed tasks with addresses, exclude green/gray statuses
   const mapTasks = tasks.filter(task => 
+    task.status === 'completed' &&
+    task.address &&
     task.latitude && 
     task.longitude && 
     !task.is_deleted && 
     !task.is_archived &&
-    task.status === 'completed' &&
-    !['completed_approved', 'not_interested'].includes(task.map_status || task.status)
+    // Hide green (approved) and gray (not interested) pins
+    !['approved', 'not_interested'].includes(task.map_status || 'pending')
   )
 
   const getMarkerColor = (task: Task) => {
@@ -339,7 +341,7 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
         <div>
           <h2 className="text-2xl font-bold">Business Map</h2>
           <p className="text-muted-foreground">
-            Showing {mapTasks.length} completed businesses with locations
+            Showing {mapTasks.length} completed businesses requiring follow-up
           </p>
         </div>
         
