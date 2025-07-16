@@ -97,8 +97,7 @@ export const tasks = {
       .from('tasks')
       .select(`
         *,
-        created_by_profile:profiles!tasks_created_by_fkey(username),
-        taken_by_profile:profiles!tasks_taken_by_fkey(username)
+        created_by_profile:profiles!tasks_created_by_fkey(username)
       `)
       .order('created_at', { ascending: false })
 
@@ -119,7 +118,7 @@ export const tasks = {
       status: task.status as Task['status'],
       created_at: new Date(task.created_at).getTime(),
       created_by: task.created_by_profile?.username || 'Unknown',
-      taken_by: task.taken_by_profile?.username,
+      taken_by: task.taken_by,
       claimed_by: task.claimed_by,
       approved_by: task.approved_by,
       completed_at: task.completed_at ? new Date(task.completed_at).getTime() : undefined,
@@ -186,25 +185,38 @@ export const tasks = {
   claim: async (taskId: string) => {
     const { data: { user } } = await supabase.auth.getUser()
     
-    // Get user ID from auth or mock session
+    // Get username from auth or mock session
+    let username = ''
     let userId = user?.id
-    if (!userId) {
+    
+    if (userId) {
+      // Get username from profiles table
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', userId)
+        .maybeSingle()
+      
+      username = profile?.username || 'Unknown'
+    } else {
+      // Use mock session for demo
       const mockSession = localStorage.getItem('mockUserSession')
       if (mockSession) {
         const session = JSON.parse(mockSession)
-        userId = session.user_id
+        username = session.username
       } else {
         throw new Error('Not authenticated')
       }
     }
 
-    console.log('Claiming task:', { taskId, userId })
+    console.log('Claiming task:', { taskId, username })
 
     const { data, error } = await supabase
       .from('tasks')
       .update({
         status: 'in_progress_no_file',
-        taken_by: userId,
+        taken_by: username,
+        claimed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', taskId)
@@ -219,13 +231,20 @@ export const tasks = {
   complete: async (taskId: string, zipFile: File) => {
     const { data: { user } } = await supabase.auth.getUser()
     
-    // Get user ID from auth or mock session
-    let userId = user?.id
-    if (!userId) {
+    // Get username from auth or mock session
+    let username = ''
+    if (user?.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      username = profile?.username || 'Unknown'
+    } else {
       const mockSession = localStorage.getItem('mockUserSession')
       if (mockSession) {
         const session = JSON.parse(mockSession)
-        userId = session.user_id
+        username = session.username
       } else {
         throw new Error('Not authenticated')
       }
@@ -255,7 +274,7 @@ export const tasks = {
         zip_url: urlData.publicUrl
       })
       .eq('id', taskId)
-      .eq('taken_by', userId)
+      .eq('taken_by', username)
       .select()
       .single()
 
@@ -266,13 +285,20 @@ export const tasks = {
   revert: async (taskId: string) => {
     const { data: { user } } = await supabase.auth.getUser()
     
-    // Get user ID from auth or mock session
-    let userId = user?.id
-    if (!userId) {
+    // Get username from auth or mock session
+    let username = ''
+    if (user?.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      username = profile?.username || 'Unknown'
+    } else {
       const mockSession = localStorage.getItem('mockUserSession')
       if (mockSession) {
         const session = JSON.parse(mockSession)
-        userId = session.user_id
+        username = session.username
       } else {
         throw new Error('Not authenticated')
       }
@@ -287,7 +313,7 @@ export const tasks = {
         zip_url: null
       })
       .eq('id', taskId)
-      .eq('taken_by', userId)
+      .eq('taken_by', username)
       .select()
       .single()
 

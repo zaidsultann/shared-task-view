@@ -21,8 +21,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 interface TaskCardProps {
   task: Task;
-  currentUser: string;
-  currentUserId: string;
+  currentUser: string; // This should be the username for comparison with taken_by
+  currentUserId: string; // This is the user ID for API calls
   onUpdate: () => void;
 }
 
