@@ -541,56 +541,54 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
                   {/* Changes Needed */}
                   {task.status === 'feedback_needed' && (
-                    <div className="flex gap-2 w-full">
-                      {task.taken_by === currentUsername && (
+                    <div className="flex flex-col gap-2 w-full">
+                      {/* Feedback button on top */}
+                      {task.feedback && task.feedback.length > 0 && (
                         <Button
+                          variant="outline"
                           onClick={() => {
                             setSelectedTask(task)
-                            setShowUploadModal(true)
+                            setShowViewFeedbackModal(true)
                           }}
-                          className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
+                          className="w-full text-sm h-9 justify-center"
                         >
-                          <Upload className="h-4 w-4 mr-2" />
-                          Re-upload
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          View Feedback
                         </Button>
                       )}
-                      {task.feedback && task.feedback.length > 0 && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedTask(task)
-                                setShowViewFeedbackModal(true)
-                              }}
-                              size="sm"
-                              className="h-9 px-3"
-                            >
-                              <MessageSquare className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>View Feedback</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      {task.current_file_url && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              onClick={() => window.open(task.current_file_url, '_blank')}
-                              size="sm"
-                              className="h-9 px-3"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>View File</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
+                      
+                      {/* Re-upload and View buttons row */}
+                      <div className="flex gap-2">
+                        {task.taken_by === currentUsername && (
+                          <Button
+                            onClick={() => {
+                              setSelectedTask(task)
+                              setShowUploadModal(true)
+                            }}
+                            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            Re-upload
+                          </Button>
+                        )}
+                        {task.current_file_url && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                onClick={() => window.open(task.current_file_url, '_blank')}
+                                size="sm"
+                                className="h-9 px-3"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>View File</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
                     </div>
                   )}
 
