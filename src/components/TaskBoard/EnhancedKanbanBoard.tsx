@@ -541,12 +541,22 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                   {/* Changes Needed */}
                   {task.status === 'feedback_needed' && (
                     <div className="flex flex-col gap-2 w-full">
-                      {/* Show feedback */}
+                      {/* Show feedback as clickable indicator */}
                       {task.feedback && task.feedback.length > 0 && (
-                        <div className="bg-red-50 p-3 rounded-lg text-sm border-l-4 border-red-200">
-                          <p className="font-medium text-red-800 mb-1">Latest Feedback:</p>
-                          <p className="text-red-700">{task.feedback[task.feedback.length - 1]?.comment}</p>
-                        </div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="bg-red-50 p-3 rounded-lg border-l-4 border-red-200 cursor-pointer hover:bg-red-100 transition-colors">
+                              <p className="font-medium text-red-800 text-sm flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4" />
+                                Latest Feedback (click to view)
+                              </p>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs p-3">
+                            <p className="text-sm font-medium mb-1">Latest Feedback:</p>
+                            <p className="text-sm">{task.feedback[task.feedback.length - 1]?.comment}</p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                       
                       <div className="flex gap-2">
@@ -563,14 +573,21 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                           </Button>
                         )}
                         {task.current_file_url && (
-                          <Button
-                            variant="outline"
-                            onClick={() => window.open(task.current_file_url, '_blank')}
-                            className="flex-1 text-sm h-9"
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View File
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                onClick={() => window.open(task.current_file_url, '_blank')}
+                                size="sm"
+                                className="h-9 px-3"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>View File</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                         <Button
                           variant="destructive"
