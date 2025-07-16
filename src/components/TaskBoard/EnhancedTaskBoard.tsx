@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MainDashboard } from './MainDashboard'
 import Dashboard from './Dashboard'
 import { MapTab } from './MapTab'
-import { BusinessMapTab } from './BusinessMapTab'
+import { SimpleBusinessMapTab } from './SimpleBusinessMapTab'
 import { useAuth } from '@/hooks/useAuth'
 import useRealtimeTasks from '@/hooks/useRealtimeTasks'
 import { useQuery } from '@tanstack/react-query'
@@ -104,7 +104,7 @@ export const EnhancedTaskBoard = () => {
           </TabsContent>
 
           <TabsContent value="business-map" className="space-y-4 sm:space-y-6">
-            <BusinessMapTab tasks={tasks} onTaskUpdate={refreshTasks} />
+            <SimpleBusinessMapTab tasks={tasks} onTaskUpdate={refreshTasks} />
           </TabsContent>
         </Tabs>
       </div>
