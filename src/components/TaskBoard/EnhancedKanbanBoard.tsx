@@ -185,7 +185,13 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
   const handleApproveTask = async (task: Task) => {
     try {
-      console.log('EnhancedKanbanBoard: Approving task:', task.id)
+      console.log('EnhancedKanbanBoard: Approving task:', task.id, 'Status:', task.status)
+      console.log('EnhancedKanbanBoard: Task details:', {
+        business_name: task.business_name,
+        current_file_url: task.current_file_url,
+        status: task.status
+      })
+      
       await tasksApi.approveTask(task.id)
       console.log('EnhancedKanbanBoard: Task approved successfully, calling onUpdate...')
 

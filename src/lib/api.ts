@@ -722,6 +722,7 @@ export const tasks = {
   },
 
   approveTask: async (taskId: string) => {
+    console.log('API: Starting approval for task:', taskId)
     const { data: { user } } = await supabase.auth.getUser()
     
     // Get username from auth or mock session
@@ -743,6 +744,8 @@ export const tasks = {
       }
     }
 
+    console.log('API: Approving task with user:', username)
+
     const { data, error } = await supabase
       .from('tasks')
       .update({
@@ -756,8 +759,35 @@ export const tasks = {
       .in('status', ['in_progress_with_file', 'awaiting_approval'])
       .select()
 
-    if (error) throw error
-    return data?.[0] || data
+    console.log('API: Approval result:', { data, error, dataLength: data?.length })
+
+    if (error) {
+      console.error('API: Approval failed:', error)
+      throw error
+    }
+
+    if (!data || data.length === 0) {
+      console.error('API: No task was updated during approval')
+      throw new Error('Failed to approve task - task may not be in the correct status')
+    }
+
+    const approvedTask = data[0]
+    console.log('API: Task approved successfully:', approvedTask.business_name)
+
+    // Geocode the address if completed and address exists but no coordinates
+    if (approvedTask.address && !approvedTask.latitude) {
+      console.log('API: Geocoding address:', approvedTask.address)
+      try {
+        await supabase.functions.invoke('geocode', {
+          body: { address: approvedTask.address, taskId }
+        })
+        console.log('API: Geocoding initiated for approved task')
+      } catch (geocodeError) {
+        console.warn('API: Geocoding failed:', geocodeError)
+      }
+    }
+
+    return approvedTask
   },
 
   geocodeTask: async (taskId: string, address: string) => {
