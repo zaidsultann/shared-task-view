@@ -5,12 +5,10 @@ import {
   Users, 
   CheckCircle, 
   Clock, 
-  Phone, 
-  MapPin, 
   TrendingUp,
   Building,
   AlertCircle,
-  DollarSign
+  MessageSquare
 } from 'lucide-react'
 import { Task } from '@/types/Task'
 
@@ -24,11 +22,15 @@ export const MainDashboard = ({ tasks }: MainDashboardProps) => {
     
     const totalDemos = activeTasks.length
     const completedTasks = activeTasks.filter(t => t.status === 'completed').length
-    const inProgressTasks = activeTasks.filter(t => t.status === 'in_progress').length
-    const awaitingApproval = activeTasks.filter(t => t.status === 'awaiting_approval').length
-    const awaitingPayment = activeTasks.filter(t => t.status === 'awaiting_payment').length
-    const followUpNeeded = activeTasks.filter(t => t.status === 'follow_up').length
-    const notInterested = activeTasks.filter(t => t.status === 'not_interested').length
+    const inProgressTasks = activeTasks.filter(t => 
+      t.status === 'in_progress_no_file' || 
+      t.status === 'in_progress_with_file' || 
+      t.status === 'feedback_needed' ||
+      t.status === 'in_progress' ||
+      t.status === 'awaiting_approval'
+    ).length
+    const awaitingApproval = activeTasks.filter(t => t.status === 'awaiting_approval' || t.status === 'in_progress_with_file').length
+    const feedbackNeeded = activeTasks.filter(t => t.status === 'feedback_needed').length
     
     // Unique businesses count
     const uniqueBusinesses = new Set(activeTasks.map(t => t.business_name.toLowerCase())).size
@@ -48,9 +50,7 @@ export const MainDashboard = ({ tasks }: MainDashboardProps) => {
       completedTasks,
       inProgressTasks,
       awaitingApproval,
-      awaitingPayment,
-      followUpNeeded,
-      notInterested,
+      feedbackNeeded,
       uniqueBusinesses,
       tasksWithFeedback,
       completionRate,
@@ -142,15 +142,15 @@ export const MainDashboard = ({ tasks }: MainDashboardProps) => {
           color="warning"
         />
         <StatCard
-          title="Awaiting Payment"
-          value={stats.awaitingPayment}
-          icon={DollarSign}
+          title="Feedback Needed"
+          value={stats.feedbackNeeded}
+          icon={MessageSquare}
           color="danger"
         />
         <StatCard
-          title="Follow-up Needed"
-          value={stats.followUpNeeded}
-          icon={Phone}
+          title="With Feedback"
+          value={stats.tasksWithFeedback}
+          icon={MessageSquare}
           color="warning"
         />
       </div>
@@ -189,7 +189,7 @@ export const MainDashboard = ({ tasks }: MainDashboardProps) => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
+              <Building className="h-5 w-5" />
               Business Engagement
             </CardTitle>
           </CardHeader>
@@ -206,25 +206,25 @@ export const MainDashboard = ({ tasks }: MainDashboardProps) => {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                  <span className="text-sm">Awaiting Payment</span>
+                  <span className="text-sm">Awaiting Approval</span>
                 </div>
-                <span className="font-medium">{stats.awaitingPayment}</span>
+                <span className="font-medium">{stats.awaitingApproval}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <span className="text-sm">Feedback Needed</span>
+                </div>
+                <span className="font-medium">{stats.feedbackNeeded}</span>
               </div>
               
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-blue-500" />
-                  <span className="text-sm">Follow-up</span>
+                  <span className="text-sm">In Progress</span>
                 </div>
-                <span className="font-medium">{stats.followUpNeeded}</span>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-gray-500" />
-                  <span className="text-sm">Not Interested</span>
-                </div>
-                <span className="font-medium">{stats.notInterested}</span>
+                <span className="font-medium">{stats.inProgressTasks}</span>
               </div>
             </div>
           </CardContent>

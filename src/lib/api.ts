@@ -508,7 +508,7 @@ export const tasks = {
     return data
   },
 
-  addFeedback: async (taskId: string, comment: string, version: number) => {
+  addFeedback: async (taskId: string, comment: string, version?: number) => {
     const { data: { user } } = await supabase.auth.getUser()
     
     let username = 'Unknown'
@@ -530,7 +530,7 @@ export const tasks = {
     // Get current task
     const { data: currentTask, error: fetchError } = await supabase
       .from('tasks')
-      .select('feedback')
+      .select('feedback, version_number')
       .eq('id', taskId)
       .single()
 
@@ -540,14 +540,17 @@ export const tasks = {
     const newFeedback: FeedbackItem = {
       user: username,
       comment,
-      version,
+      version: version || currentTask?.version_number || 1,
       created_at: Date.now()
     }
 
     const { data, error } = await supabase
       .from('tasks')
       .update({
-        feedback: [...currentFeedback, newFeedback] as any
+        status: 'feedback_needed',
+        has_feedback: true,
+        feedback: [...currentFeedback, newFeedback] as any,
+        updated_at: new Date().toISOString()
       })
       .eq('id', taskId)
       .select()
@@ -598,6 +601,118 @@ export const tasks = {
 
     if (error) throw error
     return data
+  },
+
+  uploadFile: async (taskId: string, file: File) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    // Get username from auth or mock session
+    let username = ''
+    if (user?.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      username = profile?.username || 'Unknown'
+    } else {
+      const mockSession = localStorage.getItem('mockUserSession')
+      if (mockSession) {
+        const session = JSON.parse(mockSession)
+        username = session.username
+      } else {
+        throw new Error('Not authenticated')
+      }
+    }
+
+    // Upload file to Supabase Storage
+    const fileExt = file.name.split('.').pop()
+    const fileName = `task-files/${taskId}-${Date.now()}.${fileExt}`
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('taskboard-uploads')
+      .upload(fileName, file)
+
+    if (uploadError) throw uploadError
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('taskboard-uploads')
+      .getPublicUrl(fileName)
+
+    // Get current task to increment version
+    const { data: currentTask } = await supabase
+      .from('tasks')
+      .select('version_number, versions')
+      .eq('id', taskId)
+      .single()
+
+    const newVersion = (currentTask?.version_number || 0) + 1
+    const currentVersions = (currentTask?.versions as unknown as FileVersion[]) || []
+
+    // Update task with file URL and new status
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({
+        status: 'in_progress_with_file',
+        upload_url: publicUrl,
+        current_file_url: publicUrl,
+        updated_at: new Date().toISOString(),
+        version_number: newVersion,
+        versions: [
+          ...currentVersions,
+          {
+            url: publicUrl,
+            version: newVersion,
+            uploaded_at: Date.now(),
+            uploaded_by: username
+          }
+        ] as any
+      })
+      .eq('id', taskId)
+      .eq('taken_by', username)
+      .select()
+
+    if (error) throw error
+    return data?.[0] || data
+  },
+
+  approveTask: async (taskId: string) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    // Get username from auth or mock session
+    let username = ''
+    if (user?.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      username = profile?.username || 'Unknown'
+    } else {
+      const mockSession = localStorage.getItem('mockUserSession')
+      if (mockSession) {
+        const session = JSON.parse(mockSession)
+        username = session.username
+      } else {
+        throw new Error('Not authenticated')
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({
+        status: 'completed',
+        approved_by: username,
+        approved_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', taskId)
+      .select()
+
+    if (error) throw error
+    return data?.[0] || data
   },
 
   geocodeTask: async (taskId: string, address: string) => {

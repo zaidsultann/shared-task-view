@@ -5,7 +5,7 @@ export interface Task {
   phone?: string;
   address?: string;
   note?: string;
-  status: 'open' | 'in_progress' | 'in_progress_no_file' | 'awaiting_approval' | 'completed' | 'not_interested' | 'awaiting_payment' | 'follow_up';
+  status: 'open' | 'in_progress_no_file' | 'in_progress_with_file' | 'feedback_needed' | 'completed' | 'in_progress' | 'awaiting_approval';
   created_at: number;
   created_by: string;
   taken_by?: string;

@@ -64,6 +64,7 @@ export type Database = {
           status_color: string | null
           taken_by: string | null
           updated_at: string
+          upload_url: string | null
           version_number: number | null
           versions: Json | null
           zip_url: string | null
@@ -93,6 +94,7 @@ export type Database = {
           status_color?: string | null
           taken_by?: string | null
           updated_at?: string
+          upload_url?: string | null
           version_number?: number | null
           versions?: Json | null
           zip_url?: string | null
@@ -122,6 +124,7 @@ export type Database = {
           status_color?: string | null
           taken_by?: string | null
           updated_at?: string
+          upload_url?: string | null
           version_number?: number | null
           versions?: Json | null
           zip_url?: string | null

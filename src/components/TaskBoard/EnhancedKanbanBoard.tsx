@@ -33,10 +33,13 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
   const activeTasks = tasks.filter(task => !task.is_deleted && !task.is_archived)
   
-  // Enhanced status categorization
+  // Enhanced status categorization for new workflow
   const openTasks = activeTasks.filter(task => task.status === 'open')
   const needsUploadTasks = activeTasks.filter(task => task.status === 'in_progress_no_file')
-  const awaitingApprovalTasks = activeTasks.filter(task => task.status === 'awaiting_approval')
+  const awaitingApprovalTasks = activeTasks.filter(task => 
+    task.status === 'in_progress_with_file' || task.status === 'awaiting_approval'
+  )
+  const feedbackNeededTasks = activeTasks.filter(task => task.status === 'feedback_needed')
   const completedTasks = activeTasks.filter(task => task.status === 'completed')
 
   const columns = [
@@ -66,6 +69,15 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
       color: 'bg-yellow-500',
       bgColor: 'bg-yellow-50',
       textColor: 'text-yellow-700'
+    },
+    {
+      title: 'Changes Needed',
+      tasks: feedbackNeededTasks,
+      count: feedbackNeededTasks.length,
+      icon: Bell,
+      color: 'bg-red-500',
+      bgColor: 'bg-red-50',
+      textColor: 'text-red-700'
     },
     {
       title: 'Completed',
@@ -103,31 +115,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
     setIsSubmitting(true)
     try {
-      // Upload file to Supabase Storage
-      const fileExt = uploadFile.name.split('.').pop()
-      const fileName = `${selectedTask.id}-${Date.now()}.${fileExt}`
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('taskboard-uploads')
-        .upload(fileName, uploadFile)
-
-      if (uploadError) throw uploadError
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('taskboard-uploads')
-        .getPublicUrl(fileName)
-
-      // Call edge function to update task with new version
-      const { error: versionError } = await supabase.functions.invoke('upload_version', {
-        body: {
-          task_id: selectedTask.id,
-          file_url: publicUrl,
-          uploaded_by: currentUsername
-        }
-      })
-
-      if (versionError) throw versionError
+      await tasksApi.uploadFile(selectedTask.id, uploadFile)
 
       toast({
         title: "File uploaded",
@@ -155,20 +143,11 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
     setIsSubmitting(true)
     try {
-      const { error } = await supabase.functions.invoke('add_feedback', {
-        body: {
-          task_id: selectedTask.id,
-          comment: feedbackText.trim(),
-          user: currentUsername,
-          for_version: selectedTask.versions?.length || 1
-        }
-      })
-
-      if (error) throw error
+      await tasksApi.addFeedback(selectedTask.id, feedbackText.trim())
 
       toast({
         title: "Feedback added",
-        description: "The team has been notified",
+        description: "Task moved to changes needed",
       })
 
       setShowFeedbackModal(false)
@@ -189,14 +168,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
   const handleApproveTask = async (task: Task) => {
     try {
-      const { error } = await supabase.functions.invoke('approve_task', {
-        body: {
-          task_id: task.id,
-          approved_by: currentUsername
-        }
-      })
-
-      if (error) throw error
+      await tasksApi.approveTask(task.id)
 
       toast({
         title: "Task approved",
@@ -300,8 +272,18 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
             </Button>
           )}
           
-          {task.status === 'awaiting_approval' && (
+          {(task.status === 'in_progress_with_file' || task.status === 'awaiting_approval') && (
             <div className="flex gap-2 w-full">
+              {task.current_file_url && (
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(task.current_file_url, '_blank')}
+                  className="flex-1 text-sm h-9"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={() => {
@@ -322,6 +304,52 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
               </Button>
             </div>
           )}
+
+          {task.status === 'feedback_needed' && (
+            <div className="space-y-2 w-full">
+              {/* Show feedback */}
+              {task.feedback && task.feedback.length > 0 && (
+                <div className="bg-red-50 p-2 rounded text-xs">
+                  <strong>Latest feedback:</strong> {task.feedback[task.feedback.length - 1]?.comment}
+                </div>
+              )}
+              <div className="flex gap-2">
+                {task.taken_by === currentUsername && (
+                  <Button
+                    onClick={() => {
+                      setSelectedTask(task)
+                      setShowUploadModal(true)
+                    }}
+                    className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Re-upload
+                  </Button>
+                )}
+                {task.current_file_url && (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(task.current_file_url, '_blank')}
+                    className="flex-1 text-sm h-9"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {task.status === 'completed' && task.current_file_url && (
+            <Button
+              variant="outline"
+              onClick={() => window.open(task.current_file_url, '_blank')}
+              className="flex-1 text-sm h-9"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+          )}
         </div>
       </div>
     )
@@ -329,7 +357,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
         {columns.map((column) => {
           const Icon = column.icon
           
