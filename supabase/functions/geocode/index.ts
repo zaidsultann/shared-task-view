@@ -125,13 +125,13 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Update task with coordinates
+    // Update task with coordinates - keep original address, just add coordinates
     const { data: updatedTask, error: updateError } = await supabase
       .from('tasks')
       .update({
         latitude,
-        longitude,
-        address: display_name // Update with formatted address
+        longitude
+        // Keep original address, don't overwrite with display_name
       })
       .eq('id', taskId)
       .select()

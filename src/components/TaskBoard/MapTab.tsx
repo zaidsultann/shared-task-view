@@ -87,56 +87,68 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
+      <DialogContent className="max-w-lg">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="flex items-center gap-3 text-xl">
+            <div 
+              className="w-4 h-4 rounded-full"
+              style={{ 
+                backgroundColor: statusOptions.find(opt => opt.value === (editedTask?.map_status || 'pending'))?.color === 'yellow' ? '#eab308' : 
+                               statusOptions.find(opt => opt.value === (editedTask?.map_status || 'pending'))?.color === 'blue' ? '#3b82f6' :
+                               statusOptions.find(opt => opt.value === (editedTask?.map_status || 'pending'))?.color === 'gray' ? '#6b7280' : 
+                               statusOptions.find(opt => opt.value === (editedTask?.map_status || 'pending'))?.color === 'green' ? '#22c55e' : '#ef4444'
+              }}
+            />
             {task.business_name}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div>
-            <Label>Business Name</Label>
-            <Input value={task.business_name} disabled />
+        <div className="space-y-6">
+          {/* Business Info Section */}
+          <div className="bg-muted/30 rounded-lg p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">Phone</Label>
+                <p className="font-medium">{task.phone || 'Not provided'}</p>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">Status</Label>
+                <p className="font-medium capitalize">{(editedTask?.map_status || 'pending').replace('_', ' ')}</p>
+              </div>
+            </div>
+            
+            <div>
+              <Label className="text-xs text-muted-foreground uppercase tracking-wide">Address</Label>
+              <p className="font-medium text-sm leading-relaxed">{task.address || 'Not provided'}</p>
+            </div>
+
+            {task.brief && (
+              <div>
+                <Label className="text-xs text-muted-foreground uppercase tracking-wide">Description</Label>
+                <p className="text-sm leading-relaxed">{task.brief}</p>
+              </div>
+            )}
           </div>
 
-          <div>
-            <Label>Phone</Label>
-            <Input 
-              value={task.phone || 'Not provided'} 
-              disabled 
-              className="bg-muted"
-            />
-          </div>
-
-          <div>
-            <Label>Address</Label>
-            <Input 
-              value={task.address || 'Not provided'} 
-              disabled 
-              className="bg-muted"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="status">Map Status</Label>
+          {/* Status Update Section */}
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold">Update Status</Label>
             <Select 
-              value={editedTask.map_status || 'pending'} 
+              value={editedTask?.map_status || 'pending'} 
               onValueChange={(value: string) => {
                 setEditedTask({
-                  ...editedTask,
+                  ...editedTask!,
                   map_status: value
                 })
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-12">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map(option => (
                   <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3 py-1">
                       <div 
                         className="w-3 h-3 rounded-full"
                         style={{ 
@@ -146,7 +158,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
                                          option.color === 'green' ? '#22c55e' : '#ef4444'
                         }}
                       />
-                      {option.label}
+                      <span className="font-medium">{option.label}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -154,38 +166,51 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
             </Select>
           </div>
 
-          <div>
-            <Label htmlFor="note">Notes</Label>
+          {/* Notes Section */}
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold">Notes</Label>
             <Textarea
-              id="note"
-              value={editedTask.note || ''}
+              value={editedTask?.note || ''}
               onChange={(e) => setEditedTask({
-                ...editedTask,
+                ...editedTask!,
                 note: e.target.value
               })}
-              placeholder="Add any notes or comments..."
+              placeholder="Add any notes or comments about this business..."
               rows={3}
+              className="resize-none"
             />
           </div>
 
-          {task.latitude && task.longitude && (
-            <Button
-              variant="outline"
-              onClick={openDirections}
-              className="w-full"
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Get Directions
-            </Button>
-          )}
+          {/* Action Buttons */}
+          <div className="flex flex-col gap-3 pt-4 border-t">
+            {task.latitude && task.longitude && (
+              <Button
+                variant="outline"
+                onClick={openDirections}
+                className="w-full h-12 text-primary border-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Get Directions in Google Maps
+              </Button>
+            )}
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose} disabled={saving}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={onClose} 
+                disabled={saving}
+                className="flex-1 h-12"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSave} 
+                disabled={saving}
+                className="flex-1 h-12"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
