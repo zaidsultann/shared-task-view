@@ -577,51 +577,6 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                   {/* Completed */}
                   {task.status === 'completed' && (
                     <div className="flex flex-col gap-3 w-full">
-                      {/* Status Dropdown */}
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-gray-700">Map Status</Label>
-                        <Select
-                          value={task.map_status || 'red'}
-                          onValueChange={(value) => handleMapStatusUpdate(task.id, value)}
-                        >
-                          <SelectTrigger className="w-full h-9 bg-white border-2 border-gray-200 hover:border-gray-300 transition-colors">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white border-2 border-gray-200 shadow-lg z-50">
-                            <SelectItem value="red" className="hover:bg-gray-100">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                Not visited (pending)
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="yellow" className="hover:bg-gray-100">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                                Payment pending
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="blue" className="hover:bg-gray-100">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                Follow-up
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="green" className="hover:bg-gray-100">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                Approved (hidden from map)
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="gray" className="hover:bg-gray-100">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-                                Not interested (hidden from map)
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
                       {/* Buttons Row */}
                       <div className="flex gap-2">
                         {/* Download Button */}
