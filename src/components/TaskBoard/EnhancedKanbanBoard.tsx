@@ -762,15 +762,17 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
             {selectedTask?.versions && selectedTask.versions.length > 0 ? (
               <div className="max-h-[500px] overflow-y-auto space-y-4">
                 {selectedTask.versions.map((version, index) => {
-                  // Find feedback for this version
+                  // Find feedback for this version (using the actual version number from DB)
                   const versionFeedback = selectedTask.feedback?.filter(f => f.version === version.version) || []
+                  // Display version number starting from 1 (index + 1)
+                  const displayVersionNumber = index + 1
                   
                   return (
                     <div key={index} className="border rounded-lg p-4 bg-gray-50">
                       {/* Version Header - No timestamp */}
                       <div className="mb-3">
                         <h4 className="font-semibold text-lg text-gray-900">
-                          Version {version.version}
+                          Version {displayVersionNumber}
                         </h4>
                       </div>
                       
