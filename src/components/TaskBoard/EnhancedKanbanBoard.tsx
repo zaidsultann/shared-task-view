@@ -38,7 +38,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
   const activeTasks = tasks.filter(task => !task.is_deleted && !task.is_archived)
   
-  // Enhanced status categorization for new workflow
+  // Enhanced status categorization - removed old in_progress filter
   const openTasks = activeTasks.filter(task => task.status === 'open')
   const needsUploadTasks = activeTasks.filter(task => task.status === 'in_progress_no_file')
   const awaitingApprovalTasks = activeTasks.filter(task => 
@@ -372,7 +372,25 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                       <span>Completed {formatDate(task.completed_at)}</span>
                     </div>
                   )}
-                 </div>
+                </div>
+
+                {/* Status indicator for completed tasks */}
+                {task.status === 'completed' && task.map_status && (
+                  <div className="flex items-center gap-2 pt-2 border-t">
+                    <div className={`w-2 h-2 rounded-full ${
+                      task.map_status === 'green' ? 'bg-green-500' :
+                      task.map_status === 'yellow' ? 'bg-yellow-500' :
+                      task.map_status === 'red' ? 'bg-red-500' :
+                      'bg-gray-400'
+                    }`}></div>
+                    <span className="text-xs text-gray-500 capitalize">
+                      {task.map_status === 'green' ? 'Follow Up Needed' :
+                       task.map_status === 'yellow' ? 'Pending Payment' :
+                       task.map_status === 'red' ? 'Not Interested' :
+                       'Status Unknown'}
+                    </span>
+                  </div>
+                )}
 
                 {/* Action buttons */}
                 <div className="flex gap-2">
@@ -533,36 +551,37 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
   return (
     <div className="w-full">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4 mb-6">
+      {/* Mobile-optimized grid that grows vertically */}
+      <div className="space-y-6">
         {columns.map((column) => {
           const Icon = column.icon
           
           return (
-            <div key={column.title} className="space-y-4">
-              {/* Column Header */}
-              <div className={`${column.bgColor} rounded-lg p-4 border`}>
+            <div key={column.title} className="w-full">
+              {/* Column Header - Mobile Optimized */}
+              <div className={`${column.bgColor} rounded-lg p-3 sm:p-4 border mb-4`}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${column.color}`}>
-                      <Icon className="h-4 w-4 text-white" />
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center ${column.color}`}>
+                      <Icon className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-sm">{column.title}</h3>
-                      <p className="text-xs text-muted-foreground">{column.count} tasks</p>
+                      <h3 className="font-semibold text-sm sm:text-base">{column.title}</h3>
+                      <p className="text-xs text-muted-foreground">{column.count} task{column.count !== 1 ? 's' : ''}</p>
                     </div>
                   </div>
-                  <Badge variant="secondary" className={column.textColor}>
+                  <Badge variant="secondary" className={`${column.textColor} text-xs sm:text-sm`}>
                     {column.count}
                   </Badge>
                 </div>
               </div>
 
-              {/* Tasks */}
+              {/* Tasks - Full page growth */}
               <div className="space-y-3">
                 {column.tasks.length === 0 ? (
-                  <div className="bg-muted/30 rounded-lg p-6 text-center border-2 border-dashed">
-                    <Icon className="h-8 w-8 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">
+                  <div className="bg-muted/30 rounded-lg p-4 sm:p-6 text-center border-2 border-dashed">
+                    <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/50 mx-auto mb-2 sm:mb-3" />
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       No {column.title.toLowerCase()} tasks
                     </p>
                   </div>

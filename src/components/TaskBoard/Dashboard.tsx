@@ -91,7 +91,13 @@ const Dashboard = ({ user }: DashboardProps) => {
 
   const getTaskStats = () => {
     const activeTasks = tasks.filter(task => !task.is_deleted && !task.is_archived);
-    const inProgressTasks = activeTasks.filter(task => task.status === 'in_progress' || task.status === 'in_progress_no_file' || task.status === 'awaiting_approval');
+    // Updated to exclude old in_progress status and include all sub-statuses
+    const inProgressTasks = activeTasks.filter(task => 
+      task.status === 'in_progress_no_file' || 
+      task.status === 'in_progress_with_file' || 
+      task.status === 'awaiting_approval' || 
+      task.status === 'feedback_needed'
+    );
     const completedTasks = activeTasks.filter(task => task.status === 'completed').length;
     
     return {
@@ -187,51 +193,52 @@ const Dashboard = ({ user }: DashboardProps) => {
         </p>
       </div>
 
-      {/* Action Buttons Row */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      {/* Action Buttons Row - Mobile Optimized */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2 lg:gap-4">
+          <div className="flex items-center gap-2 text-xs lg:text-sm text-muted-foreground">
             <div className="w-2 h-2 rounded-full bg-green-500"></div>
             <span>{stats.open} Open</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs lg:text-sm text-muted-foreground">
             <div className="w-2 h-2 rounded-full bg-amber-500"></div>
             <span>{stats.inProgress} In Progress</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs lg:text-sm text-muted-foreground">
             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
             <span>{stats.completed} Completed</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1 lg:gap-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={fetchTasks}
-            className="h-8"
+            className="h-7 lg:h-8 px-2 lg:px-3"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-3 w-3 lg:h-4 lg:w-4" />
           </Button>
           
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowHistoryModal(true)}
-            className="h-8"
+            className="h-7 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm"
           >
-            <History className="h-4 w-4 mr-2" />
-            History
+            <History className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+            <span className="hidden lg:inline">History</span>
           </Button>
           
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowArchiveModal(true)}
-            className="h-8"
+            className="h-7 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm"
           >
-            <Archive className="h-4 w-4 mr-2" />
-            Archive ({stats.archived})
+            <Archive className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+            <span className="hidden lg:inline">Archive ({stats.archived})</span>
+            <span className="lg:hidden">({stats.archived})</span>
           </Button>
           
           <Button
@@ -239,19 +246,20 @@ const Dashboard = ({ user }: DashboardProps) => {
             size="sm"
             onClick={handleClearHistory}
             disabled={tasks.filter(task => task.is_deleted).length === 0}
-            className="h-8"
+            className="h-7 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Clear Deleted
+            <Trash2 className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+            <span className="hidden lg:inline">Clear Deleted</span>
           </Button>
           
           <Button
             onClick={() => setShowCreateModal(true)}
             size="sm"
-            className="h-8"
+            className="h-7 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            New Task
+            <Plus className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+            <span className="hidden lg:inline">New Task</span>
+            <span className="lg:hidden">New</span>
           </Button>
         </div>
       </div>
