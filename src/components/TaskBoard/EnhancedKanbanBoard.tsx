@@ -28,6 +28,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const [showViewFeedbackModal, setShowViewFeedbackModal] = useState(false)
   const [feedbackText, setFeedbackText] = useState('')
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -540,64 +541,56 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
                   {/* Changes Needed */}
                   {task.status === 'feedback_needed' && (
-                    <div className="flex flex-col gap-2 w-full">
-                      {/* Show feedback as clickable indicator */}
+                    <div className="flex gap-2 w-full">
+                      {task.taken_by === currentUsername && (
+                        <Button
+                          onClick={() => {
+                            setSelectedTask(task)
+                            setShowUploadModal(true)
+                          }}
+                          className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Re-upload
+                        </Button>
+                      )}
                       {task.feedback && task.feedback.length > 0 && (
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="bg-red-50 p-3 rounded-lg border-l-4 border-red-200 cursor-pointer hover:bg-red-100 transition-colors">
-                              <p className="font-medium text-red-800 text-sm flex items-center gap-2">
-                                <MessageSquare className="h-4 w-4" />
-                                Latest Feedback (click to view)
-                              </p>
-                            </div>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedTask(task)
+                                setShowViewFeedbackModal(true)
+                              }}
+                              size="sm"
+                              className="h-9 px-3"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
                           </TooltipTrigger>
-                          <TooltipContent className="max-w-xs p-3">
-                            <p className="text-sm font-medium mb-1">Latest Feedback:</p>
-                            <p className="text-sm">{task.feedback[task.feedback.length - 1]?.comment}</p>
+                          <TooltipContent>
+                            <p>View Feedback</p>
                           </TooltipContent>
                         </Tooltip>
                       )}
-                      
-                      <div className="flex gap-2">
-                        {task.taken_by === currentUsername && (
-                          <Button
-                            onClick={() => {
-                              setSelectedTask(task)
-                              setShowUploadModal(true)
-                            }}
-                            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
-                          >
-                            <Upload className="h-4 w-4 mr-2" />
-                            Re-upload
-                          </Button>
-                        )}
-                        {task.current_file_url && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                onClick={() => window.open(task.current_file_url, '_blank')}
-                                size="sm"
-                                className="h-9 px-3"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>View File</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteTask(task)}
-                          className="h-9 px-3"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      {task.current_file_url && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              onClick={() => window.open(task.current_file_url, '_blank')}
+                              size="sm"
+                              className="h-9 px-3"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>View File</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
                   )}
 
@@ -755,6 +748,46 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                 disabled={!feedbackText.trim() || isSubmitting}
               >
                 {isSubmitting ? 'Adding...' : 'Add Feedback'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Feedback Modal */}
+      <Dialog open={showViewFeedbackModal} onOpenChange={setShowViewFeedbackModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Feedback for: {selectedTask?.business_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedTask?.feedback && selectedTask.feedback.length > 0 ? (
+              <div className="max-h-[400px] overflow-y-auto space-y-3">
+                {selectedTask.feedback.map((feedbackItem, index) => (
+                  <div key={index} className="bg-gray-50 p-4 rounded-lg border">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-medium text-sm text-gray-700">
+                        {feedbackItem.user}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {formatDate(feedbackItem.created_at)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-900">{feedbackItem.comment}</p>
+                    {feedbackItem.version && (
+                      <span className="text-xs text-gray-500 mt-2 block">
+                        Version: {feedbackItem.version}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">No feedback available</p>
+            )}
+            <div className="flex justify-end">
+              <Button onClick={() => setShowViewFeedbackModal(false)}>
+                Close
               </Button>
             </div>
           </div>
