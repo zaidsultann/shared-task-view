@@ -393,7 +393,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                 )}
 
                 {/* Action buttons */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 pt-2">
           {task.status === 'open' && (
             <>
               <Button
@@ -401,7 +401,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                   console.log('BUTTON CLICKED! Task:', task.business_name)
                   handleClaimTask(task)
                 }}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs lg:text-sm h-8 lg:h-9"
               >
                 Claim Task
               </Button>
@@ -409,9 +409,9 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                 variant="destructive"
                 size="sm"
                 onClick={() => handleDeleteTask(task)}
-                className="h-9 px-3"
+                className="h-8 lg:h-9 px-2 lg:px-3"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
             </>
           )}
@@ -423,26 +423,26 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                   setSelectedTask(task)
                   setShowUploadModal(true)
                 }}
-                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-xs lg:text-sm h-8 lg:h-9"
               >
-                <Upload className="h-4 w-4 mr-2" />
+                <Upload className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
                 Upload
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleRevertTask(task)}
-                className="h-9 px-3"
+                className="h-8 lg:h-9 px-2 lg:px-3"
               >
-                <RotateCcw className="h-4 w-4" />
+                <RotateCcw className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={() => handleDeleteTask(task)}
-                className="h-9 px-3"
+                className="h-8 lg:h-9 px-2 lg:px-3"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3 w-3 lg:h-4 lg:w-4" />
               </Button>
             </div>
           )}
@@ -455,9 +455,9 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                   <Button
                     variant="outline"
                     onClick={() => window.open(task.current_file_url, '_blank')}
-                    className="flex-1 text-sm h-9"
+                    className="flex-1 text-xs lg:text-sm h-8 lg:h-9"
                   >
-                    <Eye className="h-4 w-4 mr-2" />
+                    <Eye className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
                     View File
                   </Button>
                 )}
@@ -468,9 +468,9 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                     setShowFeedbackModal(true)
                   }}
                   size="sm"
-                  className="h-9 px-3"
+                  className="h-8 lg:h-9 px-2 lg:px-3"
                 >
-                  <MessageSquare className="h-4 w-4" />
+                  <MessageSquare className="h-3 w-3 lg:h-4 lg:w-4" />
                 </Button>
               </div>
               
@@ -551,14 +551,15 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
   return (
     <div className="w-full">
-      {/* Mobile-optimized grid that grows vertically */}
-      <div className="space-y-6">
+      {/* Responsive grid: vertical on mobile, horizontal columns on desktop */}
+      <div className="lg:hidden space-y-6">
+        {/* Mobile Layout - Vertical stacking */}
         {columns.map((column) => {
           const Icon = column.icon
           
           return (
             <div key={column.title} className="w-full">
-              {/* Column Header - Mobile Optimized */}
+              {/* Column Header - Mobile */}
               <div className={`${column.bgColor} rounded-lg p-3 sm:p-4 border mb-4`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 sm:space-x-3">
@@ -576,7 +577,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                 </div>
               </div>
 
-              {/* Tasks - Full page growth */}
+              {/* Tasks - Mobile */}
               <div className="space-y-3">
                 {column.tasks.length === 0 ? (
                   <div className="bg-muted/30 rounded-lg p-4 sm:p-6 text-center border-2 border-dashed">
@@ -596,6 +597,47 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
             </div>
           )
         })}
+      </div>
+
+      {/* Desktop Layout - Horizontal columns */}
+      <div className="hidden lg:block">
+        <div className="grid grid-cols-5 gap-6">
+          {columns.map((column, index) => {
+            const Icon = column.icon
+            
+            return (
+              <div key={index} className="flex flex-col h-fit">
+                <Card className={`${column.bgColor} border-0 shadow-md flex-1`}>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center justify-between text-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-4 h-4 rounded-full ${column.color}`}></div>
+                        <span className={`font-semibold ${column.textColor}`}>{column.title}</span>
+                      </div>
+                      <Badge variant="secondary" className="bg-white/80 text-gray-700 text-sm">
+                        {column.count}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 flex-1">
+                    <div className="space-y-4 min-h-[600px]">
+                      {column.tasks.length === 0 ? (
+                        <div className="text-center py-12 text-gray-500">
+                          <Icon className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                          <p className="text-base">No tasks</p>
+                        </div>
+                      ) : (
+                        column.tasks.map((task) => (
+                          <EnhancedTaskCard key={task.id} task={task} />
+                        ))
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* Upload Modal */}

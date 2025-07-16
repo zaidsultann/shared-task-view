@@ -193,51 +193,52 @@ const Dashboard = ({ user }: DashboardProps) => {
         </p>
       </div>
 
-      {/* Action Buttons Row - Mobile Optimized */}
+      {/* Action Buttons Row - Desktop Optimized */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2 lg:gap-4">
-          <div className="flex items-center gap-2 text-xs lg:text-sm text-muted-foreground">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+        <div className="flex flex-wrap items-center gap-2 lg:gap-6">
+          <div className="flex items-center gap-2 text-xs lg:text-base text-muted-foreground">
+            <div className="w-2 h-2 lg:w-3 lg:h-3 rounded-full bg-green-500"></div>
             <span>{stats.open} Open</span>
           </div>
-          <div className="flex items-center gap-2 text-xs lg:text-sm text-muted-foreground">
-            <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+          <div className="flex items-center gap-2 text-xs lg:text-base text-muted-foreground">
+            <div className="w-2 h-2 lg:w-3 lg:h-3 rounded-full bg-amber-500"></div>
             <span>{stats.inProgress} In Progress</span>
           </div>
-          <div className="flex items-center gap-2 text-xs lg:text-sm text-muted-foreground">
-            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+          <div className="flex items-center gap-2 text-xs lg:text-base text-muted-foreground">
+            <div className="w-2 h-2 lg:w-3 lg:h-3 rounded-full bg-blue-500"></div>
             <span>{stats.completed} Completed</span>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1 lg:gap-2">
+        <div className="flex flex-wrap items-center gap-1 lg:gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={fetchTasks}
-            className="h-7 lg:h-8 px-2 lg:px-3"
+            className="h-7 lg:h-10 px-2 lg:px-4"
           >
             <RefreshCw className="h-3 w-3 lg:h-4 lg:w-4" />
+            <span className="hidden lg:inline lg:ml-2">Refresh</span>
           </Button>
           
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowHistoryModal(true)}
-            className="h-7 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm"
+            className="h-7 lg:h-10 px-2 lg:px-4 text-xs lg:text-sm"
           >
-            <History className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
-            <span className="hidden lg:inline">History</span>
+            <History className="h-3 w-3 lg:h-4 lg:w-4" />
+            <span className="hidden lg:inline lg:ml-2">History</span>
           </Button>
           
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowArchiveModal(true)}
-            className="h-7 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm"
+            className="h-7 lg:h-10 px-2 lg:px-4 text-xs lg:text-sm"
           >
-            <Archive className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
-            <span className="hidden lg:inline">Archive ({stats.archived})</span>
+            <Archive className="h-3 w-3 lg:h-4 lg:w-4" />
+            <span className="hidden lg:inline lg:ml-2">Archive ({stats.archived})</span>
             <span className="lg:hidden">({stats.archived})</span>
           </Button>
           
@@ -246,19 +247,19 @@ const Dashboard = ({ user }: DashboardProps) => {
             size="sm"
             onClick={handleClearHistory}
             disabled={tasks.filter(task => task.is_deleted).length === 0}
-            className="h-7 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm"
+            className="h-7 lg:h-10 px-2 lg:px-4 text-xs lg:text-sm"
           >
-            <Trash2 className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
-            <span className="hidden lg:inline">Clear Deleted</span>
+            <Trash2 className="h-3 w-3 lg:h-4 lg:w-4" />
+            <span className="hidden lg:inline lg:ml-2">Clear Deleted</span>
           </Button>
           
           <Button
             onClick={() => setShowCreateModal(true)}
             size="sm"
-            className="h-7 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm"
+            className="h-7 lg:h-10 px-2 lg:px-4 text-xs lg:text-sm font-medium"
           >
-            <Plus className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
-            <span className="hidden lg:inline">New Task</span>
+            <Plus className="h-3 w-3 lg:h-4 lg:w-4" />
+            <span className="hidden lg:inline lg:ml-2">New Task</span>
             <span className="lg:hidden">New</span>
           </Button>
         </div>
