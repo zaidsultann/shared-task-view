@@ -13,7 +13,9 @@ import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { tasks as tasksApi } from '@/lib/api'
-import { Circle, Clock, CheckCircle, Bell, Upload, MessageSquare, ThumbsUp, Eye, Building, User, Trash2, RotateCcw } from 'lucide-react'
+import { Circle, Clock, CheckCircle, Bell, Upload, MessageSquare, ThumbsUp, Eye, Building, User, Trash2, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface EnhancedKanbanBoardProps {
   tasks: Task[]
@@ -30,6 +32,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [revertConfirmTask, setRevertConfirmTask] = useState<Task | null>(null)
+  const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set())
   const { toast } = useToast()
   const { authUser } = useAuth()
 
@@ -273,60 +276,106 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
     });
   };
 
+  const toggleTaskExpansion = (taskId: string) => {
+    const newExpanded = new Set(expandedTasks)
+    if (newExpanded.has(taskId)) {
+      newExpanded.delete(taskId)
+    } else {
+      newExpanded.add(taskId)
+    }
+    setExpandedTasks(newExpanded)
+  }
+
   const EnhancedTaskCard = ({ task }: { task: Task }) => {
+    const isExpanded = expandedTasks.has(task.id)
+    
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 hover:shadow-md transition-shadow">
-        {/* Header with icon and status */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Building className="h-4 w-4 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 text-sm">
-                {task.business_name}
-              </h3>
-              <p className="text-xs text-gray-500">
-                Created by {task.created_by}
-              </p>
-            </div>
-          </div>
-        </div>
+      <TooltipProvider>
+        <Collapsible open={isExpanded} onOpenChange={() => toggleTaskExpansion(task.id)}>
+          <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+            {/* Collapsible Header */}
+            <CollapsibleTrigger className="w-full p-3 text-left">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Building className="h-3 w-3 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 text-sm">
+                      {task.business_name}
+                    </h3>
+                    <p className="text-xs text-gray-500 truncate">
+                      {task.brief.slice(0, 50)}...
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {task.status === 'completed' && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setRevertConfirmTask(task)
+                          }}
+                          className="h-6 w-6 p-0 text-orange-600 hover:bg-orange-50"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Revert Task</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  )}
+                </div>
+              </div>
+            </CollapsibleTrigger>
 
-        {/* Task brief */}
-        <div className="text-sm text-gray-700">
-          {task.brief}
-        </div>
+            {/* Collapsible Content */}
+            <CollapsibleContent>
+              <div className="px-3 pb-3 space-y-3 border-t">
+                {/* Task brief */}
+                <div className="text-sm text-gray-700 pt-3">
+                  {task.brief}
+                </div>
 
-        {/* Task details with icons */}
-        <div className="space-y-1 text-xs text-gray-500">
-          <div className="flex items-center gap-2">
-            <User className="h-3 w-3" />
-            <span>Created by {task.created_by}</span>
-          </div>
-          
-          {task.taken_by && (
-            <div className="flex items-center gap-2">
-              <User className="h-3 w-3" />
-              <span>Claimed by {task.taken_by}</span>
-            </div>
-          )}
-          
-          <div className="flex items-center gap-2">
-            <Clock className="h-3 w-3" />
-            <span>Created {formatDate(task.created_at)}</span>
-          </div>
-          
-          {task.completed_at && (
-            <div className="flex items-center gap-2">
-              <Clock className="h-3 w-3" />
-              <span>Completed {formatDate(task.completed_at)}</span>
-            </div>
-          )}
-        </div>
+                {/* Task details with icons */}
+                <div className="space-y-1 text-xs text-gray-500">
+                  <div className="flex items-center gap-2">
+                    <User className="h-3 w-3" />
+                    <span>Created by {task.created_by}</span>
+                  </div>
+                  
+                  {task.taken_by && (
+                    <div className="flex items-center gap-2">
+                      <User className="h-3 w-3" />
+                      <span>Claimed by {task.taken_by}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    <span>Created {formatDate(task.created_at)}</span>
+                  </div>
+                  
+                  {task.completed_at && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3 w-3" />
+                      <span>Completed {formatDate(task.completed_at)}</span>
+                    </div>
+                  )}
+                 </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-2">
+                {/* Action buttons */}
+                <div className="flex gap-2">
           {task.status === 'open' && (
             <>
               <Button
@@ -463,30 +512,22 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
             </div>
           )}
 
-          {task.status === 'completed' && (
-            <div className="flex gap-2 w-full">
-              {task.current_file_url && (
-                <Button
-                  variant="outline"
-                  onClick={() => window.open(task.current_file_url, '_blank')}
-                  className="flex-1 text-sm h-9"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => setRevertConfirmTask(task)}
-                className="flex-1 text-sm h-9 text-orange-600 border-orange-200 hover:bg-orange-50"
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Revert
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
+          {task.status === 'completed' && task.current_file_url && (
+            <Button
+              variant="outline"
+              onClick={() => window.open(task.current_file_url, '_blank')}
+              className="w-full text-sm h-9"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+           )}
+                </div>
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+      </TooltipProvider>
     )
   }
 
@@ -517,7 +558,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
               </div>
 
               {/* Tasks */}
-              <div className="space-y-3 min-h-[300px]">
+              <div className="space-y-3">
                 {column.tasks.length === 0 ? (
                   <div className="bg-muted/30 rounded-lg p-6 text-center border-2 border-dashed">
                     <Icon className="h-8 w-8 text-muted-foreground/50 mx-auto mb-3" />
@@ -526,7 +567,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                  <div className="space-y-3">
                     {column.tasks.map((task) => (
                       <EnhancedTaskCard key={task.id} task={task} />
                     ))}

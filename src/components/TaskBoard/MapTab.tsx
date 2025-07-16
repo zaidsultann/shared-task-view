@@ -11,6 +11,7 @@ import { ExternalLink, MapPin } from 'lucide-react'
 import { Task } from '@/types/Task'
 import { tasks as tasksApi } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
+import useRealtimeTasks from '@/hooks/useRealtimeTasks'
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -226,6 +227,9 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
   const [modalOpen, setModalOpen] = useState(false)
   const { toast } = useToast()
 
+  // Set up real-time updates
+  useRealtimeTasks()
+
   // Filter tasks for map display - only completed tasks with addresses, exclude green/gray statuses
   const mapTasks = tasks.filter(task => 
     task.status === 'completed' &&
@@ -284,7 +288,12 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
   }
 
   const handleTaskUpdate = (updatedTask: Task) => {
+    // Update the map markers in real-time
     onTaskUpdate()
+    
+    // Also close the modal and refresh the current view
+    setModalOpen(false)
+    setSelectedTask(null)
   }
 
   // Initialize map
@@ -356,7 +365,7 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
             <h3 style="font-weight: 600; margin: 0 0 4px 0; font-size: 14px; color: #1a1a1a;">${task.business_name}</h3>
             <button onclick="window.dispatchEvent(new CustomEvent('taskClick', { detail: '${task.id}' }))" 
                     style="width: 100%; padding: 6px 10px; font-size: 11px; background: #000; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
-              View
+              View Details
             </button>
           </div>
         `, {
