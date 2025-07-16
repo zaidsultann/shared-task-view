@@ -144,9 +144,26 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
               }}
             >
               <SelectTrigger className="h-12">
-                <SelectValue />
+                <SelectValue placeholder="Select status">
+                  {editedTask?.map_status ? (
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ 
+                          backgroundColor: statusOptions.find(opt => opt.value === editedTask.map_status)?.color === 'yellow' ? '#eab308' : 
+                                         statusOptions.find(opt => opt.value === editedTask.map_status)?.color === 'blue' ? '#3b82f6' :
+                                         statusOptions.find(opt => opt.value === editedTask.map_status)?.color === 'gray' ? '#6b7280' : 
+                                         statusOptions.find(opt => opt.value === editedTask.map_status)?.color === 'green' ? '#22c55e' : '#ef4444'
+                        }}
+                      />
+                      <span>{statusOptions.find(opt => opt.value === editedTask.map_status)?.label}</span>
+                    </div>
+                  ) : (
+                    "Select status"
+                  )}
+                </SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[10000]">
                 {statusOptions.map(option => (
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center gap-3 py-1">
