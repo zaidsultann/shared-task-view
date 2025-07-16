@@ -91,8 +91,11 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
   ]
 
   const handleClaimTask = async (task: Task) => {
+    console.log('EnhancedKanbanBoard: handleClaimTask called with task:', task.id)
+    console.log('EnhancedKanbanBoard: Current user info:', { currentUser, currentUsername })
+    
     try {
-      console.log('EnhancedKanbanBoard: Claiming task:', task.id)
+      console.log('EnhancedKanbanBoard: About to call tasksApi.claim...')
       await tasksApi.claim(task.id)
       console.log('EnhancedKanbanBoard: Task claimed successfully, calling onUpdate...')
 
