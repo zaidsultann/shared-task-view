@@ -571,29 +571,32 @@ export const tasks = {
       }
     }
 
-    // Get current task
+    // Get current task to determine version
     const { data: currentTask, error: fetchError } = await supabase
       .from('tasks')
-      .select('feedback, version_number')
+      .select('version_number')
       .eq('id', taskId)
       .single()
 
     if (fetchError) throw fetchError
 
-    const currentFeedback = (currentTask.feedback as unknown as FeedbackItem[]) || []
-    const newFeedback: FeedbackItem = {
-      user: username,
-      comment,
-      version: version || currentTask?.version_number || 1,
-      created_at: Date.now()
-    }
+    const feedbackVersion = version || currentTask?.version_number || 1
 
+    // Use the database function to add feedback safely
+    const { error: feedbackError } = await supabase.rpc('add_task_feedback', {
+      task_id_param: taskId,
+      comment_param: comment,
+      user_param: username,
+      version_param: feedbackVersion
+    })
+
+    if (feedbackError) throw feedbackError
+
+    // Update task status separately
     const { data, error } = await supabase
       .from('tasks')
       .update({
         status: 'feedback_needed',
-        has_feedback: true,
-        feedback: [...currentFeedback, newFeedback] as any,
         updated_at: new Date().toISOString()
       })
       .eq('id', taskId)
