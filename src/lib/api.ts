@@ -212,6 +212,7 @@ export const tasks = {
 
     console.log('API: Claiming task:', { taskId, username, userId })
 
+    // Try with different approach for mock users
     const { data, error } = await supabase
       .from('tasks')
       .update({

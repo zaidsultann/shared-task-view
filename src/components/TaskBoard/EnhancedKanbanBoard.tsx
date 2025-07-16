@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { tasks as tasksApi } from '@/lib/api'
-import { Circle, Clock, CheckCircle, Bell, Upload, MessageSquare, ThumbsUp, Eye, Building, User } from 'lucide-react'
+import { Circle, Clock, CheckCircle, Bell, Upload, MessageSquare, ThumbsUp, Eye, Building, User, Trash2, RotateCcw } from 'lucide-react'
 
 interface EnhancedKanbanBoardProps {
   tasks: Task[]
@@ -204,6 +204,53 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
     }
   }
 
+  const handleDeleteTask = async (task: Task) => {
+    try {
+      console.log('EnhancedKanbanBoard: Deleting task:', task.id)
+      await tasksApi.delete(task.id)
+      console.log('EnhancedKanbanBoard: Task deleted successfully, calling onUpdate...')
+
+      toast({
+        title: "Task deleted",
+        description: "Task has been moved to deleted",
+      })
+
+      // Force immediate refresh
+      await onUpdate()
+      console.log('EnhancedKanbanBoard: onUpdate completed after delete')
+    } catch (error) {
+      console.error('EnhancedKanbanBoard: Error deleting task:', error)
+      toast({
+        title: "Error",
+        description: "Failed to delete task",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleRevertTask = async (task: Task) => {
+    try {
+      console.log('EnhancedKanbanBoard: Reverting task:', task.id)
+      await tasksApi.revert(task.id)
+      console.log('EnhancedKanbanBoard: Task reverted successfully, calling onUpdate...')
+
+      toast({
+        title: "Task reverted",
+        description: "Task moved back to open",
+      })
+
+      // Force immediate refresh
+      await onUpdate()
+      console.log('EnhancedKanbanBoard: onUpdate completed after revert')
+    } catch (error) {
+      console.error('EnhancedKanbanBoard: Error reverting task:', error)
+      toast({
+        title: "Error",
+        description: "Failed to revert task",
+        variant: "destructive",
+      })
+    }
+  }
   const formatDate = (dateString: string | number) => {
     const date = typeof dateString === 'string' ? new Date(dateString) : new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -269,25 +316,53 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
         {/* Action buttons */}
         <div className="flex gap-2">
           {task.status === 'open' && (
-            <Button
-              onClick={() => handleClaimTask(task)}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9"
-            >
-              Claim Task
-            </Button>
+            <>
+              <Button
+                onClick={() => handleClaimTask(task)}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9"
+              >
+                Claim Task
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeleteTask(task)}
+                className="h-9 px-3"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </>
           )}
           
           {(task.status === 'in_progress_no_file' && task.taken_by === currentUsername) && (
-            <Button
-              onClick={() => {
-                setSelectedTask(task)
-                setShowUploadModal(true)
-              }}
-              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Upload
-            </Button>
+            <div className="flex gap-2 w-full">
+              <Button
+                onClick={() => {
+                  setSelectedTask(task)
+                  setShowUploadModal(true)
+                }}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleRevertTask(task)}
+                className="h-9 px-3"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeleteTask(task)}
+                className="h-9 px-3"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           )}
           
           {(task.status === 'in_progress_with_file' || task.status === 'awaiting_approval') && (
@@ -319,6 +394,14 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
               >
                 <ThumbsUp className="h-4 w-4 mr-2" />
                 Approve
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeleteTask(task)}
+                className="h-9 px-3"
+              >
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           )}
