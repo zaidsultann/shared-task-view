@@ -325,16 +325,11 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                     <h3 className="font-semibold text-gray-900 text-base leading-tight mb-1">
                       {task.business_name}
                     </h3>
-                    <p className="text-sm text-gray-600 line-clamp-1 mb-2">
+                    <p className="text-sm text-gray-600 line-clamp-1 mb-1">
                       {task.brief.slice(0, 60)}...
                     </p>
                     <div className="flex items-center gap-2 text-xs text-gray-500">
                       <span>Created by {task.created_by}</span>
-                      {task.taken_by && <span>• Claimed by {task.taken_by}</span>}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-                      <Clock className="h-3 w-3" />
-                      <span>Created {formatDate(task.created_at)}</span>
                     </div>
                   </div>
                 </div>
@@ -597,8 +592,9 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
   }
 
   return (
-    <div className="w-full p-6 bg-gray-50">
-      <div className="space-y-8">
+    <div className="w-full">
+      {/* Mobile Layout - Vertical stacking */}
+      <div className="lg:hidden space-y-6 p-4">
         {columns.map((column) => {
           const Icon = column.icon
           
@@ -610,7 +606,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                   <Icon className="h-4 w-4 text-white" />
                 </div>
                 <h2 className="font-semibold text-gray-900 text-lg">{column.title}</h2>
-                <span className="text-sm text-gray-500">{column.count} tasks</span>
+                <span className="text-sm text-gray-500">{column.count}</span>
               </div>
 
               {/* Individual Task Cards */}
@@ -629,6 +625,40 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
             </div>
           )
         })}
+      </div>
+
+      {/* Desktop Layout - Vertical Columns */}
+      <div className="hidden lg:block p-6">
+        <div className="grid grid-cols-5 gap-6">
+          {columns.map((column) => {
+            const Icon = column.icon
+            
+            return (
+              <div key={column.title} className="flex flex-col space-y-4">
+                {/* Simple Column Header */}
+                <div className="flex items-center gap-2 px-2">
+                  <div className={`w-5 h-5 rounded-full ${column.color}`}></div>
+                  <h3 className="font-semibold text-gray-900">{column.title}</h3>
+                  <span className="text-sm text-gray-500">{column.count}</span>
+                </div>
+
+                {/* Tasks Column */}
+                <div className="space-y-3 min-h-[600px]">
+                  {column.tasks.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <Icon className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No tasks</p>
+                    </div>
+                  ) : (
+                    column.tasks.map((task) => (
+                      <EnhancedTaskCard key={task.id} task={task} />
+                    ))
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {/* Upload Modal */}
