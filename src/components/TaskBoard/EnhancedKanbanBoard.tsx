@@ -372,43 +372,52 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
           )}
           
           {(task.status === 'in_progress_with_file' || task.status === 'awaiting_approval') && (
-            <div className="flex gap-2 w-full">
+            <div className="space-y-2 w-full">
+              {/* Top row: View File button */}
               {task.current_file_url && (
                 <Button
                   variant="outline"
                   onClick={() => window.open(task.current_file_url, '_blank')}
-                  className="flex-1 text-sm h-9"
+                  className="w-full text-sm h-9"
                 >
                   <Eye className="h-4 w-4 mr-2" />
-                  View
+                  View File
                 </Button>
               )}
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSelectedTask(task)
-                  setShowFeedbackModal(true)
-                }}
-                className="flex-1 text-sm h-9"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Feedback
-              </Button>
-              <Button
-                onClick={() => handleApproveTask(task)}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9"
-              >
-                <ThumbsUp className="h-4 w-4 mr-2" />
-                Approve
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleDeleteTask(task)}
-                className="h-9 px-3"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              
+              {/* Bottom row: Action buttons */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedTask(task)
+                    setShowFeedbackModal(true)
+                  }}
+                  className="flex-1 text-sm h-9"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Feedback
+                </Button>
+                
+                {task.status === 'awaiting_approval' && (
+                  <Button
+                    onClick={() => handleApproveTask(task)}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9"
+                  >
+                    <ThumbsUp className="h-4 w-4 mr-2" />
+                    Approve
+                  </Button>
+                )}
+                
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteTask(task)}
+                  className="h-9 px-3"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
 
