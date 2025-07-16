@@ -8,16 +8,21 @@ import {
   Download, 
   Trash2, 
   CheckCircle, 
-  PlayCircle, 
   Upload,
   Building,
-  ChevronDown,
+  Bell,
+  Eye,
+  MessageSquare,
+  ThumbsUp,
   Archive,
   Calendar
 } from 'lucide-react';
 import { Task } from '@/types/Task';
-import CompleteTaskModal from './CompleteTaskModal';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 
 interface TaskCardProps {
   task: Task;
@@ -27,9 +32,11 @@ interface TaskCardProps {
 }
 
 const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps) => {
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [feedbackText, setFeedbackText] = useState('');
   const { toast } = useToast();
 
   const handleClaim = async () => {
@@ -39,13 +46,81 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
       
       toast({
         title: "Task claimed!",
-        description: `You are now working on ${task.business_name}`,
+        description: `Task moved to "Needs Upload". You can now upload files.`,
       });
       onUpdate();
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to claim task",
+        variant: "destructive",
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const handleUploadFile = async () => {
+    if (!uploadFile) return;
+    
+    setIsLoading(true);
+    try {
+      await tasksApi.uploadFile(task.id, uploadFile);
+      
+      toast({
+        title: "File uploaded!",
+        description: `Task moved to "Awaiting Approval"`,
+      });
+      setShowUploadModal(false);
+      setUploadFile(null);
+      onUpdate();
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const handleAddFeedback = async () => {
+    if (!feedbackText.trim()) return;
+    
+    setIsLoading(true);
+    try {
+      await tasksApi.addFeedback(task.id, feedbackText.trim());
+      
+      toast({
+        title: "Feedback sent!",
+        description: `Task moved to "Changes Needed"`,
+      });
+      setShowFeedbackModal(false);
+      setFeedbackText('');
+      onUpdate();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send feedback",
+        variant: "destructive",
+      });
+    }
+    setIsLoading(false);
+  };
+
+  const handleApprove = async () => {
+    setIsLoading(true);
+    try {
+      await tasksApi.approveTask(task.id);
+      
+      toast({
+        title: "Task approved!",
+        description: `${task.business_name} has been completed`,
+      });
+      onUpdate();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to approve task",
         variant: "destructive",
       });
     }
@@ -139,33 +214,24 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
     setIsLoading(false);
   };
 
-  const getStatusColor = () => {
+  const getStatusBadge = () => {
     switch (task.status) {
       case 'open':
-        return 'bg-green-500';
-      case 'in_progress':
+        return <Badge className="bg-green-500 text-white">Open</Badge>;
       case 'in_progress_no_file':
+        return <Badge className="bg-orange-500 text-white">Needs Upload</Badge>;
+      case 'in_progress_with_file':
       case 'awaiting_approval':
-        return 'bg-amber-500';
+        return <Badge className="bg-yellow-500 text-white">Awaiting Approval</Badge>;
+      case 'feedback_needed':
+        return <Badge className="bg-red-500 text-white flex items-center gap-1">
+          <Bell className="h-3 w-3" />
+          Changes Needed
+        </Badge>;
       case 'completed':
-        return 'bg-blue-500';
+        return <Badge className="bg-blue-500 text-white">Completed</Badge>;
       default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const getStatusDisplay = () => {
-    switch (task.status) {
-      case 'open':
-        return 'Open';
-      case 'in_progress':
-      case 'in_progress_no_file':
-      case 'awaiting_approval':
-        return 'In Progress';
-      case 'completed':
-        return 'Completed';
-      default:
-        return task.status;
+        return <Badge variant="secondary">{task.status}</Badge>;
     }
   };
 
@@ -197,17 +263,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
               </p>
             </div>
           </div>
-          <Select value={getStatusDisplay()} disabled>
-            <SelectTrigger className={`w-32 h-8 ${getStatusColor()} text-white border-0 focus:ring-0`}>
-              <SelectValue />
-              <ChevronDown className="h-4 w-4 ml-1" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Open">Open</SelectItem>
-              <SelectItem value="In Progress">In Progress</SelectItem>
-              <SelectItem value="Completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
+          {getStatusBadge()}
         </div>
 
         {/* Task brief */}
@@ -242,99 +298,182 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
           )}
         </div>
 
+        {/* Feedback Display for Changes Needed */}
+        {task.status === 'feedback_needed' && task.feedback && task.feedback.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Bell className="h-4 w-4 text-red-600" />
+              <span className="font-medium text-red-800">Feedback Required</span>
+            </div>
+            <p className="text-sm text-red-700">
+              {task.feedback[task.feedback.length - 1]?.comment}
+            </p>
+          </div>
+        )}
+
         {/* Action buttons */}
         <div className="flex gap-2">
+          {/* Open Status - Show Claim Button */}
           {task.status === 'open' && (
-            <>
-              <Button
-                onClick={handleClaim}
-                disabled={isLoading}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-              >
-                Claim Task
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDelete}
-                disabled={isLoading}
-                className="w-10 h-10 p-0"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </>
+            <Button
+              onClick={handleClaim}
+              disabled={isLoading}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            >
+              Claim Task
+            </Button>
           )}
 
-          {(task.status === 'in_progress' || task.status === 'in_progress_no_file') && task.taken_by === currentUser && (
-            <>
-              <Button
-                onClick={() => setShowCompleteModal(true)}
-                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Complete
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleRevert}
-                disabled={isLoading}
-                className="flex-1"
-              >
-                Revert
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDelete}
-                disabled={isLoading}
-                className="w-10 h-10 p-0"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </>
+          {/* Needs Upload - Show Upload Button (only for task owner) */}
+          {task.status === 'in_progress_no_file' && task.taken_by === currentUser && (
+            <Button
+              onClick={() => setShowUploadModal(true)}
+              disabled={isLoading}
+              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload File
+            </Button>
           )}
 
-          {task.status === 'completed' && (
+          {/* Awaiting Approval - Show View, Feedback, and Approve Buttons */}
+          {(task.status === 'in_progress_with_file' || task.status === 'awaiting_approval') && (
             <>
-              {task.zip_url && (
+              {task.current_file_url && (
                 <Button
                   variant="outline"
-                  onClick={handleDownload}
+                  onClick={() => window.open(task.current_file_url, '_blank')}
                   className="flex-1"
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
+                  <Eye className="h-4 w-4 mr-2" />
+                  View File
                 </Button>
               )}
               <Button
                 variant="outline"
-                onClick={handleArchive}
+                onClick={() => setShowFeedbackModal(true)}
                 disabled={isLoading}
                 className="flex-1"
               >
-                <Archive className="h-4 w-4 mr-2" />
-                Archive
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Send Feedback
               </Button>
               <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDelete}
+                onClick={handleApprove}
                 disabled={isLoading}
-                className="w-10 h-10 p-0"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
               >
-                <Trash2 className="h-4 w-4" />
+                <ThumbsUp className="h-4 w-4 mr-2" />
+                Approve
               </Button>
             </>
+          )}
+
+          {/* Changes Needed - Show View and Re-upload (only for task owner) */}
+          {task.status === 'feedback_needed' && (
+            <>
+              {task.current_file_url && (
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(task.current_file_url, '_blank')}
+                  className="flex-1"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View File
+                </Button>
+              )}
+              {task.taken_by === currentUser && (
+                <Button
+                  onClick={() => setShowUploadModal(true)}
+                  disabled={isLoading}
+                  className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Re-upload
+                </Button>
+              )}
+            </>
+          )}
+
+          {/* Completed - Show Download Button */}
+          {task.status === 'completed' && task.current_file_url && (
+            <Button
+              variant="outline"
+              onClick={() => window.open(task.current_file_url, '_blank')}
+              className="flex-1"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
           )}
         </div>
       </div>
 
-      <CompleteTaskModal
-        isOpen={showCompleteModal}
-        onClose={() => setShowCompleteModal(false)}
-        task={task}
-        onComplete={onUpdate}
-      />
+      {/* Upload Modal */}
+      <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload File</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="file-upload">Select File</Label>
+              <Input
+                id="file-upload"
+                type="file"
+                accept=".zip,.rar,.7z"
+                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Upload files for task: {task.business_name}
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowUploadModal(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleUploadFile} 
+                disabled={!uploadFile || isLoading}
+              >
+                {isLoading ? 'Uploading...' : 'Upload'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Feedback Modal */}
+      <Dialog open={showFeedbackModal} onOpenChange={setShowFeedbackModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Feedback</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="feedback">Feedback for: {task.business_name}</Label>
+              <Textarea
+                id="feedback"
+                placeholder="Enter your feedback..."
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowFeedbackModal(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleAddFeedback} 
+                disabled={!feedbackText.trim() || isLoading}
+              >
+                {isLoading ? 'Sending...' : 'Send Feedback'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
