@@ -87,11 +87,11 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-4">
           <DialogTitle className="flex items-center gap-3 text-xl">
             <div 
-              className="w-4 h-4 rounded-full"
+              className="w-4 h-4 rounded-full flex-shrink-0"
               style={{ 
                 backgroundColor: statusOptions.find(opt => opt.value === (editedTask?.map_status || 'pending'))?.color === 'yellow' ? '#eab308' : 
                                statusOptions.find(opt => opt.value === (editedTask?.map_status || 'pending'))?.color === 'blue' ? '#3b82f6' :
@@ -99,7 +99,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
                                statusOptions.find(opt => opt.value === (editedTask?.map_status || 'pending'))?.color === 'green' ? '#22c55e' : '#ef4444'
               }}
             />
-            {task.business_name}
+            <span className="truncate">{task.business_name}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -109,17 +109,17 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-muted-foreground uppercase tracking-wide">Phone</Label>
-                <p className="font-medium">{task.phone || 'Not provided'}</p>
+                <p className="font-medium text-sm">{task.phone || 'Not provided'}</p>
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground uppercase tracking-wide">Status</Label>
-                <p className="font-medium capitalize">{(editedTask?.map_status || 'pending').replace('_', ' ')}</p>
+                <p className="font-medium text-sm capitalize">{(editedTask?.map_status || 'pending').replace('_', ' ')}</p>
               </div>
             </div>
             
             <div>
               <Label className="text-xs text-muted-foreground uppercase tracking-wide">Address</Label>
-              <p className="font-medium text-sm leading-relaxed">{task.address || 'Not provided'}</p>
+              <p className="font-medium text-sm leading-relaxed break-words">{task.address || 'Not provided'}</p>
             </div>
 
             {task.brief && (
@@ -150,7 +150,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }: TaskModalProps) => {
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center gap-3 py-1">
                       <div 
-                        className="w-3 h-3 rounded-full"
+                        className="w-3 h-3 rounded-full flex-shrink-0"
                         style={{ 
                           backgroundColor: option.color === 'yellow' ? '#eab308' : 
                                          option.color === 'blue' ? '#3b82f6' :
@@ -352,19 +352,22 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
         })
 
         marker.bindPopup(`
-          <div style="padding: 8px; min-width: 200px;">
-            <h3 style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">${task.business_name}</h3>
-            <p style="font-size: 12px; color: #666; margin-bottom: 8px;">${task.brief}</p>
-            <p style="font-size: 11px; color: #888; margin-bottom: 8px;">📍 ${task.address}</p>
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <div style="padding: 12px; min-width: 180px; font-family: system-ui;">
+            <h3 style="font-weight: 600; margin: 0 0 8px 0; font-size: 15px; color: #1a1a1a;">${task.business_name}</h3>
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
               <div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${getMarkerColor(task)};"></div>
-              <span style="font-size: 12px; text-transform: capitalize;">${(task.map_status || 'pending').replace('_', ' ')}</span>
+              <span style="font-size: 12px; color: #666; text-transform: capitalize;">${(task.map_status || 'pending').replace('_', ' ')}</span>
             </div>
-            <button onclick="window.dispatchEvent(new CustomEvent('taskClick', { detail: '${task.id}' }))" style="width: 100%; padding: 6px 12px; font-size: 12px; background-color: #000; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
+            <button onclick="window.dispatchEvent(new CustomEvent('taskClick', { detail: '${task.id}' }))" 
+                    style="width: 100%; padding: 8px 12px; font-size: 12px; background: #000; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">
               View Details
             </button>
           </div>
-        `)
+        `, {
+          closeButton: true,
+          maxWidth: 200,
+          className: 'custom-popup'
+        })
 
         marker.addTo(mapInstanceRef.current)
         markersRef.current.push(marker)
