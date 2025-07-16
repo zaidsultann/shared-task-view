@@ -317,70 +317,57 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2">
           {task.status === 'open' && (
-            <div className="flex gap-2 w-full">
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  console.log('🔥 BASIC BUTTON CLICKED! Task:', task.business_name, task.id)
+            <>
+              <Button
+                onClick={() => {
+                  console.log('BUTTON CLICKED! Task:', task.business_name)
                   handleClaimTask(task)
                 }}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9 rounded px-4 py-2 font-medium"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm h-9"
               >
                 Claim Task
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  console.log('🗑️ DELETE CLICKED! Task:', task.business_name)
-                  handleDeleteTask(task)
-                }}
-                className="h-9 px-3 bg-red-600 hover:bg-red-700 text-white rounded"
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeleteTask(task)}
+                className="h-9 px-3"
               >
-                🗑️
-              </button>
-            </div>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </>
           )}
           
           {(task.status === 'in_progress_no_file' && task.taken_by === currentUsername) && (
             <div className="flex gap-2 w-full">
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  console.log('📤 UPLOAD CLICKED!')
+              <Button
+                onClick={() => {
                   setSelectedTask(task)
                   setShowUploadModal(true)
                 }}
-                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9 rounded px-4 py-2"
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
               >
-                📤 Upload
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  console.log('🔄 REVERT CLICKED!')
-                  handleRevertTask(task)
-                }}
-                className="h-9 px-3 bg-gray-500 hover:bg-gray-600 text-white rounded"
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleRevertTask(task)}
+                className="h-9 px-3"
               >
-                🔄
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  console.log('🗑️ DELETE CLICKED!')
-                  handleDeleteTask(task)
-                }}
-                className="h-9 px-3 bg-red-600 hover:bg-red-700 text-white rounded"
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeleteTask(task)}
+                className="h-9 px-3"
               >
-                🗑️
-              </button>
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           )}
           
