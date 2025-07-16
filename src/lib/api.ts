@@ -183,7 +183,10 @@ export const tasks = {
   },
 
   claim: async (taskId: string) => {
+    console.log('API: Starting claim process for task:', taskId)
+    
     const { data: { user } } = await supabase.auth.getUser()
+    console.log('API: Current auth user:', user?.id)
     
     // Get username from auth or mock session
     let username = ''
@@ -198,19 +201,29 @@ export const tasks = {
         .maybeSingle()
       
       username = profile?.username || 'Unknown'
+      console.log('API: Using authenticated user:', { username, userId })
     } else {
       // Use mock session for demo
       const mockSession = localStorage.getItem('mockUserSession')
+      console.log('API: Mock session from storage:', mockSession)
+      
       if (mockSession) {
         const session = JSON.parse(mockSession)
         username = session.username
         userId = session.user_id
+        console.log('API: Using mock session:', { username, userId })
       } else {
+        console.error('API: No authentication found')
         throw new Error('Not authenticated')
       }
     }
 
-    console.log('API: Claiming task:', { taskId, username, userId })
+    console.log('API: About to claim task with data:', {
+      taskId,
+      username,
+      userId,
+      status: 'in_progress_no_file'
+    })
 
     // Try with different approach for mock users
     const { data, error } = await supabase
@@ -226,14 +239,31 @@ export const tasks = {
       .eq('status', 'open')
       .select()
 
-    console.log('API: Claim result:', { data, error })
+    console.log('API: Claim database result:', { 
+      data, 
+      error,
+      dataLength: data?.length,
+      firstResult: data?.[0] 
+    })
+    
     if (error) {
-      console.error('API: Claim failed:', error)
+      console.error('API: Claim failed with error:', error)
       throw error
     }
     
     if (!data || data.length === 0) {
       console.error('API: No task was updated - task may not exist or already claimed')
+      console.log('API: Checking if task exists and is open...')
+      
+      // Debug: Check if task exists and what its current status is
+      const { data: debugData } = await supabase
+        .from('tasks')
+        .select('id, status, taken_by, business_name')
+        .eq('id', taskId)
+        .single()
+      
+      console.log('API: Task debug info:', debugData)
+      
       throw new Error('Failed to claim task - task may not exist or already claimed')
     }
     
