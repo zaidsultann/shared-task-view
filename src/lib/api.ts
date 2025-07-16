@@ -204,18 +204,20 @@ export const tasks = {
       if (mockSession) {
         const session = JSON.parse(mockSession)
         username = session.username
+        userId = session.user_id
       } else {
         throw new Error('Not authenticated')
       }
     }
 
-    console.log('Claiming task:', { taskId, username })
+    console.log('API: Claiming task:', { taskId, username, userId })
 
     const { data, error } = await supabase
       .from('tasks')
       .update({
         status: 'in_progress_no_file',
         taken_by: username,
+        claimed_by: userId,
         claimed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -223,9 +225,19 @@ export const tasks = {
       .eq('status', 'open')
       .select()
 
-    console.log('Claim result:', { data, error })
-    if (error) throw error
-    return data?.[0] || data
+    console.log('API: Claim result:', { data, error })
+    if (error) {
+      console.error('API: Claim failed:', error)
+      throw error
+    }
+    
+    if (!data || data.length === 0) {
+      console.error('API: No task was updated - task may not exist or not in open status')
+      throw new Error('Failed to claim task - task may not exist or already claimed')
+    }
+    
+    console.log('API: Task claimed successfully:', data[0])
+    return data[0]
   },
 
   complete: async (taskId: string, zipFile: File) => {
