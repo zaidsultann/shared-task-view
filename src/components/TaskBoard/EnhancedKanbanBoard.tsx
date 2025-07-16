@@ -588,14 +588,6 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                             </TooltipContent>
                           </Tooltip>
                         )}
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteTask(task)}
-                          className="h-9 px-3"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
                   )}
