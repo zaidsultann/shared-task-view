@@ -597,94 +597,38 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
   }
 
   return (
-    <div className="w-full">
-      {/* Responsive grid: vertical on mobile, horizontal columns on desktop */}
-      <div className="lg:hidden space-y-6">
-        {/* Mobile Layout - Vertical stacking */}
+    <div className="w-full p-6 bg-gray-50">
+      <div className="space-y-8">
         {columns.map((column) => {
           const Icon = column.icon
           
           return (
-            <div key={column.title} className="w-full">
-              {/* Column Header - Mobile */}
-              <div className={`${column.bgColor} rounded-xl p-4 sm:p-6 border mb-5 shadow-sm`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3 sm:space-x-4">
-                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${column.color} shadow-sm`}>
-                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-base sm:text-lg">{column.title}</h3>
-                      <p className="text-sm text-muted-foreground">{column.count} task{column.count !== 1 ? 's' : ''}</p>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className={`${column.textColor} text-sm font-medium px-3 py-1`}>
-                    {column.count}
-                  </Badge>
+            <div key={column.title} className="space-y-4">
+              {/* Simple Header */}
+              <div className="flex items-center gap-3 px-2">
+                <div className={`w-6 h-6 rounded-full ${column.color} flex items-center justify-center`}>
+                  <Icon className="h-4 w-4 text-white" />
                 </div>
+                <h2 className="font-semibold text-gray-900 text-lg">{column.title}</h2>
+                <span className="text-sm text-gray-500">{column.count} tasks</span>
               </div>
 
-              {/* Tasks - Mobile */}
-              <div className="space-y-4">
+              {/* Individual Task Cards */}
+              <div className="space-y-3">
                 {column.tasks.length === 0 ? (
-                  <div className="bg-muted/30 rounded-xl p-6 sm:p-8 text-center border-2 border-dashed">
-                    <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground/50 mx-auto mb-3 sm:mb-4" />
-                    <p className="text-sm sm:text-base text-muted-foreground">
-                      No {column.title.toLowerCase()} tasks
-                    </p>
+                  <div className="text-center py-8 text-gray-500 bg-white rounded-lg border">
+                    <Icon className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">No {column.title.toLowerCase()} tasks</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {column.tasks.map((task) => (
-                      <EnhancedTaskCard key={task.id} task={task} />
-                    ))}
-                  </div>
+                  column.tasks.map((task) => (
+                    <EnhancedTaskCard key={task.id} task={task} />
+                  ))
                 )}
               </div>
             </div>
           )
         })}
-      </div>
-
-      {/* Desktop Layout - Horizontal columns */}
-      <div className="hidden lg:block">
-        <div className="grid grid-cols-5 gap-8">
-          {columns.map((column, index) => {
-            const Icon = column.icon
-            
-            return (
-              <div key={index} className="flex flex-col h-fit">
-                <Card className={`${column.bgColor} border-0 shadow-lg flex-1 rounded-xl`}>
-                  <CardHeader className="pb-5">
-                    <CardTitle className="flex items-center justify-between text-lg">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full ${column.color} shadow-sm`}></div>
-                        <span className={`font-semibold ${column.textColor}`}>{column.title}</span>
-                      </div>
-                      <Badge variant="secondary" className="bg-white/80 text-gray-700 text-sm font-medium px-3 py-1">
-                        {column.count}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 flex-1 px-6">
-                    <div className="space-y-5 min-h-[600px]">
-                      {column.tasks.length === 0 ? (
-                        <div className="text-center py-16 text-gray-500">
-                          <Icon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                          <p className="text-base">No tasks</p>
-                        </div>
-                      ) : (
-                        column.tasks.map((task) => (
-                          <EnhancedTaskCard key={task.id} task={task} />
-                        ))
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )
-          })}
-        </div>
       </div>
 
       {/* Upload Modal */}
