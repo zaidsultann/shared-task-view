@@ -12,11 +12,12 @@ import {
   Upload,
   Building,
   ChevronDown,
-  ChevronUp,
-  Archive
+  Archive,
+  Calendar
 } from 'lucide-react';
 import { Task } from '@/types/Task';
 import CompleteTaskModal from './CompleteTaskModal';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TaskCardProps {
   task: Task;
@@ -137,19 +138,39 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
     setIsLoading(false);
   };
 
-  const getStatusBadge = () => {
+  const getStatusColor = () => {
     switch (task.status) {
       case 'open':
-        return <div className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">Open</div>;
+        return 'bg-green-500';
       case 'in_progress':
-        return <div className="px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">In Progress</div>;
+      case 'in_progress_no_file':
+      case 'awaiting_approval':
+        return 'bg-amber-500';
       case 'completed':
-        return <div className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">Completed</div>;
+        return 'bg-blue-500';
+      default:
+        return 'bg-gray-500';
     }
   };
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
+  const getStatusDisplay = () => {
+    switch (task.status) {
+      case 'open':
+        return 'Open';
+      case 'in_progress':
+      case 'in_progress_no_file':
+      case 'awaiting_approval':
+        return 'In Progress';
+      case 'completed':
+        return 'Completed';
+      default:
+        return task.status;
+    }
+  };
+
+  const formatDate = (dateString: string | number) => {
+    const date = typeof dateString === 'string' ? new Date(dateString) : new Date(dateString);
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -159,151 +180,152 @@ const TaskCard = ({ task, currentUser, onUpdate }: TaskCardProps) => {
 
   return (
     <>
-      <div className="bg-gradient-card rounded-xl shadow-soft border border-white/20 hover-lift transition-all duration-300">
-        {/* Compact Header */}
-        <div 
-          className="p-4 cursor-pointer hover:bg-white/30 transition-colors rounded-t-xl"
-          onClick={() => setIsExpanded(!isExpanded)}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 flex-1 min-w-0">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                <Building className="h-4 w-4 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground truncate">
-                  {task.business_name}
-                </h3>
-                <p className="text-sm text-muted-foreground truncate">
-                  Created by {task.created_by}
-                </p>
-              </div>
-              {getStatusBadge()}
+      <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4 hover:shadow-md transition-shadow">
+        {/* Header with icon and status */}
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Building className="h-4 w-4 text-blue-600" />
             </div>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0 ml-2">
-              {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Expandable Content */}
-        {isExpanded && (
-          <div className="px-4 pb-4 space-y-4 border-t border-white/10">
-            {/* Task Brief */}
-            <div className="bg-white/50 rounded-lg p-3 border border-white/20">
-              <p className="text-sm text-foreground leading-relaxed">
-                {task.brief}
+            <div>
+              <h3 className="font-semibold text-gray-900">
+                {task.business_name}
+              </h3>
+              <p className="text-sm text-gray-500">
+                Created by {task.created_by}
               </p>
             </div>
+          </div>
+          <Select value={getStatusDisplay()} disabled>
+            <SelectTrigger className={`w-32 h-8 ${getStatusColor()} text-white border-0 focus:ring-0`}>
+              <SelectValue />
+              <ChevronDown className="h-4 w-4 ml-1" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Open">Open</SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
+              <SelectItem value="Completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-            {/* Task Info */}
-            <div className="space-y-2 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <User className="h-3 w-3" />
-                <span>Created by {task.created_by}</span>
-              </div>
-              
-              {task.taken_by && (
-                <div className="flex items-center gap-2">
-                  <PlayCircle className="h-3 w-3" />
-                  <span>Claimed by {task.taken_by}</span>
-                </div>
-              )}
-              
-              <div className="flex items-center gap-2">
-                <Clock className="h-3 w-3" />
-                <span>Created {formatDate(task.created_at)}</span>
-              </div>
-              
-              {task.completed_at && (
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-3 w-3" />
-                  <span>Completed {formatDate(task.completed_at)}</span>
-                </div>
-              )}
+        {/* Task brief */}
+        <div className="text-sm text-gray-700">
+          {task.brief}
+        </div>
+
+        {/* Task details with icons */}
+        <div className="space-y-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2">
+            <User className="h-3 w-3" />
+            <span>Created by {task.created_by}</span>
+          </div>
+          
+          {task.taken_by && (
+            <div className="flex items-center gap-2">
+              <User className="h-3 w-3" />
+              <span>Claimed by {task.taken_by}</span>
             </div>
+          )}
+          
+          <div className="flex items-center gap-2">
+            <Calendar className="h-3 w-3" />
+            <span>Created {formatDate(task.created_at)}</span>
+          </div>
+          
+          {task.completed_at && (
+            <div className="flex items-center gap-2">
+              <Calendar className="h-3 w-3" />
+              <span>Completed {formatDate(task.completed_at)}</span>
+            </div>
+          )}
+        </div>
 
-            {/* Actions */}
-            <div className="flex gap-2 pt-3 border-t border-white/10">
-              {task.status === 'open' && (
-                <Button
-                  variant="success"
-                  size="sm"
-                  onClick={handleClaim}
-                  disabled={isLoading}
-                  className="flex-1 hover-lift"
-                >
-                  <PlayCircle className="h-3 w-3" />
-                  Claim Task
-                </Button>
-              )}
-
-              {task.status === 'in_progress' && task.taken_by === currentUser && (
-                <>
-                  <Button
-                    variant="warning"
-                    size="sm"
-                    onClick={() => setShowCompleteModal(true)}
-                    className="flex-1 hover-lift"
-                  >
-                    <Upload className="h-3 w-3" />
-                    Complete
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRevert}
-                    disabled={isLoading}
-                    className="flex-1 hover-lift"
-                  >
-                    <PlayCircle className="h-3 w-3" />
-                    Revert
-                  </Button>
-                </>
-              )}
-
-              {task.status === 'completed' && (
-                <div className="flex gap-2 flex-1">
-                  {task.zip_url && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDownload}
-                      className="flex-1 hover-lift"
-                    >
-                      <Download className="h-3 w-3" />
-                      Download
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleArchive}
-                    disabled={isLoading}
-                    className="flex-1 hover-lift"
-                  >
-                    <Archive className="h-3 w-3" />
-                    Archive
-                  </Button>
-                </div>
-              )}
-
+        {/* Action buttons */}
+        <div className="flex gap-2">
+          {task.status === 'open' && (
+            <>
+              <Button
+                onClick={handleClaim}
+                disabled={isLoading}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              >
+                Claim Task
+              </Button>
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={handleDelete}
                 disabled={isLoading}
-                className="hover-lift"
+                className="w-10 h-10 p-0"
               >
-                <Trash2 className="h-3 w-3" />
+                <Trash2 className="h-4 w-4" />
               </Button>
-            </div>
-          </div>
-        )}
+            </>
+          )}
+
+          {(task.status === 'in_progress' || task.status === 'in_progress_no_file') && task.taken_by === currentUser && (
+            <>
+              <Button
+                onClick={() => setShowCompleteModal(true)}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Complete
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleRevert}
+                disabled={isLoading}
+                className="flex-1"
+              >
+                Revert
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDelete}
+                disabled={isLoading}
+                className="w-10 h-10 p-0"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+
+          {task.status === 'completed' && (
+            <>
+              {task.zip_url && (
+                <Button
+                  variant="outline"
+                  onClick={handleDownload}
+                  className="flex-1"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={handleArchive}
+                disabled={isLoading}
+                className="flex-1"
+              >
+                <Archive className="h-4 w-4 mr-2" />
+                Archive
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDelete}
+                disabled={isLoading}
+                className="w-10 h-10 p-0"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <CompleteTaskModal
