@@ -775,7 +775,7 @@ export const tasks = {
       .from('tasks')
       .update({
         status: 'completed',
-        approved_by: username,
+        approved_by: userId, // Use userId instead of username for the UUID field
         approved_at: new Date().toISOString(),
         completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
