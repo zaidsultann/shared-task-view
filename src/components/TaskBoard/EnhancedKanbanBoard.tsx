@@ -754,36 +754,93 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
       {/* View Feedback Modal */}
       <Dialog open={showViewFeedbackModal} onOpenChange={setShowViewFeedbackModal}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Feedback for: {selectedTask?.business_name}</DialogTitle>
+            <DialogTitle>Version History - {selectedTask?.business_name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {selectedTask?.feedback && selectedTask.feedback.length > 0 ? (
-              <div className="max-h-[400px] overflow-y-auto space-y-3">
-                {selectedTask.feedback.map((feedbackItem, index) => (
-                  <div key={index} className="bg-gray-50 p-4 rounded-lg border">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="font-medium text-sm text-gray-700">
-                        {feedbackItem.user}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {formatDate(feedbackItem.created_at)}
-                      </span>
+            {selectedTask?.versions && selectedTask.versions.length > 0 ? (
+              <div className="max-h-[500px] overflow-y-auto space-y-4">
+                {selectedTask.versions.map((version, index) => {
+                  // Find feedback for this version
+                  const versionFeedback = selectedTask.feedback?.filter(f => f.version === version.version) || []
+                  
+                  return (
+                    <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                      {/* Version Header */}
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-semibold text-lg text-gray-900">
+                          Version {version.version}
+                        </h4>
+                        <span className="text-sm text-gray-500">
+                          {formatDate(version.uploaded_at)}
+                        </span>
+                      </div>
+                      
+                      {/* File Info */}
+                      <div className="bg-white rounded-lg p-3 mb-3 border">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <Eye className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">Uploaded File</p>
+                              <p className="text-xs text-gray-500">
+                                By {version.uploaded_by || 'Unknown'}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(version.url, '_blank')}
+                            className="h-8"
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            View
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Feedback for this version */}
+                      {versionFeedback.length > 0 ? (
+                        <div className="space-y-2">
+                          <h5 className="font-medium text-sm text-gray-700">Feedback:</h5>
+                          {versionFeedback.map((feedback, feedbackIndex) => (
+                            <div key={feedbackIndex} className="bg-red-50 border-l-4 border-red-200 p-3 rounded">
+                              <div className="flex justify-between items-start mb-1">
+                                <span className="font-medium text-sm text-red-800">
+                                  {feedback.user}
+                                </span>
+                                <span className="text-xs text-red-600">
+                                  {formatDate(feedback.created_at)}
+                                </span>
+                              </div>
+                              <p className="text-sm text-red-700">{feedback.comment}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="bg-green-50 border-l-4 border-green-200 p-3 rounded">
+                          <p className="text-sm text-green-700 font-medium">
+                            ✅ No feedback - Version approved
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-900">{feedbackItem.comment}</p>
-                    {feedbackItem.version && (
-                      <span className="text-xs text-gray-500 mt-2 block">
-                        Version: {feedbackItem.version}
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-4">No feedback available</p>
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+                  <Eye className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="text-gray-500">No version history available</p>
+              </div>
             )}
-            <div className="flex justify-end">
+            <div className="flex justify-end pt-4 border-t">
               <Button onClick={() => setShowViewFeedbackModal(false)}>
                 Close
               </Button>
