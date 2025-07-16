@@ -45,6 +45,7 @@ export type Database = {
           approved_by: string | null
           brief: string
           business_name: string
+          claimed_at: string | null
           claimed_by: string | null
           completed_at: string | null
           created_at: string
@@ -73,6 +74,7 @@ export type Database = {
           approved_by?: string | null
           brief: string
           business_name: string
+          claimed_at?: string | null
           claimed_by?: string | null
           completed_at?: string | null
           created_at?: string
@@ -101,6 +103,7 @@ export type Database = {
           approved_by?: string | null
           brief?: string
           business_name?: string
+          claimed_at?: string | null
           claimed_by?: string | null
           completed_at?: string | null
           created_at?: string
@@ -141,13 +144,6 @@ export type Database = {
           {
             foreignKeyName: "tasks_created_by_fkey"
             columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "tasks_taken_by_fkey"
-            columns: ["taken_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
