@@ -317,42 +317,44 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
             {/* Collapsible Header */}
             <CollapsibleTrigger className="w-full p-4 text-left hover:bg-gray-50/50 transition-colors flex items-center">
               <div className="flex items-center justify-between w-full">
-                <div className="flex items-start space-x-3 min-w-0 flex-1">
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Building className="h-5 w-5 text-blue-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-gray-900 text-base leading-tight mb-1">
+                    <h3 className="font-semibold text-gray-900 text-base leading-tight">
                       {task.business_name}
                     </h3>
-                    <p className="text-sm text-gray-600 line-clamp-1 mb-1">
-                      {task.brief.slice(0, 60)}...
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span>Created by {task.created_by}</span>
-                    </div>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   {/* Only show map status for completed tasks */}
                   {task.status === 'completed' && task.map_status && (
                     <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium" style={{
-                      backgroundColor: task.map_status === 'green' ? '#dcfce7' :
+                      backgroundColor: task.map_status === 'blue' ? '#dbeafe' :
                                      task.map_status === 'yellow' ? '#fef3c7' :
-                                     task.map_status === 'red' ? '#fee2e2' : '#f3f4f6',
-                      color: task.map_status === 'green' ? '#166534' :
+                                     task.map_status === 'red' ? '#fee2e2' :
+                                     task.map_status === 'green' ? '#dcfce7' :
+                                     task.map_status === 'gray' ? '#f3f4f6' : '#f3f4f6',
+                      color: task.map_status === 'blue' ? '#1e40af' :
                             task.map_status === 'yellow' ? '#92400e' :
-                            task.map_status === 'red' ? '#991b1b' : '#374151'
+                            task.map_status === 'red' ? '#991b1b' :
+                            task.map_status === 'green' ? '#166534' :
+                            task.map_status === 'gray' ? '#374151' : '#374151'
                     }}>
                       <div className={`w-2 h-2 rounded-full ${
-                        task.map_status === 'green' ? 'bg-green-500' :
+                        task.map_status === 'blue' ? 'bg-blue-500' :
                         task.map_status === 'yellow' ? 'bg-yellow-500' :
                         task.map_status === 'red' ? 'bg-red-500' :
-                        'bg-gray-500'
+                        task.map_status === 'green' ? 'bg-green-500' :
+                        task.map_status === 'gray' ? 'bg-gray-500' :
+                        'bg-gray-400'
                       }`}></div>
-                      {task.map_status === 'green' ? 'Follow Up' :
-                       task.map_status === 'yellow' ? 'Pending' :
-                       task.map_status === 'red' ? 'Not Interested' :
+                      {task.map_status === 'blue' ? 'Follow-up' :
+                       task.map_status === 'yellow' ? 'Payment pending' :
+                       task.map_status === 'red' ? 'Not visited' :
+                       task.map_status === 'green' ? 'Approved' :
+                       task.map_status === 'gray' ? 'Not interested' :
                        'Unknown'}
                     </div>
                   )}
@@ -420,16 +422,20 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                 {task.status === 'completed' && task.map_status && (
                   <div className="flex items-center gap-2 pt-2 border-t">
                     <div className={`w-2 h-2 rounded-full ${
-                      task.map_status === 'green' ? 'bg-green-500' :
+                      task.map_status === 'blue' ? 'bg-blue-500' :
                       task.map_status === 'yellow' ? 'bg-yellow-500' :
                       task.map_status === 'red' ? 'bg-red-500' :
+                      task.map_status === 'green' ? 'bg-green-500' :
+                      task.map_status === 'gray' ? 'bg-gray-500' :
                       'bg-gray-400'
                     }`}></div>
-                    <span className="text-xs text-gray-500 capitalize">
-                      {task.map_status === 'green' ? 'Follow Up Needed' :
-                       task.map_status === 'yellow' ? 'Pending Payment' :
-                       task.map_status === 'red' ? 'Not Interested' :
-                       'Status Unknown'}
+                    <span className="text-xs text-gray-500">
+                      Status: {task.map_status === 'blue' ? 'Follow-up' :
+                               task.map_status === 'yellow' ? 'Payment pending' :
+                               task.map_status === 'red' ? 'Not visited' :
+                               task.map_status === 'green' ? 'Approved' :
+                               task.map_status === 'gray' ? 'Not interested' :
+                               'Unknown'}
                     </span>
                   </div>
                 )}
