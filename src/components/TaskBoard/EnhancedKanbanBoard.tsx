@@ -292,20 +292,20 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
     return (
       <TooltipProvider>
         <Collapsible open={isExpanded} onOpenChange={() => toggleTaskExpansion(task.id)}>
-          <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-200 overflow-hidden">
             {/* Collapsible Header */}
-            <CollapsibleTrigger className="w-full p-3 text-left">
+            <CollapsibleTrigger className="w-full p-4 sm:p-5 text-left hover:bg-gray-50/50 transition-colors">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Building className="h-3 w-3 text-blue-600" />
+                <div className="flex items-center space-x-4 min-w-0 flex-1">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Building className="h-5 w-5 text-blue-600" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-base leading-tight mb-1">
                       {task.business_name}
                     </h3>
-                    <p className="text-xs text-gray-500 truncate">
-                      {task.brief.slice(0, 50)}...
+                    <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                      {task.brief.slice(0, 60)}...
                     </p>
                   </div>
                 </div>
@@ -341,7 +341,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
             {/* Collapsible Content */}
             <CollapsibleContent>
-              <div className="px-3 pb-3 space-y-3 border-t">
+              <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-4 border-t bg-gray-50/30">
                 {/* Task brief */}
                 <div className="text-sm text-gray-700 pt-3">
                   {task.brief}
@@ -560,34 +560,34 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
           return (
             <div key={column.title} className="w-full">
               {/* Column Header - Mobile */}
-              <div className={`${column.bgColor} rounded-lg p-3 sm:p-4 border mb-4`}>
+              <div className={`${column.bgColor} rounded-xl p-4 sm:p-6 border mb-5 shadow-sm`}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center ${column.color}`}>
-                      <Icon className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${column.color} shadow-sm`}>
+                      <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-sm sm:text-base">{column.title}</h3>
-                      <p className="text-xs text-muted-foreground">{column.count} task{column.count !== 1 ? 's' : ''}</p>
+                      <h3 className="font-semibold text-base sm:text-lg">{column.title}</h3>
+                      <p className="text-sm text-muted-foreground">{column.count} task{column.count !== 1 ? 's' : ''}</p>
                     </div>
                   </div>
-                  <Badge variant="secondary" className={`${column.textColor} text-xs sm:text-sm`}>
+                  <Badge variant="secondary" className={`${column.textColor} text-sm font-medium px-3 py-1`}>
                     {column.count}
                   </Badge>
                 </div>
               </div>
 
               {/* Tasks - Mobile */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {column.tasks.length === 0 ? (
-                  <div className="bg-muted/30 rounded-lg p-4 sm:p-6 text-center border-2 border-dashed">
-                    <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/50 mx-auto mb-2 sm:mb-3" />
-                    <p className="text-xs sm:text-sm text-muted-foreground">
+                  <div className="bg-muted/30 rounded-xl p-6 sm:p-8 text-center border-2 border-dashed">
+                    <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground/50 mx-auto mb-3 sm:mb-4" />
+                    <p className="text-sm sm:text-base text-muted-foreground">
                       No {column.title.toLowerCase()} tasks
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {column.tasks.map((task) => (
                       <EnhancedTaskCard key={task.id} task={task} />
                     ))}
@@ -601,29 +601,29 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
       {/* Desktop Layout - Horizontal columns */}
       <div className="hidden lg:block">
-        <div className="grid grid-cols-5 gap-6">
+        <div className="grid grid-cols-5 gap-8">
           {columns.map((column, index) => {
             const Icon = column.icon
             
             return (
               <div key={index} className="flex flex-col h-fit">
-                <Card className={`${column.bgColor} border-0 shadow-md flex-1`}>
-                  <CardHeader className="pb-4">
+                <Card className={`${column.bgColor} border-0 shadow-lg flex-1 rounded-xl`}>
+                  <CardHeader className="pb-5">
                     <CardTitle className="flex items-center justify-between text-lg">
                       <div className="flex items-center gap-3">
-                        <div className={`w-4 h-4 rounded-full ${column.color}`}></div>
+                        <div className={`w-5 h-5 rounded-full ${column.color} shadow-sm`}></div>
                         <span className={`font-semibold ${column.textColor}`}>{column.title}</span>
                       </div>
-                      <Badge variant="secondary" className="bg-white/80 text-gray-700 text-sm">
+                      <Badge variant="secondary" className="bg-white/80 text-gray-700 text-sm font-medium px-3 py-1">
                         {column.count}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-0 flex-1">
-                    <div className="space-y-4 min-h-[600px]">
+                  <CardContent className="pt-0 flex-1 px-6">
+                    <div className="space-y-5 min-h-[600px]">
                       {column.tasks.length === 0 ? (
-                        <div className="text-center py-12 text-gray-500">
-                          <Icon className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                        <div className="text-center py-16 text-gray-500">
+                          <Icon className="h-12 w-12 mx-auto mb-3 opacity-50" />
                           <p className="text-base">No tasks</p>
                         </div>
                       ) : (
