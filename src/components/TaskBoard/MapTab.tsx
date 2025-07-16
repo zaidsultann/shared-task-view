@@ -204,13 +204,24 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
   const mapTasks = tasks.filter(task => 
     task.status === 'completed' &&
     task.address &&
-    task.latitude && 
-    task.longitude && 
     !task.is_deleted && 
     !task.is_archived &&
     // Hide green (approved) and gray (not interested) pins
     !['approved', 'not_interested'].includes(task.map_status || 'pending')
   )
+
+  console.log('MapTab: All tasks count:', tasks.length)
+  console.log('MapTab: Completed tasks:', tasks.filter(t => t.status === 'completed').length)
+  console.log('MapTab: Tasks with addresses:', tasks.filter(t => t.address).length)
+  console.log('MapTab: Tasks with coordinates:', tasks.filter(t => t.latitude && t.longitude).length)
+  console.log('MapTab: Final map tasks:', mapTasks.length, mapTasks.map(t => ({
+    name: t.business_name,
+    address: t.address,
+    lat: t.latitude,
+    lng: t.longitude,
+    status: t.status,
+    mapStatus: t.map_status
+  })))
 
   const getMarkerColor = (task: Task) => {
     const status = task.map_status || 'pending'
@@ -258,12 +269,15 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
     const defaultCenter: [number, number] = [40.7589, -73.9851] // New York City
     
     // Calculate map center based on available tasks
-    const mapCenter: [number, number] = mapTasks.length > 0
+    const mapCenter: [number, number] = mapTasks.length > 0 && mapTasks.some(t => t.latitude && t.longitude)
       ? [
-          mapTasks.reduce((sum, task) => sum + (task.latitude || 0), 0) / mapTasks.length,
-          mapTasks.reduce((sum, task) => sum + (task.longitude || 0), 0) / mapTasks.length
+          mapTasks.filter(t => t.latitude).reduce((sum, task) => sum + (task.latitude || 0), 0) / mapTasks.filter(t => t.latitude).length,
+          mapTasks.filter(t => t.longitude).reduce((sum, task) => sum + (task.longitude || 0), 0) / mapTasks.filter(t => t.longitude).length
         ]
       : defaultCenter
+
+    console.log('MapTab: Map center calculated:', mapCenter)
+    console.log('MapTab: Tasks with coordinates for centering:', mapTasks.filter(t => t.latitude && t.longitude).length)
 
     // Create map
     const map = L.map(mapRef.current).setView(mapCenter, mapTasks.length > 0 ? 10 : 13)
@@ -273,6 +287,8 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map)
+
+    console.log('MapTab: Map initialized with center:', mapCenter)
 
     return () => {
       if (mapInstanceRef.current) {
@@ -293,8 +309,18 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
     markersRef.current = []
 
     // Add new markers
-    mapTasks.forEach(task => {
+    mapTasks.forEach((task, index) => {
+      console.log(`MapTab: Processing task ${index + 1}:`, {
+        name: task.business_name,
+        hasCoordinates: !!(task.latitude && task.longitude),
+        lat: task.latitude,
+        lng: task.longitude,
+        address: task.address
+      })
+
       if (task.latitude && task.longitude) {
+        console.log(`MapTab: Creating marker for ${task.business_name} at [${task.latitude}, ${task.longitude}]`)
+        
         const marker = L.marker([task.latitude, task.longitude], {
           icon: createCustomIcon(getMarkerColor(task))
         })
@@ -303,6 +329,7 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
           <div style="padding: 8px; min-width: 200px;">
             <h3 style="font-weight: bold; margin-bottom: 8px; font-size: 14px;">${task.business_name}</h3>
             <p style="font-size: 12px; color: #666; margin-bottom: 8px;">${task.brief}</p>
+            <p style="font-size: 11px; color: #888; margin-bottom: 8px;">📍 ${task.address}</p>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
               <div style="width: 8px; height: 8px; border-radius: 50%; background-color: ${getMarkerColor(task)};"></div>
               <span style="font-size: 12px; text-transform: capitalize;">${(task.map_status || 'pending').replace('_', ' ')}</span>
@@ -315,8 +342,13 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
 
         marker.addTo(mapInstanceRef.current)
         markersRef.current.push(marker)
+        console.log(`MapTab: Marker added for ${task.business_name}`)
+      } else {
+        console.log(`MapTab: Skipping ${task.business_name} - missing coordinates`)
       }
     })
+
+    console.log(`MapTab: Total markers added: ${markersRef.current.length}`)
   }, [mapTasks])
 
   // Handle task click events from popup
@@ -342,6 +374,11 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
           <h2 className="text-2xl font-bold">Business Map</h2>
           <p className="text-muted-foreground">
             Showing {mapTasks.length} completed businesses requiring follow-up
+            {tasks.filter(t => t.status === 'completed' && t.address && !t.latitude).length > 0 && (
+              <span className="text-orange-600 ml-2">
+                ({tasks.filter(t => t.status === 'completed' && t.address && !t.latitude).length} need geocoding)
+              </span>
+            )}
           </p>
         </div>
         
@@ -358,6 +395,33 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
             <div className="w-3 h-3 rounded-full bg-blue-500" />
             <span>Follow Up</span>
           </div>
+          
+          {/* Geocode button for completed tasks without coordinates */}
+          {tasks.filter(t => t.status === 'completed' && t.address && !t.latitude).length > 0 && (
+            <Button
+              onClick={async () => {
+                const tasksToGeocode = tasks.filter(t => t.status === 'completed' && t.address && !t.latitude)
+                console.log('Geocoding tasks:', tasksToGeocode.length)
+                
+                for (const task of tasksToGeocode) {
+                  try {
+                    console.log('Geocoding:', task.business_name, task.address)
+                    await tasksApi.geocodeTask(task.id, task.address)
+                  } catch (error) {
+                    console.error('Failed to geocode:', task.business_name, error)
+                  }
+                }
+                
+                // Refresh to show new pins
+                setTimeout(() => onTaskUpdate(), 2000)
+              }}
+              variant="outline"
+              size="sm"
+              className="text-orange-600 border-orange-200"
+            >
+              Geocode {tasks.filter(t => t.status === 'completed' && t.address && !t.latitude).length} Addresses
+            </Button>
+          )}
         </div>
       </div>
 

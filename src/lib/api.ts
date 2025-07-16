@@ -866,14 +866,27 @@ export const tasks = {
     return data
   },
 
-  // Add revert functionality
+  // Add revert functionality - send to proper section based on file status
   revertTask: async (taskId: string) => {
     console.log('API: Reverting task:', taskId)
+
+    // First get the current task to check if it has files
+    const { data: currentTask } = await supabase
+      .from('tasks')
+      .select('current_file_url, versions')
+      .eq('id', taskId)
+      .single()
+
+    // Determine proper status based on file uploads
+    const hasFiles = currentTask?.current_file_url || (currentTask?.versions && Array.isArray(currentTask.versions) && currentTask.versions.length > 0)
+    const newStatus = hasFiles ? 'in_progress_with_file' : 'in_progress_no_file'
+
+    console.log('API: Reverting to status:', newStatus, 'based on files:', hasFiles)
 
     const { data, error } = await supabase
       .from('tasks')
       .update({
-        status: 'in_progress',
+        status: newStatus,
         approved_by: null,
         approved_at: null,
         completed_at: null,
