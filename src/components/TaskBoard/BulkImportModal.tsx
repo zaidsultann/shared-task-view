@@ -156,12 +156,32 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
             header: true,
             skipEmptyLines: true,
             complete: (results) => {
-              allData = results.data.map((row: any) => ({
-                business_name: row['Business Name'] || row['business_name'] || '',
-                phone: row['Phone'] || row['phone'] || '',
-                address: row['Address'] || row['address'] || '',
-                note: row['Note'] || row['note'] || ''
-              })).filter((row: ImportRow) => row.business_name)
+              allData = results.data.map((row: any) => {
+                const normalizedRow: ImportRow = {
+                  business_name: '',
+                  phone: '',
+                  address: '',
+                  note: ''
+                }
+
+                // Case-insensitive header mapping
+                Object.keys(row).forEach(key => {
+                  const lowerKey = key.toLowerCase().trim()
+                  const value = row[key]?.toString().trim() || ''
+
+                  if (lowerKey.includes('business') && lowerKey.includes('name')) {
+                    normalizedRow.business_name = value
+                  } else if (lowerKey.includes('phone')) {
+                    normalizedRow.phone = value
+                  } else if (lowerKey.includes('address')) {
+                    normalizedRow.address = value
+                  } else if (lowerKey.includes('note')) {
+                    normalizedRow.note = value
+                  }
+                })
+
+                return normalizedRow
+              }).filter((row: ImportRow) => row.business_name && row.phone)
               resolve(void 0)
             }
           })
@@ -172,11 +192,11 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
       const tasksToInsert = allData.map(row => ({
         business_name: row.business_name,
         brief: `Imported task for ${row.business_name}`,
-        phone: row.phone || null,
+        phone: row.phone,
         address: row.address || null,
         note: row.note || null,
         status: 'open',
-        created_by: authUser?.username || 'unknown',
+        created_by: authUser.user_id,
         created_at: new Date().toISOString()
       }))
 

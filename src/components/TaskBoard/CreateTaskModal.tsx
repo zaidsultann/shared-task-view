@@ -205,17 +205,16 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }: CreateTaskModalProp
             </TabsContent>
             
             <TabsContent value="bulk" className="space-y-4 mt-6">
-              <Button 
-                onClick={() => setShowBulkImport(true)} 
-                className="w-full h-32 border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 bg-muted/10 hover:bg-muted/20"
-                variant="ghost"
+              <div 
+                onClick={() => setShowBulkImport(true)}
+                className="w-full h-32 border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 bg-muted/10 hover:bg-muted/20 rounded-lg cursor-pointer flex items-center justify-center transition-colors"
               >
                 <div className="text-center">
                   <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                   <div className="text-sm font-medium">Upload Spreadsheet</div>
                   <div className="text-xs text-muted-foreground">CSV, Excel, or JSON files</div>
                 </div>
-              </Button>
+              </div>
             </TabsContent>
           </Tabs>
         </DialogContent>
