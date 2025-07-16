@@ -727,24 +727,49 @@ export const tasks = {
     
     // Get username from auth or mock session
     let username = ''
-    if (user?.id) {
+    let userId = user?.id
+    
+    if (userId) {
+      // Get username from profiles table
       const { data: profile } = await supabase
         .from('profiles')
         .select('username')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .maybeSingle()
+      
       username = profile?.username || 'Unknown'
+      console.log('API: Using authenticated user for approval:', { username, userId })
     } else {
+      // Use mock session for demo
       const mockSession = localStorage.getItem('mockUserSession')
+      console.log('API: Mock session from storage:', mockSession)
+      
       if (mockSession) {
         const session = JSON.parse(mockSession)
         username = session.username
+        userId = session.user_id
+        console.log('API: Using mock session for approval:', { username, userId })
       } else {
+        console.error('API: No authentication found for approval')
         throw new Error('Not authenticated')
       }
     }
 
-    console.log('API: Approving task with user:', username)
+    console.log('API: About to approve task with data:', {
+      taskId,
+      username,
+      userId,
+      newStatus: 'completed'
+    })
+
+    // First, check what the current task status is
+    const { data: currentTaskData } = await supabase
+      .from('tasks')
+      .select('id, status, business_name, current_file_url')
+      .eq('id', taskId)
+      .single()
+    
+    console.log('API: Current task before approval:', currentTaskData)
 
     const { data, error } = await supabase
       .from('tasks')
@@ -756,19 +781,33 @@ export const tasks = {
         updated_at: new Date().toISOString()
       })
       .eq('id', taskId)
-      .in('status', ['in_progress_with_file', 'awaiting_approval'])
       .select()
 
-    console.log('API: Approval result:', { data, error, dataLength: data?.length })
+    console.log('API: Approval database result:', { 
+      data, 
+      error,
+      dataLength: data?.length,
+      firstResult: data?.[0] 
+    })
 
     if (error) {
-      console.error('API: Approval failed:', error)
+      console.error('API: Approval failed with error:', error)
       throw error
     }
 
     if (!data || data.length === 0) {
-      console.error('API: No task was updated during approval')
-      throw new Error('Failed to approve task - task may not be in the correct status')
+      console.error('API: No task was updated during approval - task may not exist')
+      
+      // Debug: Check if task exists and what its current status is
+      const { data: debugData } = await supabase
+        .from('tasks')
+        .select('id, status, business_name, current_file_url')
+        .eq('id', taskId)
+        .single()
+      
+      console.log('API: Task debug info during approval:', debugData)
+      
+      throw new Error('Failed to approve task - task may not exist or is in wrong status')
     }
 
     const approvedTask = data[0]
