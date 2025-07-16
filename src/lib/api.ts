@@ -203,17 +203,17 @@ export const tasks = {
     const { data, error } = await supabase
       .from('tasks')
       .update({
-        status: 'in_progress',
-        taken_by: userId
+        status: 'in_progress_no_file',
+        taken_by: userId,
+        updated_at: new Date().toISOString()
       })
       .eq('id', taskId)
       .eq('status', 'open')
       .select()
-      .single()
 
     console.log('Claim result:', { data, error })
     if (error) throw error
-    return data
+    return data?.[0] || data
   },
 
   complete: async (taskId: string, zipFile: File) => {

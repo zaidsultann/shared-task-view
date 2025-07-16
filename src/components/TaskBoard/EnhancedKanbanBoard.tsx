@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { tasks as tasksApi } from '@/lib/api'
 import { Circle, Clock, CheckCircle, Bell, Upload, MessageSquare, ThumbsUp, Eye, Building, User } from 'lucide-react'
 
 interface EnhancedKanbanBoardProps {
@@ -79,16 +80,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
   const handleClaimTask = async (task: Task) => {
     try {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ 
-          taken_by: currentUser,
-          status: 'in_progress_no_file',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', task.id)
-
-      if (error) throw error
+      await tasksApi.claim(task.id)
 
       toast({
         title: "Task claimed",
