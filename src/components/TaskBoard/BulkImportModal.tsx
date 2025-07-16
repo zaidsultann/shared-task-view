@@ -28,6 +28,7 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<ImportRow[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
   const { toast } = useToast()
   const { authUser } = useAuth()
 
@@ -37,6 +38,39 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
 
     setFile(selectedFile)
     parseFile(selectedFile)
+  }
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragOver(false)
+    
+    const droppedFile = event.dataTransfer.files?.[0]
+    if (!droppedFile) return
+
+    const allowedTypes = ['.csv', '.xlsx', '.xls', '.json']
+    const fileExtension = '.' + droppedFile.name.split('.').pop()?.toLowerCase()
+    
+    if (!allowedTypes.includes(fileExtension)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a CSV, Excel, or JSON file",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setFile(droppedFile)
+    parseFile(droppedFile)
+  }
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    setIsDragOver(false)
   }
 
   const parseFile = (file: File) => {
@@ -147,11 +181,13 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
 
     setIsLoading(true)
     try {
-      // Re-parse the entire file for import
+      // Re-parse the entire file for import  
       let allData: ImportRow[] = []
       
-      if (file.name.endsWith('.csv')) {
-        await new Promise((resolve) => {
+      const parsePromise = new Promise<void>((resolve, reject) => {
+        const fileExtension = file.name.split('.').pop()?.toLowerCase()
+
+        if (fileExtension === 'csv') {
           Papa.parse(file, {
             header: true,
             skipEmptyLines: true,
@@ -164,7 +200,6 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
                   note: ''
                 }
 
-                // Case-insensitive header mapping
                 Object.keys(row).forEach(key => {
                   const lowerKey = key.toLowerCase().trim()
                   const value = row[key]?.toString().trim() || ''
@@ -182,11 +217,104 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
 
                 return normalizedRow
               }).filter((row: ImportRow) => row.business_name && row.phone)
-              resolve(void 0)
-            }
+              resolve()
+            },
+            error: reject
           })
-        })
-      }
+        } else if (['xlsx', 'xls'].includes(fileExtension || '')) {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            try {
+              const data = new Uint8Array(e.target?.result as ArrayBuffer)
+              const workbook = XLSX.read(data, { type: 'array' })
+              const firstSheetName = workbook.SheetNames[0]
+              const worksheet = workbook.Sheets[firstSheetName]
+              const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+              
+              const headers = jsonData[0] as string[]
+              const rows = jsonData.slice(1).map(row => {
+                const obj: any = {}
+                headers.forEach((header, index) => {
+                  obj[header] = (row as any[])[index] || ''
+                })
+                return obj
+              })
+              
+              allData = rows.map((row: any) => {
+                const normalizedRow: ImportRow = {
+                  business_name: '',
+                  phone: '',
+                  address: '',
+                  note: ''
+                }
+
+                Object.keys(row).forEach(key => {
+                  const lowerKey = key.toLowerCase().trim()
+                  const value = row[key]?.toString().trim() || ''
+
+                  if (lowerKey.includes('business') && lowerKey.includes('name')) {
+                    normalizedRow.business_name = value
+                  } else if (lowerKey.includes('phone')) {
+                    normalizedRow.phone = value
+                  } else if (lowerKey.includes('address')) {
+                    normalizedRow.address = value
+                  } else if (lowerKey.includes('note')) {
+                    normalizedRow.note = value
+                  }
+                })
+
+                return normalizedRow
+              }).filter((row: ImportRow) => row.business_name && row.phone)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
+          }
+          reader.readAsArrayBuffer(file)
+        } else if (fileExtension === 'json') {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            try {
+              const jsonData = JSON.parse(e.target?.result as string)
+              const dataArray = Array.isArray(jsonData) ? jsonData : [jsonData]
+              
+              allData = dataArray.map((row: any) => {
+                const normalizedRow: ImportRow = {
+                  business_name: '',
+                  phone: '',
+                  address: '',
+                  note: ''
+                }
+
+                Object.keys(row).forEach(key => {
+                  const lowerKey = key.toLowerCase().trim()
+                  const value = row[key]?.toString().trim() || ''
+
+                  if (lowerKey.includes('business') && lowerKey.includes('name')) {
+                    normalizedRow.business_name = value
+                  } else if (lowerKey.includes('phone')) {
+                    normalizedRow.phone = value
+                  } else if (lowerKey.includes('address')) {
+                    normalizedRow.address = value
+                  } else if (lowerKey.includes('note')) {
+                    normalizedRow.note = value
+                  }
+                })
+
+                return normalizedRow
+              }).filter((row: ImportRow) => row.business_name && row.phone)
+              resolve()
+            } catch (error) {
+              reject(error)
+            }
+          }
+          reader.readAsText(file)
+        } else {
+          reject(new Error('Unsupported file type'))
+        }
+      })
+
+      await parsePromise
       
       // Insert tasks in batches
       const tasksToInsert = allData.map(row => ({
@@ -196,8 +324,7 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
         address: row.address || null,
         note: row.note || null,
         status: 'open',
-        created_by: authUser.user_id,
-        created_at: new Date().toISOString()
+        created_by: authUser.user_id
       }))
 
       const { error } = await supabase
@@ -212,9 +339,7 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
       })
 
       onTasksImported()
-      onClose()
-      setFile(null)
-      setPreview([])
+      handleClose()
     } catch (error) {
       console.error('Import error:', error)
       toast({
@@ -271,12 +396,31 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
 
           <div className="space-y-4">
             <Label htmlFor="file-upload">Upload File</Label>
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+                isDragOver 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+              }`}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onClick={() => document.getElementById('file-upload')?.click()}
+            >
+              <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+              <div className="text-sm font-medium mb-1">
+                {file ? file.name : 'Drop your file here or click to browse'}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Supports CSV, Excel (xlsx, xls), and JSON files
+              </div>
+            </div>
             <Input
               id="file-upload"
               type="file"
               accept=".csv,.xlsx,.xls,.json"
               onChange={handleFileChange}
-              className="cursor-pointer"
+              className="hidden"
             />
           </div>
 
