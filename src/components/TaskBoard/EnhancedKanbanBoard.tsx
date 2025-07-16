@@ -313,29 +313,33 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
     return (
       <TooltipProvider>
         <Collapsible open={isExpanded} onOpenChange={() => toggleTaskExpansion(task.id)}>
-          <div className="bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-200 overflow-hidden min-h-[140px]">
+          <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200 overflow-hidden">
             {/* Collapsible Header */}
-            <CollapsibleTrigger className="w-full p-4 sm:p-5 text-left hover:bg-gray-50/50 transition-colors min-h-[140px] flex items-center">
-              <div className="flex items-center justify-between h-full w-full">
-                <div className="flex items-center space-x-4 min-w-0 flex-1">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Building className="h-6 w-6 text-blue-600" />
+            <CollapsibleTrigger className="w-full p-4 text-left hover:bg-gray-50/50 transition-colors flex items-center">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-start space-x-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Building className="h-5 w-5 text-blue-600" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-gray-900 text-lg leading-tight mb-2">
+                    <h3 className="font-semibold text-gray-900 text-base leading-tight mb-1">
                       {task.business_name}
                     </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed mb-2">
-                      {task.brief.slice(0, 80)}...
+                    <p className="text-sm text-gray-600 line-clamp-1 mb-2">
+                      {task.brief.slice(0, 60)}...
                     </p>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
                       <span>Created by {task.created_by}</span>
                       {task.taken_by && <span>• Claimed by {task.taken_by}</span>}
                     </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                      <Clock className="h-3 w-3" />
+                      <span>Created {formatDate(task.created_at)}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-center gap-2">
-                  {getStatusBadge(task)}
+                <div className="flex flex-col items-end gap-2">
+                  {/* Only show map status for completed tasks */}
                   {task.status === 'completed' && task.map_status && (
                     <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium" style={{
                       backgroundColor: task.map_status === 'green' ? '#dcfce7' :
