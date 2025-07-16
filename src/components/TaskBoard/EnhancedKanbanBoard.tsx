@@ -767,17 +767,14 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                   
                   return (
                     <div key={index} className="border rounded-lg p-4 bg-gray-50">
-                      {/* Version Header */}
-                      <div className="flex justify-between items-center mb-3">
+                      {/* Version Header - No timestamp */}
+                      <div className="mb-3">
                         <h4 className="font-semibold text-lg text-gray-900">
                           Version {version.version}
                         </h4>
-                        <span className="text-sm text-gray-500">
-                          {formatDate(version.uploaded_at)}
-                        </span>
                       </div>
                       
-                      {/* File Info */}
+                      {/* File Info with Upload Date */}
                       <div className="bg-white rounded-lg p-3 mb-3 border">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -787,7 +784,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                             <div>
                               <p className="font-medium text-sm">Uploaded File</p>
                               <p className="text-xs text-gray-500">
-                                By {version.uploaded_by || 'Unknown'}
+                                By {version.uploaded_by || 'Unknown'} • {formatDate(version.uploaded_at)}
                               </p>
                             </div>
                           </div>
