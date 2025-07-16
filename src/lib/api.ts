@@ -132,6 +132,7 @@ export const tasks = {
       latitude: task.latitude,
       longitude: task.longitude,
       status_color: task.status_color || 'red',
+      map_status: task.map_status,
       is_deleted: task.is_deleted,
       is_archived: task.is_archived || false
     }))
@@ -603,9 +604,9 @@ export const tasks = {
     return data
   },
 
-  updateStatus: async (taskId: string, status: Task['status'], statusColor?: string) => {
+  updateStatus: async (taskId: string, status: Task['status'], mapStatus?: string) => {
     const updateData: any = { status }
-    if (statusColor) updateData.status_color = statusColor
+    if (mapStatus) updateData.map_status = mapStatus
 
     const { data, error } = await supabase
       .from('tasks')
@@ -752,6 +753,7 @@ export const tasks = {
         updated_at: new Date().toISOString()
       })
       .eq('id', taskId)
+      .in('status', ['in_progress_with_file', 'awaiting_approval'])
       .select()
 
     if (error) throw error

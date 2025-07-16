@@ -391,10 +391,10 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                     setSelectedTask(task)
                     setShowFeedbackModal(true)
                   }}
-                  className="flex-1 text-sm h-9"
+                  size="sm"
+                  className="h-9 px-3"
                 >
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Feedback
+                  <MessageSquare className="h-4 w-4" />
                 </Button>
               </div>
               
@@ -409,11 +409,11 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                 </Button>
                 <Button
                   variant="destructive"
+                  size="sm"
                   onClick={() => handleDeleteTask(task)}
-                  className="flex-1 text-sm h-9"
+                  className="h-9 px-3"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>

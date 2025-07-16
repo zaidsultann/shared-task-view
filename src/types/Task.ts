@@ -22,6 +22,7 @@ export interface Task {
   latitude?: number;
   longitude?: number;
   status_color: string;
+  map_status?: string;
   is_deleted: boolean;
   is_archived: boolean;
 }

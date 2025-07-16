@@ -3,11 +3,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MainDashboard } from './MainDashboard'
 import Dashboard from './Dashboard'
 import { MapTab } from './MapTab'
+import { BusinessMapTab } from './BusinessMapTab'
 import { useAuth } from '@/hooks/useAuth'
 import useRealtimeTasks from '@/hooks/useRealtimeTasks'
 import { useQuery } from '@tanstack/react-query'
 import { tasks as tasksApi } from '@/lib/api'
-import { BarChart3, Kanban, Map, LogOut } from 'lucide-react'
+import { BarChart3, Kanban, Map, MapPin, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import logoImg from '@/assets/logo.png'
 
@@ -71,7 +72,7 @@ export const EnhancedTaskBoard = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6 sm:mb-8 bg-muted/50 h-auto p-1">
+          <TabsList className="grid w-full grid-cols-4 mb-6 sm:mb-8 bg-muted/50 h-auto p-1">
             <TabsTrigger value="dashboard" className="flex items-center gap-1 sm:gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm text-xs sm:text-sm py-2 px-2 sm:px-4">
               <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden xs:inline">Dashboard</span>
@@ -83,6 +84,10 @@ export const EnhancedTaskBoard = () => {
             <TabsTrigger value="map" className="flex items-center gap-1 sm:gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm text-xs sm:text-sm py-2 px-2 sm:px-4">
               <Map className="h-3 w-3 sm:h-4 sm:w-4" />
               <span className="hidden xs:inline">Map</span>
+            </TabsTrigger>
+            <TabsTrigger value="business-map" className="flex items-center gap-1 sm:gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm text-xs sm:text-sm py-2 px-2 sm:px-4">
+              <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Business</span>
             </TabsTrigger>
           </TabsList>
 
@@ -96,6 +101,10 @@ export const EnhancedTaskBoard = () => {
 
           <TabsContent value="map" className="space-y-4 sm:space-y-6">
             <MapTab tasks={tasks} onTaskUpdate={refreshTasks} />
+          </TabsContent>
+
+          <TabsContent value="business-map" className="space-y-4 sm:space-y-6">
+            <BusinessMapTab tasks={tasks} onTaskUpdate={refreshTasks} />
           </TabsContent>
         </Tabs>
       </div>
