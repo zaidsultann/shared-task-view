@@ -136,16 +136,6 @@ export const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }: CreateTaskMo
                 />
               </div>
 
-              <div>
-                <Label htmlFor="note">Note</Label>
-                <Textarea
-                  id="note"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Additional notes or comments"
-                  rows={2}
-                />
-              </div>
 
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={handleClose} disabled={loading}>

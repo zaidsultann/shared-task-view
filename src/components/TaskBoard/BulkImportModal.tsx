@@ -137,7 +137,7 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
       })
 
       return normalizedRow
-    }).filter(row => row.business_name) // Only include rows with business name
+    }).filter(row => row.business_name && row.phone) // Only include rows with business name and phone
 
     setPreview(data.length > 5 ? normalizedData.slice(0, 5) : normalizedData)
   }
@@ -207,8 +207,14 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
     }
   }
 
+  const handleClose = () => {
+    setFile(null)
+    setPreview([])
+    onClose()
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -231,7 +237,7 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
               <h4 className="font-medium mb-2">Required Headers</h4>
               <ul className="space-y-1">
                 <li>• <strong>Business Name</strong> (required)</li>
-                <li>• Phone (optional)</li>
+                <li>• <strong>Phone</strong> (required)</li>
               </ul>
             </div>
             <div className="p-3 bg-muted rounded-lg">
@@ -283,7 +289,7 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
           )}
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button 

@@ -172,19 +172,6 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }: CreateTaskModalProp
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="note" className="text-sm font-medium">
-                    Additional Notes
-                  </Label>
-                  <Textarea
-                    id="note"
-                    placeholder="Any additional notes..."
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    className="min-h-[60px] bg-background/50 backdrop-blur-sm resize-none"
-                    disabled={isLoading}
-                  />
-                </div>
 
                 <div className="flex gap-3 pt-4">
                   <Button
