@@ -73,22 +73,27 @@ const Dashboard = ({ user }: DashboardProps) => {
     
     try {
       console.log('Dashboard: Starting clearHistory operation...')
-      console.log('Dashboard: Deleted tasks count:', deletedTasksCount)
+      console.log('Dashboard: Deleted tasks to clear:', deletedTasksCount)
       
       const result = await tasksApi.clearHistory()
-      console.log('Dashboard: clearHistory result:', result)
+      console.log('Dashboard: clearHistory completed, removed:', result?.length || 0, 'tasks')
+      
+      const actualDeletedCount = result?.length || 0
       
       toast({
-        title: "Deleted tasks cleared",
-        description: `${deletedTasksCount} deleted tasks have been permanently removed`,
+        title: "Success!",
+        description: `${actualDeletedCount} deleted task${actualDeletedCount !== 1 ? 's have' : ' has'} been permanently removed`,
       })
       
-      console.log('Dashboard: Calling fetchTasks...')
-      fetchTasks();
+      // Immediately refresh tasks to show updated list
+      console.log('Dashboard: Refreshing task list...')
+      await fetchTasks();
+      
     } catch (error) {
+      console.error('Dashboard: clearHistory failed:', error)
       toast({
         title: "Error",
-        description: "Failed to clear deleted tasks",
+        description: `Failed to clear deleted tasks: ${error.message}`,
         variant: "destructive",
       });
     }

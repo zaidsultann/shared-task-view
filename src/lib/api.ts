@@ -396,27 +396,42 @@ export const tasks = {
   },
 
   clearHistory: async () => {
-    console.log('API: Clearing deleted tasks...')
-    
-    // First check current user context
-    const { data: { user } } = await supabase.auth.getUser()
-    console.log('API: Current auth user for clear history:', user?.id)
-    
-    // Also check mock session
-    const mockSession = localStorage.getItem('mockUserSession')
-    console.log('API: Mock session for clear history:', mockSession ? JSON.parse(mockSession) : null)
+    console.log('API: Starting clearHistory operation...')
     
     try {
+      // First get all deleted tasks to verify count
+      const { data: deletedTasks, error: fetchError } = await supabase
+        .from('tasks')
+        .select('id, business_name')
+        .eq('is_deleted', true)
+      
+      if (fetchError) {
+        console.error('API: Error fetching deleted tasks:', fetchError)
+        throw fetchError
+      }
+      
+      console.log('API: Found deleted tasks to remove:', deletedTasks?.length || 0, deletedTasks?.map(t => ({ id: t.id, name: t.business_name })))
+      
+      if (!deletedTasks || deletedTasks.length === 0) {
+        console.log('API: No deleted tasks found to clear')
+        return []
+      }
+      
+      // Now delete them permanently
       const { data, error } = await supabase
         .from('tasks')
         .delete()
         .eq('is_deleted', true)
-        .select()
+        .select('id, business_name')
 
-      console.log('API: Clear history result:', { data, error })
+      console.log('API: Delete operation result:', { 
+        deletedCount: data?.length || 0, 
+        deletedTasks: data?.map(t => ({ id: t.id, name: t.business_name })),
+        error 
+      })
       
       if (error) {
-        console.error('API: Clear history error details:', {
+        console.error('API: Delete operation failed:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
@@ -425,10 +440,10 @@ export const tasks = {
         throw error
       }
       
-      console.log('API: Successfully deleted tasks:', data?.length || 0)
-      return data
+      console.log('API: Successfully permanently deleted', data?.length || 0, 'tasks')
+      return data || []
     } catch (err) {
-      console.error('API: Clear history catch block:', err)
+      console.error('API: clearHistory operation failed:', err)
       throw err
     }
   },
