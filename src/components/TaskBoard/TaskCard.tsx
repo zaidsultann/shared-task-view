@@ -208,7 +208,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
   };
 
   const getDeleteConfirmationMessage = () => {
-    // Get creator and claimer names with better fallback
+    // Get creator and claimer names with better fallback (no "User" prefix)
     const creatorProfile = profiles.find(p => p.user_id === task.created_by);
     const claimerProfile = profiles.find(p => p.user_id === task.claimed_by);
     
@@ -222,7 +222,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
     // For Open Tasks Section
     if (task.status === 'open') {
       if (isCreator) {
-        return `Are you sure you want to delete your own task: ${task.business_name}?`;
+        return `Are you sure you want to delete your own task?`;
       } else {
         return `This task was created by ${creatorName}. Are you sure you want to delete it?`;
       }
@@ -233,7 +233,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
       // Four different scenarios based on creator/claimer relationship
       if (isCreator && isClaimer) {
         // Created by self, claimed by self
-        return `Are you sure you want to delete your own task: ${task.business_name}?`;
+        return `This task was created and claimed by you. Are you sure you want to delete it?`;
       } else if (isCreator && !isClaimer) {
         // Created by self, claimed by someone else
         return `This task was created by you and claimed by ${claimerName}. Are you sure you want to delete it?`;
@@ -248,7 +248,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
     
     // Fallback for other statuses
     if (isCreator) {
-      return `Are you sure you want to delete your own task: ${task.business_name}?`;
+      return `Are you sure you want to delete your own task?`;
     } else {
       return `This task was created by ${creatorName}. Are you sure you want to delete it?`;
     }
@@ -344,7 +344,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
                 {task.business_name}
               </h3>
               <p className="text-sm text-gray-500">
-                Created by {task.created_by}
+                Created by {profiles.find(p => p.user_id === task.created_by)?.username || task.created_by?.slice(-4)}
               </p>
             </div>
           </div>
@@ -360,7 +360,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
         <div className="space-y-2 text-xs text-gray-500">
           <div className="flex items-center gap-2">
             <User className="h-3 w-3" />
-            <span>Created by {task.created_by}</span>
+            <span>Created by {profiles.find(p => p.user_id === task.created_by)?.username || task.created_by?.slice(-4)}</span>
           </div>
           
           {task.taken_by && (
