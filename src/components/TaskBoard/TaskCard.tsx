@@ -172,7 +172,13 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this task?')) return;
+    // Check if this is another user's task and show confirmation
+    const isOwnTask = task.created_by === currentUserId || task.taken_by === currentUser;
+    const confirmMessage = isOwnTask 
+      ? 'Are you sure you want to delete this task?'
+      : 'Are you sure you want to delete this task? It was created or claimed by another user.';
+    
+    if (!confirm(confirmMessage)) return;
     
     setIsLoading(true);
     try {

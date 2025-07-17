@@ -222,6 +222,14 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
   }
 
   const handleDeleteTask = async (task: Task) => {
+    // Check if this is another user's task and show confirmation
+    const isOwnTask = task.created_by === currentUser || task.taken_by === currentUsername;
+    const confirmMessage = isOwnTask 
+      ? 'Are you sure you want to delete this task?'
+      : 'Are you sure you want to delete this task? It was created or claimed by another user.';
+    
+    if (!confirm(confirmMessage)) return;
+    
     try {
       console.log('EnhancedKanbanBoard: Deleting task:', task.id)
       await tasksApi.delete(task.id)
@@ -451,29 +459,46 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                     </>
                   )}
                   
-                  {/* Needs Upload */}
-                  {(task.status === 'in_progress_no_file' && task.taken_by === currentUsername) && (
-                    <>
-                      <Button
-                        onClick={() => {
-                          setSelectedTask(task)
-                          setShowUploadModal(true)
-                        }}
-                        className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload File
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteTask(task)}
-                        className="h-9 px-3"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
+                   {/* Needs Upload */}
+                   {task.status === 'in_progress_no_file' && (
+                     <>
+                       {task.taken_by === currentUsername ? (
+                         <Button
+                           onClick={() => {
+                             setSelectedTask(task)
+                             setShowUploadModal(true)
+                           }}
+                           className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
+                         >
+                           <Upload className="h-4 w-4 mr-2" />
+                           Upload File
+                         </Button>
+                       ) : (
+                         <Tooltip>
+                           <TooltipTrigger asChild>
+                             <Button
+                               disabled
+                               className="flex-1 bg-gray-300 text-gray-500 text-sm h-9 cursor-not-allowed"
+                             >
+                               <Upload className="h-4 w-4 mr-2" />
+                               Upload File
+                             </Button>
+                           </TooltipTrigger>
+                           <TooltipContent>
+                             <p>This task is being handled by {task.taken_by}</p>
+                           </TooltipContent>
+                         </Tooltip>
+                       )}
+                       <Button
+                         variant="destructive"
+                         size="sm"
+                         onClick={() => handleDeleteTask(task)}
+                         className="h-9 px-3"
+                       >
+                         <Trash2 className="h-4 w-4" />
+                       </Button>
+                     </>
+                   )}
                   
                   {/* Awaiting Approval */}
                   {(task.status === 'in_progress_with_file' || task.status === 'awaiting_approval') && (
@@ -542,38 +567,61 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                         </Button>
                       )}
                       
-                      {/* Re-upload and View buttons row */}
-                      <div className="flex gap-2">
-                        {task.taken_by === currentUsername && (
-                          <Button
-                            onClick={() => {
-                              setSelectedTask(task)
-                              setShowUploadModal(true)
-                            }}
-                            className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
-                          >
-                            <Upload className="h-4 w-4 mr-2" />
-                            Re-upload
-                          </Button>
-                        )}
-                        {task.current_file_url && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                onClick={() => window.open(task.current_file_url, '_blank')}
-                                size="sm"
-                                className="h-9 px-3"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>View File</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                      </div>
+                       {/* Re-upload and View buttons row */}
+                       <div className="flex gap-2">
+                         {task.taken_by === currentUsername ? (
+                           <Button
+                             onClick={() => {
+                               setSelectedTask(task)
+                               setShowUploadModal(true)
+                             }}
+                             className="flex-1 bg-amber-600 hover:bg-amber-700 text-white text-sm h-9"
+                           >
+                             <Upload className="h-4 w-4 mr-2" />
+                             Re-upload
+                           </Button>
+                         ) : (
+                           <Tooltip>
+                             <TooltipTrigger asChild>
+                               <Button
+                                 disabled
+                                 className="flex-1 bg-gray-300 text-gray-500 text-sm h-9 cursor-not-allowed"
+                               >
+                                 <Upload className="h-4 w-4 mr-2" />
+                                 Re-upload
+                               </Button>
+                             </TooltipTrigger>
+                             <TooltipContent>
+                               <p>This task is being handled by {task.taken_by}</p>
+                             </TooltipContent>
+                           </Tooltip>
+                         )}
+                         {task.current_file_url && (
+                           <Tooltip>
+                             <TooltipTrigger asChild>
+                               <Button
+                                 variant="outline"
+                                 onClick={() => window.open(task.current_file_url, '_blank')}
+                                 size="sm"
+                                 className="h-9 px-3"
+                               >
+                                 <Eye className="h-4 w-4" />
+                               </Button>
+                             </TooltipTrigger>
+                             <TooltipContent>
+                               <p>View File</p>
+                             </TooltipContent>
+                           </Tooltip>
+                         )}
+                         <Button
+                           variant="destructive"
+                           size="sm"
+                           onClick={() => handleDeleteTask(task)}
+                           className="h-9 px-3"
+                         >
+                           <Trash2 className="h-4 w-4" />
+                         </Button>
+                       </div>
                     </div>
                   )}
 
@@ -646,7 +694,8 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
   }
 
   return (
-    <div className="w-full">
+    <TooltipProvider>
+      <div className="w-full">
       {/* Mobile Layout - Vertical stacking */}
       <div className="lg:hidden space-y-6 p-4">
         {columns.map((column) => {
@@ -908,5 +957,6 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </TooltipProvider>
   )
 }
