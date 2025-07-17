@@ -21,6 +21,7 @@ import CreateTaskModal from './CreateTaskModal';
 import HistoryModal from './HistoryModal';
 import ArchiveModal from './ArchiveModal';
 import { BulkImportModal } from './BulkImportModal';
+import { useRealtimeTasks } from '@/hooks/useRealtimeTasks';
 
 interface DashboardProps {
   user: User;
@@ -163,11 +164,17 @@ const Dashboard = ({ user }: DashboardProps) => {
     }
   };
 
+  // Enhanced real-time hook with callback for immediate UI updates
+  useRealtimeTasks(() => {
+    console.log('🔄 Dashboard: Realtime task update detected, refreshing state...')
+    fetchTasks()
+  })
+
   useEffect(() => {
     fetchTasks();
     
-    // Set up periodic refresh every 30 seconds
-    const interval = setInterval(fetchTasks, 30000);
+    // Reduced periodic refresh interval since we have real-time updates
+    const interval = setInterval(fetchTasks, 60000); // 60 seconds instead of 30
     
     return () => clearInterval(interval);
   }, []);

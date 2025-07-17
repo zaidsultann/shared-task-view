@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ExternalLink } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { tasks as tasksApi } from '@/lib/api'
+import { useRealtimeTasks } from '@/hooks/useRealtimeTasks'
 import 'leaflet/dist/leaflet.css'
 
 interface BusinessMapTabProps {
@@ -53,6 +54,12 @@ export const BusinessMapTab = ({ tasks, onTaskUpdate }: BusinessMapTabProps) => 
   const [businessNote, setBusinessNote] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
   const { toast } = useToast()
+  
+  // Enhanced real-time hook for map updates
+  useRealtimeTasks(() => {
+    console.log('🗺️ BusinessMapTab: Realtime update detected, refreshing map...')
+    onTaskUpdate()
+  })
 
   // Filter completed tasks with addresses and coordinates
   const mappableTasks = tasks.filter(task => 

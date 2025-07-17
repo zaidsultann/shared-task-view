@@ -17,6 +17,7 @@ import { Circle, Clock, CheckCircle, Bell, Upload, MessageSquare, ThumbsUp, Eye,
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useRealtimeTasks } from '@/hooks/useRealtimeTasks'
 
 interface EnhancedKanbanBoardProps {
   tasks: Task[]
