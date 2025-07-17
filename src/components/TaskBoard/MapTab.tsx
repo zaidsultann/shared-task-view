@@ -357,6 +357,8 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
   useEffect(() => {
     if (!mapInstanceRef.current) return
 
+    console.log('🗺️ MapTab: Updating markers, mapTasks count:', mapTasks.length)
+
     // Clear existing markers
     markersRef.current.forEach(marker => {
       mapInstanceRef.current?.removeLayer(marker)
