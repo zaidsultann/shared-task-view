@@ -212,9 +212,9 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
     const creatorProfile = profiles.find(p => p.user_id === task.created_by);
     const claimerProfile = profiles.find(p => p.user_id === task.claimed_by);
     
-    // Better fallback: try to get email from user ID if username not available
-    const creatorName = creatorProfile?.username || `User ${task.created_by?.slice(-4)}`;
-    const claimerName = claimerProfile?.username || `User ${task.claimed_by?.slice(-4)}`;
+    // Better fallback: use last 4 digits of user ID if username not available  
+    const creatorName = creatorProfile?.username || task.created_by?.slice(-4);
+    const claimerName = claimerProfile?.username || task.claimed_by?.slice(-4);
     
     const isCreator = task.created_by === currentUserId;
     const isClaimer = task.claimed_by === currentUserId;
@@ -560,7 +560,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
               </>
             )}
 
-            {/* Changes Needed - Show View and Re-upload (with conditional states) */}
+            {/* Changes Needed - Show View and Re-upload (with conditional states), NO DELETE */}
             {task.status === 'feedback_needed' && (
               <>
                 {task.current_file_url && (
@@ -594,7 +594,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Only {profiles.find(p => p.user_id === task.claimed_by)?.username || `User ${task.claimed_by?.slice(-4)}`} can re-upload this task.</p>
+                      <p>Only {profiles.find(p => p.user_id === task.claimed_by)?.username || task.claimed_by?.slice(-4)} can re-upload this task.</p>
                     </TooltipContent>
                   </Tooltip>
                 )}

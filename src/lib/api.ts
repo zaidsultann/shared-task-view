@@ -368,7 +368,7 @@ export const tasks = {
   delete: async (taskId: string) => {
     const { data: { user } } = await supabase.auth.getUser()
     
-    // Get user ID from auth or mock session
+    // Get user ID from auth or mock session for logging
     let userId = user?.id
     if (!userId) {
       const mockSession = localStorage.getItem('mockUserSession')
@@ -382,11 +382,11 @@ export const tasks = {
 
     console.log('Deleting task:', { taskId, userId })
 
+    // Allow any authenticated user to delete any task
     const { data, error } = await supabase
       .from('tasks')
       .update({ is_deleted: true })
       .eq('id', taskId)
-      .eq('created_by', userId)
       .select()
       .single()
 
