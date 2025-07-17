@@ -82,9 +82,16 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
+          console.log('🔍 Papa Parse results:', {
+            data: results.data,
+            dataLength: results.data.length,
+            errors: results.errors,
+            meta: results.meta
+          })
           processData(results.data as any[])
         },
         error: (error) => {
+          console.error('❌ Papa Parse error:', error)
           toast({
             title: "Error parsing CSV",
             description: error.message,
