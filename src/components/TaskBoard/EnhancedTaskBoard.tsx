@@ -78,7 +78,7 @@ export const EnhancedTaskBoard = () => {
         <div className="container mx-auto px-3 sm:px-6 py-2 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-md flex items-center justify-center">
+            <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-md flex items-center justify-center">
   <img
     src="/lovable-uploads/de0c8937-319e-402f-a37d-4767260cab4f.png"
     alt="Digitalizers Inc."
