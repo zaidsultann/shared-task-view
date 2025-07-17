@@ -208,14 +208,18 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
   };
 
   const getDeleteConfirmationMessage = () => {
-    // Get creator and claimer names with better fallback
+    // Get creator and claimer names 
     const creatorProfile = profiles.find(p => p.user_id === task.created_by);
     const claimerProfile = profiles.find(p => p.user_id === task.claimed_by);
     
-    // Clean names by removing "User " prefix and fallback to last 4 digits of user ID
-    const cleanName = (name: string) => name?.replace(/^User\s+/, '') || '';
-    const creatorName = cleanName(creatorProfile?.username || '') || task.created_by?.slice(-4);
-    const claimerName = cleanName(claimerProfile?.username || '') || task.claimed_by?.slice(-4);
+    // Get clean names without "User" prefix
+    const getCleanName = (profile: any) => {
+      if (!profile?.username) return null;
+      return profile.username.replace(/^User\s+/, '');
+    };
+    
+    const creatorName = getCleanName(creatorProfile);
+    const claimerName = getCleanName(claimerProfile);
     
     const isCreator = task.created_by === currentUserId;
     const isClaimer = task.claimed_by === currentUserId;
