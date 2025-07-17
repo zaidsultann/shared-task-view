@@ -397,15 +397,40 @@ export const tasks = {
 
   clearHistory: async () => {
     console.log('API: Clearing deleted tasks...')
-    const { data, error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('is_deleted', true)
-      .select()
+    
+    // First check current user context
+    const { data: { user } } = await supabase.auth.getUser()
+    console.log('API: Current auth user for clear history:', user?.id)
+    
+    // Also check mock session
+    const mockSession = localStorage.getItem('mockUserSession')
+    console.log('API: Mock session for clear history:', mockSession ? JSON.parse(mockSession) : null)
+    
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('is_deleted', true)
+        .select()
 
-    console.log('API: Clear history result:', { data, error })
-    if (error) throw error
-    return data
+      console.log('API: Clear history result:', { data, error })
+      
+      if (error) {
+        console.error('API: Clear history error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw error
+      }
+      
+      console.log('API: Successfully deleted tasks:', data?.length || 0)
+      return data
+    } catch (err) {
+      console.error('API: Clear history catch block:', err)
+      throw err
+    }
   },
 
   // Archive operations

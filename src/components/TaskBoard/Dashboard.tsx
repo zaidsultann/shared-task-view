@@ -72,13 +72,18 @@ const Dashboard = ({ user }: DashboardProps) => {
     if (!confirm(`Are you sure you want to permanently remove ${deletedTasksCount} deleted task(s)? This action cannot be undone.`)) return;
     
     try {
-      await tasksApi.clearHistory()
+      console.log('Dashboard: Starting clearHistory operation...')
+      console.log('Dashboard: Deleted tasks count:', deletedTasksCount)
+      
+      const result = await tasksApi.clearHistory()
+      console.log('Dashboard: clearHistory result:', result)
       
       toast({
         title: "Deleted tasks cleared",
         description: `${deletedTasksCount} deleted tasks have been permanently removed`,
       })
       
+      console.log('Dashboard: Calling fetchTasks...')
       fetchTasks();
     } catch (error) {
       toast({
