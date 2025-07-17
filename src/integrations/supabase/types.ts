@@ -178,6 +178,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      clear_deleted_tasks: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          deleted_task_id: string
+          deleted_task_name: string
+          deleted_count: number
+        }[]
+      }
       upload_task_version: {
         Args: {
           task_id_param: string

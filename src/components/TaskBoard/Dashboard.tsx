@@ -80,10 +80,18 @@ const Dashboard = ({ user }: DashboardProps) => {
       
       const actualDeletedCount = result?.length || 0
       
-      toast({
-        title: "Success!",
-        description: `${actualDeletedCount} deleted task${actualDeletedCount !== 1 ? 's have' : ' has'} been permanently removed`,
-      })
+      if (actualDeletedCount > 0) {
+        toast({
+          title: "Success!",
+          description: `${actualDeletedCount} deleted task${actualDeletedCount !== 1 ? 's have' : ' has'} been permanently removed`,
+        })
+      } else {
+        toast({
+          title: "No tasks removed",
+          description: "No deleted tasks were found to remove",
+          variant: "destructive",
+        })
+      }
       
       // Immediately refresh tasks to show updated list
       console.log('Dashboard: Refreshing task list...')
