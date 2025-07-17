@@ -56,14 +56,14 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
             <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-large hover-lift">
               <img 
                 src="/lovable-uploads/c516933f-21f1-40ae-869b-9c8b76ebe1dd.png" 
-                alt="TaskBoard" 
+                alt="Digitalizers Inc." 
                 className="w-12 h-12"
               />
             </div>
           </div>
           <div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent mb-2">
-              TaskBoard
+              Digitalizers Inc.
             </h1>
             <p className="text-muted-foreground">Modern task management for productive teams</p>
           </div>
