@@ -14,9 +14,6 @@ import logoImg from '@/assets/logo.png'
 export const EnhancedTaskBoard = () => {
   const { authUser, logout } = useAuth()
   
-  // Set up realtime updates
-  useRealtimeTasks()
-
   // Fetch tasks with real-time updates
   const { 
     data: tasks = [], 
@@ -25,7 +22,13 @@ export const EnhancedTaskBoard = () => {
   } = useQuery({
     queryKey: ['tasks'],
     queryFn: tasksApi.getAll,
-    refetchInterval: 30000, // Backup polling every 30 seconds
+    refetchInterval: 60000, // Reduced polling since we have real-time updates
+  })
+
+  // Set up real-time updates with immediate refetch
+  useRealtimeTasks(() => {
+    console.log('🔄 EnhancedTaskBoard: Realtime update detected, refetching tasks...')
+    refreshTasks()
   })
 
   const handleLogout = async () => {

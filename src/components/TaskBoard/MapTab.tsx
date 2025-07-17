@@ -244,8 +244,11 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
   const [modalOpen, setModalOpen] = useState(false)
   const { toast } = useToast()
 
-  // Set up real-time updates
-  useRealtimeTasks()
+  // Set up real-time updates for immediate map sync
+  useRealtimeTasks(() => {
+    console.log('🗺️ MapTab: Realtime update detected, triggering map refresh...')
+    onTaskUpdate()
+  })
 
   // Filter tasks for map display - only completed tasks with addresses, exclude green/gray statuses
   const mapTasks = tasks.filter(task => 
