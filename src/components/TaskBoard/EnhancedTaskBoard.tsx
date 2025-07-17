@@ -78,9 +78,13 @@ export const EnhancedTaskBoard = () => {
         <div className="container mx-auto px-3 sm:px-6 py-2 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
-                <img src="/lovable-uploads/de0c8937-319e-402f-a37d-4767260cab4f.png" alt="Digitalizers Inc." className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-md flex items-center justify-center">
+  <img
+    src="/lovable-uploads/de0c8937-319e-402f-a37d-4767260cab4f.png"
+    alt="Digitalizers Inc."
+    className="w-7 h-7 sm:w-8 sm:h-8"
+  />
+</div>
               <div className="min-w-0 flex-1">
                 <h1 className="text-sm sm:text-lg font-semibold text-foreground truncate">Digitalizers Inc.</h1>
                 <p className="text-xs text-muted-foreground hidden sm:block truncate">Welcome back, {authUser?.username}</p>
