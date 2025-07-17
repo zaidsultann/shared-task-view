@@ -147,6 +147,8 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
   }
 
   const processData = (data: any[]) => {
+    console.log('🔍 Processing raw data:', data.length, 'rows')
+    
     const normalizedData = data.map(row => {
       const normalizedRow: ImportRow = {
         business_name: '',
@@ -174,6 +176,10 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
       return normalizedRow
     }).filter(row => row.business_name && row.phone) // Only include rows with business name and phone
 
+    console.log('✅ Normalized data:', normalizedData.length, 'valid rows')
+    console.log('📊 Setting preview to show:', normalizedData.length, 'rows')
+    console.log('📋 First few rows:', normalizedData.slice(0, 3))
+    
     setTotalRows(normalizedData.length)
     setPreview(normalizedData) // Show all valid rows
   }
@@ -441,14 +447,18 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {preview.map((row, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{row.business_name}</TableCell>
-                        <TableCell>{row.phone}</TableCell>
-                        <TableCell>{row.address}</TableCell>
-                        <TableCell>{row.note}</TableCell>
-                      </TableRow>
-                    ))}
+                    {(() => {
+                      console.log('🎯 Rendering table rows - preview.length:', preview.length)
+                      console.log('🎯 Preview data:', preview)
+                      return preview.map((row, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{row.business_name}</TableCell>
+                          <TableCell>{row.phone}</TableCell>
+                          <TableCell>{row.address}</TableCell>
+                          <TableCell>{row.note}</TableCell>
+                        </TableRow>
+                      ))
+                    })()}
                   </TableBody>
                 </Table>
               </div>
