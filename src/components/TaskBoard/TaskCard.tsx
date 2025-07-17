@@ -25,6 +25,17 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
 
 interface TaskCardProps {
   task: Task;
@@ -37,6 +48,7 @@ interface TaskCardProps {
 const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }: TaskCardProps) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [feedbackText, setFeedbackText] = useState('');
@@ -175,31 +187,6 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
   };
 
   const handleDelete = async () => {
-    // Get creator and claimer names for confirmation message
-    const creatorProfile = profiles.find(p => p.user_id === task.created_by);
-    const claimerProfile = profiles.find(p => p.user_id === task.claimed_by);
-    const creatorName = creatorProfile?.username || 'Unknown';
-    const claimerName = claimerProfile?.username || 'Unknown';
-    
-    const isCreator = task.created_by === currentUserId;
-    const isClaimer = task.claimed_by === currentUserId;
-    const isOwner = isCreator || isClaimer;
-    
-    let confirmMessage = 'Are you sure you want to delete this task?';
-    
-    if (!isOwner) {
-      // Different messages based on task status/section
-      if (task.status === 'open') {
-        confirmMessage = `This task was created by ${creatorName}. Are you sure you want to delete it?`;
-      } else if (task.claimed_by && task.created_by !== task.claimed_by) {
-        confirmMessage = `This task was created by ${creatorName} and claimed by ${claimerName}. Are you sure you want to delete it?`;
-      } else {
-        confirmMessage = `This task was created by ${creatorName}. Are you sure you want to delete it?`;
-      }
-    }
-    
-    if (!confirm(confirmMessage)) return;
-    
     setIsLoading(true);
     try {
       await tasksApi.delete(task.id);
@@ -217,6 +204,34 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
       });
     }
     setIsLoading(false);
+    setShowDeleteDialog(false);
+  };
+
+  const getDeleteConfirmationMessage = () => {
+    // Get creator and claimer names with better fallback
+    const creatorProfile = profiles.find(p => p.user_id === task.created_by);
+    const claimerProfile = profiles.find(p => p.user_id === task.claimed_by);
+    
+    // Better fallback: try to get email from user ID if username not available
+    const creatorName = creatorProfile?.username || `User ${task.created_by?.slice(-4)}`;
+    const claimerName = claimerProfile?.username || `User ${task.claimed_by?.slice(-4)}`;
+    
+    const isCreator = task.created_by === currentUserId;
+    const isClaimer = task.claimed_by === currentUserId;
+    const isOwner = isCreator || isClaimer;
+    
+    if (isOwner) {
+      return `Are you sure you want to delete your own task: ${task.business_name}?`;
+    }
+    
+    // Different messages based on task status/section
+    if (task.status === 'open') {
+      return `This task was created by ${creatorName}. Are you sure you want to delete it?`;
+    } else if (task.claimed_by && task.created_by !== task.claimed_by) {
+      return `This task was created by ${creatorName} and claimed by ${claimerName}. Are you sure you want to delete it?`;
+    } else {
+      return `This task was created by ${creatorName}. Are you sure you want to delete it?`;
+    }
   };
 
   const handleDownload = async () => {
@@ -374,14 +389,34 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
                 >
                   Claim Task
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleDelete}
-                  disabled={isLoading}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      disabled={isLoading}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {getDeleteConfirmationMessage()}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleDelete}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Yes, Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </>
             )}
 
@@ -409,18 +444,38 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Claimed by {profiles.find(p => p.user_id === task.claimed_by)?.username || 'Unknown'}. Only they can upload.</p>
+                      <p>Claimed by {profiles.find(p => p.user_id === task.claimed_by)?.username || `User ${task.claimed_by?.slice(-4)}`}. Only they can upload.</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={handleDelete}
-                  disabled={isLoading}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      disabled={isLoading}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {getDeleteConfirmationMessage()}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleDelete}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Yes, Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </>
             )}
 
@@ -454,18 +509,38 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
                   <ThumbsUp className="h-4 w-4 mr-2" />
                   Approve
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleDelete}
-                  disabled={isLoading}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      disabled={isLoading}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {getDeleteConfirmationMessage()}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleDelete}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Yes, Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </>
             )}
 
-            {/* Changes Needed - Show View, Re-upload (with conditional states), and Delete */}
+            {/* Changes Needed - Show View and Re-upload (with conditional states) */}
             {task.status === 'feedback_needed' && (
               <>
                 {task.current_file_url && (
@@ -499,18 +574,10 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Only {profiles.find(p => p.user_id === task.claimed_by)?.username || 'Unknown'} can re-upload this task.</p>
+                      <p>Only {profiles.find(p => p.user_id === task.claimed_by)?.username || `User ${task.claimed_by?.slice(-4)}`} can re-upload this task.</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={handleDelete}
-                  disabled={isLoading}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </>
             )}
 
