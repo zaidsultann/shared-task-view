@@ -32,6 +32,8 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [showViewFeedbackModal, setShowViewFeedbackModal] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null)
   const [feedbackText, setFeedbackText] = useState('')
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -222,35 +224,12 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
     }
   }
 
-  const handleDeleteTask = async (task: Task) => {
-    // Get creator and claimer names for confirmation message
-    const creatorProfile = profiles.find(p => p.user_id === task.created_by);
-    const claimerProfile = profiles.find(p => p.user_id === task.claimed_by);
-    const creatorName = creatorProfile?.username || 'Unknown';
-    const claimerName = claimerProfile?.username || 'Unknown';
-    
-    const isCreator = task.created_by === currentUser;
-    const isClaimer = task.claimed_by === currentUser;
-    const isOwner = isCreator || isClaimer;
-    
-    let confirmMessage = 'Are you sure you want to delete this task?';
-    
-    if (!isOwner) {
-      // Different messages based on task status/section
-      if (task.status === 'open') {
-        confirmMessage = `This task was created by ${creatorName}. Are you sure you want to delete it?`;
-      } else if (task.claimed_by && task.created_by !== task.claimed_by) {
-        confirmMessage = `This task was created by ${creatorName} and claimed by ${claimerName}. Are you sure you want to delete it?`;
-      } else {
-        confirmMessage = `This task was created by ${creatorName}. Are you sure you want to delete it?`;
-      }
-    }
-    
-    if (!confirm(confirmMessage)) return;
+  const handleDeleteTask = async () => {
+    if (!taskToDelete) return;
     
     try {
-      console.log('EnhancedKanbanBoard: Deleting task:', task.id)
-      await tasksApi.delete(task.id)
+      console.log('EnhancedKanbanBoard: Deleting task:', taskToDelete.id)
+      await tasksApi.delete(taskToDelete.id)
       console.log('EnhancedKanbanBoard: Task deleted successfully, calling onUpdate...')
 
       toast({
@@ -268,8 +247,38 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
         description: "Failed to delete task",
         variant: "destructive",
       })
+    } finally {
+      setShowDeleteDialog(false)
+      setTaskToDelete(null)
     }
   }
+
+  const getDeleteConfirmationMessage = (task: Task) => {
+    // Get creator and claimer names with better fallback
+    const creatorProfile = profiles.find(p => p.user_id === task.created_by);
+    const claimerProfile = profiles.find(p => p.user_id === task.claimed_by);
+    
+    // Better fallback: try to get email from user ID if username not available
+    const creatorName = creatorProfile?.username || `User ${task.created_by?.slice(-4)}`;
+    const claimerName = claimerProfile?.username || `User ${task.claimed_by?.slice(-4)}`;
+    
+    const isCreator = task.created_by === currentUser;
+    const isClaimer = task.claimed_by === currentUser;
+    const isOwner = isCreator || isClaimer;
+    
+    if (isOwner) {
+      return `Are you sure you want to delete your own task: ${task.business_name}?`;
+    }
+    
+    // Different messages based on task status/section
+    if (task.status === 'open') {
+      return `This task was created by ${creatorName}. Are you sure you want to delete it?`;
+    } else if (task.claimed_by && task.created_by !== task.claimed_by) {
+      return `This task was created by ${creatorName} and claimed by ${claimerName}. Are you sure you want to delete it?`;
+    } else {
+      return `This task was created by ${creatorName}. Are you sure you want to delete it?`;
+    }
+  };
 
   const handleRevertTask = async (task: Task) => {
     try {
@@ -469,7 +478,10 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => handleDeleteTask(task)}
+                        onClick={() => {
+                          setTaskToDelete(task)
+                          setShowDeleteDialog(true)
+                        }}
                         className="h-9 px-3"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -507,14 +519,17 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                            </TooltipContent>
                          </Tooltip>
                        )}
-                       <Button
-                         variant="destructive"
-                         size="sm"
-                         onClick={() => handleDeleteTask(task)}
-                         className="h-9 px-3"
-                       >
-                         <Trash2 className="h-4 w-4" />
-                       </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setTaskToDelete(task)
+                            setShowDeleteDialog(true)
+                          }}
+                          className="h-9 px-3"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                      </>
                    )}
                   
@@ -555,14 +570,17 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                           <ThumbsUp className="h-4 w-4 mr-2" />
                           Approve
                         </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteTask(task)}
-                          className="h-9 px-3"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                         <Button
+                           variant="destructive"
+                           size="sm"
+                           onClick={() => {
+                             setTaskToDelete(task)
+                             setShowDeleteDialog(true)
+                           }}
+                           className="h-9 px-3"
+                         >
+                           <Trash2 className="h-4 w-4" />
+                         </Button>
                       </div>
                     </div>
                   )}
@@ -631,14 +649,7 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                              </TooltipContent>
                            </Tooltip>
                          )}
-                         <Button
-                           variant="destructive"
-                           size="sm"
-                           onClick={() => handleDeleteTask(task)}
-                           className="h-9 px-3"
-                         >
-                           <Trash2 className="h-4 w-4" />
-                         </Button>
+                          {/* NO DELETE BUTTON IN CHANGES NEEDED SECTION */}
                        </div>
                     </div>
                   )}
@@ -970,6 +981,27 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
               className="bg-orange-600 hover:bg-orange-700"
             >
               Revert Task
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Modal */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              {taskToDelete && getDeleteConfirmationMessage(taskToDelete)}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteTask}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Yes, Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

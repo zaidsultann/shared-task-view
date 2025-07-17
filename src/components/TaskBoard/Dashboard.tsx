@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { tasks as tasksApi, auth } from '@/lib/api';
 import { 
@@ -34,6 +35,7 @@ const Dashboard = ({ user, profiles = [] }: DashboardProps) => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
+  const [showClearDialog, setShowClearDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [isDragOver, setIsDragOver] = useState(false);
@@ -71,8 +73,6 @@ const Dashboard = ({ user, profiles = [] }: DashboardProps) => {
       return;
     }
     
-    if (!confirm(`Are you sure you want to permanently remove ${deletedTasksCount} deleted task(s)? This action cannot be undone.`)) return;
-    
     try {
       console.log('Dashboard: Starting clearHistory operation...')
       console.log('Dashboard: Deleted tasks to clear:', deletedTasksCount)
@@ -89,7 +89,7 @@ const Dashboard = ({ user, profiles = [] }: DashboardProps) => {
         })
       } else {
         toast({
-          title: "No tasks removed",
+          title: "No tasks cleared",
           description: "No deleted tasks were found to remove",
           variant: "destructive",
         })
@@ -106,6 +106,8 @@ const Dashboard = ({ user, profiles = [] }: DashboardProps) => {
         description: `Failed to clear deleted tasks: ${error.message}`,
         variant: "destructive",
       });
+    } finally {
+      setShowClearDialog(false);
     }
   };
 
@@ -268,16 +270,36 @@ const Dashboard = ({ user, profiles = [] }: DashboardProps) => {
             <span className="lg:hidden">({stats.archived})</span>
           </Button>
           
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleClearHistory}
-            disabled={tasks.filter(task => task.is_deleted).length === 0}
-            className="h-7 lg:h-10 px-2 lg:px-4 text-xs lg:text-sm"
-          >
-            <Trash2 className="h-3 w-3 lg:h-4 lg:w-4" />
-            <span className="hidden lg:inline lg:ml-2">Clear Deleted</span>
-          </Button>
+          <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={tasks.filter(task => task.is_deleted).length === 0}
+                className="h-7 lg:h-10 px-2 lg:px-4 text-xs lg:text-sm"
+              >
+                <Trash2 className="h-3 w-3 lg:h-4 lg:w-4" />
+                <span className="hidden lg:inline lg:ml-2">Clear Deleted</span>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear Deleted Tasks</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to permanently remove {tasks.filter(task => task.is_deleted).length} deleted task(s)? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleClearHistory}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Yes, Clear Permanently
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           
           <Button
             onClick={() => setShowCreateModal(true)}
