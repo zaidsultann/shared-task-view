@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { tasks as tasksApi } from '@/lib/api'
-import { Circle, Clock, CheckCircle, Bell, Upload, MessageSquare, ThumbsUp, Eye, Building, User, Trash2, RotateCcw, ChevronDown, ChevronRight, Download } from 'lucide-react'
+import { Circle, Clock, CheckCircle, Bell, Upload, MessageSquare, ThumbsUp, Eye, Building, User, Trash2, RotateCcw, ChevronDown, ChevronRight, Download, Archive } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -297,6 +297,30 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
     }
   }
 
+  const handleArchiveTask = async (task: Task) => {
+    try {
+      console.log('EnhancedKanbanBoard: Archiving task:', task.id)
+      await tasksApi.archive(task.id)
+      console.log('EnhancedKanbanBoard: Task archived successfully, calling onUpdate...')
+
+      toast({
+        title: "Task Archived",
+        description: `${task.business_name} has been moved to archive.`,
+      })
+
+      // Force immediate refresh
+      await onUpdate()
+      console.log('EnhancedKanbanBoard: onUpdate completed after archive')
+    } catch (error) {
+      console.error('EnhancedKanbanBoard: Error archiving task:', error)
+      toast({
+        title: "Archive Failed",
+        description: "Failed to archive task. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
   const formatDate = (dateString: string | number) => {
     const date = typeof dateString === 'string' ? new Date(dateString) : new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -387,6 +411,10 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                          task.map_status === 'green' ? 'Complete' :
                          task.map_status === 'gray' ? 'Not Interested' : 'Not Visited'}
                       </Badge>
+                      {/* Debug info */}
+                      <span className="text-xs text-gray-400 ml-2">
+                        ({task.map_status || 'no status'})
+                      </span>
                     </div>
                   </div>
                 )}
@@ -576,22 +604,9 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
 
                   {/* Completed */}
                   {task.status === 'completed' && (
-                    <div className="flex flex-col gap-3 w-full">
-                      {/* Buttons Row */}
-                      <div className="flex gap-2">
-                        {/* Download Button */}
-                        {task.current_file_url && (
-                          <Button
-                            variant="outline"
-                            onClick={() => window.open(task.current_file_url, '_blank')}
-                            className="flex-1 text-sm h-9"
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            Download
-                          </Button>
-                        )}
-                        
-                        {/* Revert Button - moved inside dropdown body */}
+                    <div className="flex flex-col gap-2 w-full">
+                      {/* First row: Revert Button */}
+                      <div className="flex justify-center">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -608,6 +623,41 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>Revert Task</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      
+                      {/* Second row: Download and Archive buttons */}
+                      <div className="flex gap-2">
+                        {/* Download Button */}
+                        {task.current_file_url && (
+                          <Button
+                            variant="outline"
+                            onClick={() => window.open(task.current_file_url, '_blank')}
+                            className="flex-1 text-sm h-9"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                          </Button>
+                        )}
+                        
+                        {/* Archive Button */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleArchiveTask(task)
+                              }}
+                              className="h-9 w-9 p-0 text-gray-600 hover:bg-gray-50"
+                            >
+                              <Archive className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Archive Task</p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
