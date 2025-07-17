@@ -63,8 +63,9 @@ export const BusinessMapTab = ({ tasks, onTaskUpdate }: BusinessMapTabProps) => 
   )
 
   // Get current map status for each business (defaulting to not_visited)
+  // Map from color values (stored in DB) to business status objects
   const getBusinessStatus = (task: Task): BusinessStatus => {
-    return businessStatuses.find(status => status.value === (task.map_status || 'not_visited')) || businessStatuses[0]
+    return businessStatuses.find(status => status.iconColor === (task.map_status || 'red')) || businessStatuses[0]
   }
 
   // Filter tasks to show on map (exclude complete and not_interested)
@@ -75,7 +76,9 @@ export const BusinessMapTab = ({ tasks, onTaskUpdate }: BusinessMapTabProps) => 
 
   const handleBusinessClick = (task: Task) => {
     setSelectedBusiness(task)
-    setBusinessStatus(task.map_status || 'not_visited')
+    // Get the current business status object and use its value for the dropdown
+    const currentStatus = getBusinessStatus(task)
+    setBusinessStatus(currentStatus.value)
     setBusinessNote(task.note || '')
   }
 
@@ -84,7 +87,10 @@ export const BusinessMapTab = ({ tasks, onTaskUpdate }: BusinessMapTabProps) => 
 
     setIsUpdating(true)
     try {
-      await tasksApi.updateStatus(selectedBusiness.id, selectedBusiness.status, businessStatus)
+      // Convert status value to color value for database storage
+      const selectedStatusObj = businessStatuses.find(status => status.value === businessStatus)
+      const colorValue = selectedStatusObj?.iconColor || 'red'
+      await tasksApi.updateMapStatus(selectedBusiness.id, colorValue)
       
       toast({
         title: "Status updated",
