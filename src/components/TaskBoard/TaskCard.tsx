@@ -464,7 +464,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Claimed by {profiles.find(p => p.user_id === task.claimed_by)?.username || `User ${task.claimed_by?.slice(-4)}`}. Only they can upload.</p>
+                      <p>Claimed by {profiles.find(p => p.user_id === task.claimed_by)?.username || task.claimed_by?.slice(-4)}. Only they can upload.</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
