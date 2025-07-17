@@ -27,6 +27,7 @@ interface ImportRow {
 export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImportModalProps) => {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<ImportRow[]>([])
+  const [totalRows, setTotalRows] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [isDragOver, setIsDragOver] = useState(false)
   const { toast } = useToast()
@@ -173,7 +174,8 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
       return normalizedRow
     }).filter(row => row.business_name && row.phone) // Only include rows with business name and phone
 
-    setPreview(data.length > 5 ? normalizedData.slice(0, 5) : normalizedData)
+    setTotalRows(normalizedData.length)
+    setPreview(normalizedData) // Show all valid rows
   }
 
   const handleImport = async () => {
@@ -355,6 +357,7 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
   const handleClose = () => {
     setFile(null)
     setPreview([])
+    setTotalRows(0)
     onClose()
   }
 
@@ -426,8 +429,8 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
 
           {preview.length > 0 && (
             <div className="space-y-4">
-              <h4 className="font-medium">Preview (First 5 rows)</h4>
-              <div className="border rounded-lg overflow-hidden">
+              <h4 className="font-medium">Preview ({totalRows} valid rows found)</h4>
+              <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -458,7 +461,7 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
             </Button>
             <Button 
               onClick={handleImport} 
-              disabled={!file || preview.length === 0 || isLoading}
+              disabled={!file || totalRows === 0 || isLoading}
               className="flex items-center gap-2"
             >
               {isLoading ? (
@@ -469,7 +472,7 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
               ) : (
                 <>
                   <Upload className="h-4 w-4" />
-                  Import {preview.length} Tasks
+                  Import {totalRows} Tasks
                 </>
               )}
             </Button>
