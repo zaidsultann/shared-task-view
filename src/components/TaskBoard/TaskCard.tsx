@@ -218,17 +218,37 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
     
     const isCreator = task.created_by === currentUserId;
     const isClaimer = task.claimed_by === currentUserId;
-    const isOwner = isCreator || isClaimer;
     
-    if (isOwner) {
-      return `Are you sure you want to delete your own task: ${task.business_name}?`;
+    // For Open Tasks Section
+    if (task.status === 'open') {
+      if (isCreator) {
+        return `Are you sure you want to delete your own task: ${task.business_name}?`;
+      } else {
+        return `This task was created by ${creatorName}. Are you sure you want to delete it?`;
+      }
     }
     
-    // Different messages based on task status/section
-    if (task.status === 'open') {
-      return `This task was created by ${creatorName}. Are you sure you want to delete it?`;
-    } else if (task.claimed_by && task.created_by !== task.claimed_by) {
-      return `This task was created by ${creatorName} and claimed by ${claimerName}. Are you sure you want to delete it?`;
+    // For sections with claiming (Needs Upload, Awaiting Approval, Changes Needed)
+    if (task.claimed_by) {
+      // Four different scenarios based on creator/claimer relationship
+      if (isCreator && isClaimer) {
+        // Created by self, claimed by self
+        return `Are you sure you want to delete your own task: ${task.business_name}?`;
+      } else if (isCreator && !isClaimer) {
+        // Created by self, claimed by someone else
+        return `This task was created by you and claimed by ${claimerName}. Are you sure you want to delete it?`;
+      } else if (!isCreator && isClaimer) {
+        // Created by someone else, claimed by you
+        return `This task was created by ${creatorName} and claimed by you. Are you sure you want to delete it?`;
+      } else {
+        // Created by someone else, claimed by someone else
+        return `This task was created by ${creatorName} and claimed by ${claimerName}. Are you sure you want to delete it?`;
+      }
+    }
+    
+    // Fallback for other statuses
+    if (isCreator) {
+      return `Are you sure you want to delete your own task: ${task.business_name}?`;
     } else {
       return `This task was created by ${creatorName}. Are you sure you want to delete it?`;
     }
