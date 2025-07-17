@@ -427,7 +427,7 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold">Business Map</h2>
+          <h2 className="text-3xl font-bold">Business Map</h2>
           <p className="text-sm text-muted-foreground">
             Showing {mapTasks.length} completed businesses requiring follow-up
             {tasks.filter(t => t.status === 'completed' && t.address && !t.latitude).length > 0 && (
