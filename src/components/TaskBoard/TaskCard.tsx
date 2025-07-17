@@ -212,9 +212,10 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
     const creatorProfile = profiles.find(p => p.user_id === task.created_by);
     const claimerProfile = profiles.find(p => p.user_id === task.claimed_by);
     
-    // Better fallback: use last 4 digits of user ID if username not available  
-    const creatorName = creatorProfile?.username || task.created_by?.slice(-4);
-    const claimerName = claimerProfile?.username || task.claimed_by?.slice(-4);
+    // Clean names by removing "User " prefix and fallback to last 4 digits of user ID
+    const cleanName = (name: string) => name?.replace(/^User\s+/, '') || '';
+    const creatorName = cleanName(creatorProfile?.username || '') || task.created_by?.slice(-4);
+    const claimerName = cleanName(claimerProfile?.username || '') || task.claimed_by?.slice(-4);
     
     const isCreator = task.created_by === currentUserId;
     const isClaimer = task.claimed_by === currentUserId;
@@ -222,7 +223,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
     // For Open Tasks Section
     if (task.status === 'open') {
       if (isCreator) {
-        return `Are you sure you want to delete your own task: ${task.business_name}?`;
+        return `Are you sure you want to delete a task created by yourself?`;
       } else {
         return `This task was created by ${creatorName}. Are you sure you want to delete it?`;
       }
@@ -233,10 +234,10 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
       // Four different scenarios based on creator/claimer relationship
       if (isCreator && isClaimer) {
         // Created by self, claimed by self
-        return `Are you sure you want to delete your own task: ${task.business_name}?`;
+        return `This task was created and claimed by yourself. Are you sure you want to delete it?`;
       } else if (isCreator && !isClaimer) {
         // Created by self, claimed by someone else
-        return `This task was created by you and claimed by ${claimerName}. Are you sure you want to delete it?`;
+        return `This task was created by yourself and claimed by ${claimerName}. Are you sure you want to delete it?`;
       } else if (!isCreator && isClaimer) {
         // Created by someone else, claimed by you
         return `This task was created by ${creatorName} and claimed by you. Are you sure you want to delete it?`;
@@ -248,7 +249,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
     
     // Fallback for other statuses
     if (isCreator) {
-      return `Are you sure you want to delete your own task: ${task.business_name}?`;
+      return `Are you sure you want to delete a task created by yourself?`;
     } else {
       return `This task was created by ${creatorName}. Are you sure you want to delete it?`;
     }
@@ -464,7 +465,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Claimed by {profiles.find(p => p.user_id === task.claimed_by)?.username || task.claimed_by?.slice(-4)}. Only they can upload.</p>
+                      <p>Claimed by {(profiles.find(p => p.user_id === task.claimed_by)?.username || '').replace(/^User\s+/, '') || task.claimed_by?.slice(-4)}. Only they can upload.</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -560,7 +561,7 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
               </>
             )}
 
-            {/* Changes Needed - Show View and Re-upload (with conditional states), NO DELETE */}
+            {/* Changes Needed - Show View, Re-upload (with conditional states), and Delete */}
             {task.status === 'feedback_needed' && (
               <>
                 {task.current_file_url && (
@@ -594,10 +595,38 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }:
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Only {profiles.find(p => p.user_id === task.claimed_by)?.username || task.claimed_by?.slice(-4)} can re-upload this task.</p>
+                      <p>Only {(profiles.find(p => p.user_id === task.claimed_by)?.username || '').replace(/^User\s+/, '') || task.claimed_by?.slice(-4)} can re-upload this task.</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
+                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      disabled={isLoading}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {getDeleteConfirmationMessage()}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleDelete}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Yes, Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </>
             )}
 
