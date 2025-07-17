@@ -1,6 +1,5 @@
 // API utility functions using Supabase
 import { supabase } from '@/integrations/supabase/client'
-import { createClient } from '@supabase/supabase-js'
 import { Task, FileVersion, FeedbackItem } from '@/types/Task'
 
 // Authentication
@@ -400,14 +399,8 @@ export const tasks = {
     console.log('API: Starting clearHistory operation...')
     
     try {
-      // Use service role client for admin operations like clearing deleted tasks
-      const serviceRoleClient = createClient(
-        'https://fqaykpnmpqkvozdrrceq.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxYXlrcG5tcHFrdm96ZHJyY2VxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjUxNzI4MiwiZXhwIjoyMDY4MDkzMjgyfQ.xhJfqA_l6mG4DlOJRGOUfHXggvShH0P4jNm7F7I5VGI'
-      )
-      
       // First get all deleted tasks to verify count
-      const { data: deletedTasks, error: fetchError } = await serviceRoleClient
+      const { data: deletedTasks, error: fetchError } = await supabase
         .from('tasks')
         .select('id, business_name')
         .eq('is_deleted', true)
@@ -424,8 +417,8 @@ export const tasks = {
         return []
       }
       
-      // Now delete them permanently using service role
-      const { data, error } = await serviceRoleClient
+      // Now delete them permanently
+      const { data, error } = await supabase
         .from('tasks')
         .delete()
         .eq('is_deleted', true)
