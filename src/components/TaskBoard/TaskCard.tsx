@@ -15,7 +15,8 @@ import {
   MessageSquare,
   ThumbsUp,
   Archive,
-  Calendar
+  Calendar,
+  Lock
 } from 'lucide-react';
 import { Task } from '@/types/Task';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -23,15 +24,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TaskCardProps {
   task: Task;
   currentUser: string; // This should be the username for comparison with taken_by
   currentUserId: string; // This is the user ID for API calls
   onUpdate: () => void;
+  profiles?: { user_id: string; username: string }[]; // For displaying usernames
 }
 
-const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps) => {
+const TaskCard = ({ task, currentUser, currentUserId, onUpdate, profiles = [] }: TaskCardProps) => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -172,11 +175,28 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
   };
 
   const handleDelete = async () => {
-    // Check if this is another user's task and show confirmation
-    const isOwnTask = task.created_by === currentUserId || task.taken_by === currentUser;
-    const confirmMessage = isOwnTask 
-      ? 'Are you sure you want to delete this task?'
-      : 'Are you sure you want to delete this task? It was created or claimed by another user.';
+    // Get creator and claimer names for confirmation message
+    const creatorProfile = profiles.find(p => p.user_id === task.created_by);
+    const claimerProfile = profiles.find(p => p.user_id === task.claimed_by);
+    const creatorName = creatorProfile?.username || 'Unknown';
+    const claimerName = claimerProfile?.username || 'Unknown';
+    
+    const isCreator = task.created_by === currentUserId;
+    const isClaimer = task.claimed_by === currentUserId;
+    const isOwner = isCreator || isClaimer;
+    
+    let confirmMessage = 'Are you sure you want to delete this task?';
+    
+    if (!isOwner) {
+      // Different messages based on task status/section
+      if (task.status === 'open') {
+        confirmMessage = `This task was created by ${creatorName}. Are you sure you want to delete it?`;
+      } else if (task.claimed_by && task.created_by !== task.claimed_by) {
+        confirmMessage = `This task was created by ${creatorName} and claimed by ${claimerName}. Are you sure you want to delete it?`;
+      } else {
+        confirmMessage = `This task was created by ${creatorName}. Are you sure you want to delete it?`;
+      }
+    }
     
     if (!confirm(confirmMessage)) return;
     
@@ -342,101 +362,191 @@ const TaskCard = ({ task, currentUser, currentUserId, onUpdate }: TaskCardProps)
         )}
 
         {/* Action buttons */}
-        <div className="flex gap-2">
-          {/* Open Status - Show Claim Button */}
-          {task.status === 'open' && (
-            <Button
-              onClick={handleClaim}
-              disabled={isLoading}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-            >
-              Claim Task
-            </Button>
-          )}
-
-          {/* Needs Upload - Show Upload Button (only for task owner) */}
-          {task.status === 'in_progress_no_file' && task.taken_by === currentUser && (
-            <Button
-              onClick={() => setShowUploadModal(true)}
-              disabled={isLoading}
-              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Upload File
-            </Button>
-          )}
-
-          {/* Awaiting Approval - Show View, Feedback, and Approve Buttons */}
-          {(task.status === 'in_progress_with_file' || task.status === 'awaiting_approval') && (
-            <>
-              {task.current_file_url && (
+        <TooltipProvider>
+          <div className="flex gap-2">
+            {/* Open Status - Show Claim and Delete Buttons */}
+            {task.status === 'open' && (
+              <>
                 <Button
-                  variant="outline"
-                  onClick={() => window.open(task.current_file_url, '_blank')}
-                  className="flex-1"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View File
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => setShowFeedbackModal(true)}
-                disabled={isLoading}
-                className="flex-1"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Send Feedback
-              </Button>
-              <Button
-                onClick={handleApprove}
-                disabled={isLoading}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-              >
-                <ThumbsUp className="h-4 w-4 mr-2" />
-                Approve
-              </Button>
-            </>
-          )}
-
-          {/* Changes Needed - Show View and Re-upload (only for task owner) */}
-          {task.status === 'feedback_needed' && (
-            <>
-              {task.current_file_url && (
-                <Button
-                  variant="outline"
-                  onClick={() => window.open(task.current_file_url, '_blank')}
-                  className="flex-1"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View File
-                </Button>
-              )}
-              {task.taken_by === currentUser && (
-                <Button
-                  onClick={() => setShowUploadModal(true)}
+                  onClick={handleClaim}
                   disabled={isLoading}
-                  className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                 >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Re-upload
+                  Claim Task
                 </Button>
-              )}
-            </>
-          )}
+                <Button
+                  variant="outline"
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
 
-          {/* Completed - Show Download Button */}
-          {task.status === 'completed' && task.current_file_url && (
-            <Button
-              variant="outline"
-              onClick={() => window.open(task.current_file_url, '_blank')}
-              className="flex-1"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-          )}
-        </div>
+            {/* Needs Upload - Show Upload Button (with conditional states) and Delete */}
+            {task.status === 'in_progress_no_file' && (
+              <>
+                {task.claimed_by === currentUserId ? (
+                  <Button
+                    onClick={() => setShowUploadModal(true)}
+                    disabled={isLoading}
+                    className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload File
+                  </Button>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        disabled
+                        className="flex-1 bg-gray-300 text-gray-500 cursor-not-allowed"
+                      >
+                        <Lock className="h-4 w-4 mr-2" />
+                        Upload File
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Claimed by {profiles.find(p => p.user_id === task.claimed_by)?.username || 'Unknown'}. Only they can upload.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+
+            {/* Awaiting Approval - Show View, Feedback, Approve, and Delete Buttons */}
+            {(task.status === 'in_progress_with_file' || task.status === 'awaiting_approval') && (
+              <>
+                {task.current_file_url && (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(task.current_file_url, '_blank')}
+                    className="flex-1"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View File
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFeedbackModal(true)}
+                  disabled={isLoading}
+                  className="flex-1"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Send Feedback
+                </Button>
+                <Button
+                  onClick={handleApprove}
+                  disabled={isLoading}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <ThumbsUp className="h-4 w-4 mr-2" />
+                  Approve
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+
+            {/* Changes Needed - Show View, Re-upload (with conditional states), and Delete */}
+            {task.status === 'feedback_needed' && (
+              <>
+                {task.current_file_url && (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(task.current_file_url, '_blank')}
+                    className="flex-1"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View File
+                  </Button>
+                )}
+                {task.claimed_by === currentUserId ? (
+                  <Button
+                    onClick={() => setShowUploadModal(true)}
+                    disabled={isLoading}
+                    className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Re-upload
+                  </Button>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        disabled
+                        className="flex-1 bg-gray-300 text-gray-500 cursor-not-allowed"
+                      >
+                        <Lock className="h-4 w-4 mr-2" />
+                        Re-upload
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Only {profiles.find(p => p.user_id === task.claimed_by)?.username || 'Unknown'} can re-upload this task.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+
+            {/* Completed - Show Download, Revert, and Archive Buttons */}
+            {task.status === 'completed' && (
+              <>
+                {task.current_file_url && (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(task.current_file_url, '_blank')}
+                    className="flex-1"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={handleRevert}
+                  disabled={isLoading}
+                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                >
+                  Revert
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleArchive}
+                  disabled={isLoading}
+                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                >
+                  <Archive className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        </TooltipProvider>
       </div>
 
       {/* Upload Modal */}

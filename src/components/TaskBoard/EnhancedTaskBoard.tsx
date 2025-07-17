@@ -5,8 +5,10 @@ import Dashboard from './Dashboard'
 import { MapTab } from './MapTab'
 import { useAuth } from '@/hooks/useAuth'
 import useRealtimeTasks from '@/hooks/useRealtimeTasks'
+import useRealtimeProfiles from '@/hooks/useRealtimeProfiles'
 import { useQuery } from '@tanstack/react-query'
 import { tasks as tasksApi } from '@/lib/api'
+import { supabase } from '@/integrations/supabase/client'
 import { BarChart3, Kanban, Map, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import logoImg from '@/assets/logo.png'
@@ -25,10 +27,29 @@ export const EnhancedTaskBoard = () => {
     refetchInterval: 60000, // Reduced polling since we have real-time updates
   })
 
+  // Fetch profiles with real-time updates
+  const { 
+    data: profiles = [], 
+    refetch: refreshProfiles 
+  } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('profiles').select('*')
+      if (error) throw error
+      return data || []
+    },
+    refetchInterval: 300000, // Refresh every 5 minutes
+  })
+
   // Set up real-time updates with immediate refetch
   useRealtimeTasks(() => {
     console.log('🔄 EnhancedTaskBoard: Realtime update detected, refetching tasks...')
     refreshTasks()
+  })
+
+  useRealtimeProfiles(() => {
+    console.log('🔄 EnhancedTaskBoard: Realtime profile update detected, refetching profiles...')
+    refreshProfiles()
   })
 
   const handleLogout = async () => {
@@ -94,7 +115,10 @@ export const EnhancedTaskBoard = () => {
           </TabsContent>
 
           <TabsContent value="tasks" className="space-y-4 sm:space-y-6">
-            <Dashboard user={{username: authUser?.username || 'Unknown', user_id: authUser?.user_id || ''}} />
+            <Dashboard 
+              user={{username: authUser?.username || 'Unknown', user_id: authUser?.user_id || ''}} 
+              profiles={profiles}
+            />
           </TabsContent>
 
           <TabsContent value="map" className="space-y-4 sm:space-y-6">

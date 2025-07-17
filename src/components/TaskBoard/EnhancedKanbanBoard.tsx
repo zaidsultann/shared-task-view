@@ -24,9 +24,10 @@ interface EnhancedKanbanBoardProps {
   currentUser: string
   currentUsername: string
   onUpdate: () => void
+  profiles?: { user_id: string; username: string }[]
 }
 
-export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpdate }: EnhancedKanbanBoardProps) => {
+export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpdate, profiles = [] }: EnhancedKanbanBoardProps) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
@@ -222,11 +223,28 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
   }
 
   const handleDeleteTask = async (task: Task) => {
-    // Check if this is another user's task and show confirmation
-    const isOwnTask = task.created_by === currentUser || task.taken_by === currentUsername;
-    const confirmMessage = isOwnTask 
-      ? 'Are you sure you want to delete this task?'
-      : 'Are you sure you want to delete this task? It was created or claimed by another user.';
+    // Get creator and claimer names for confirmation message
+    const creatorProfile = profiles.find(p => p.user_id === task.created_by);
+    const claimerProfile = profiles.find(p => p.user_id === task.claimed_by);
+    const creatorName = creatorProfile?.username || 'Unknown';
+    const claimerName = claimerProfile?.username || 'Unknown';
+    
+    const isCreator = task.created_by === currentUser;
+    const isClaimer = task.claimed_by === currentUser;
+    const isOwner = isCreator || isClaimer;
+    
+    let confirmMessage = 'Are you sure you want to delete this task?';
+    
+    if (!isOwner) {
+      // Different messages based on task status/section
+      if (task.status === 'open') {
+        confirmMessage = `This task was created by ${creatorName}. Are you sure you want to delete it?`;
+      } else if (task.claimed_by && task.created_by !== task.claimed_by) {
+        confirmMessage = `This task was created by ${creatorName} and claimed by ${claimerName}. Are you sure you want to delete it?`;
+      } else {
+        confirmMessage = `This task was created by ${creatorName}. Are you sure you want to delete it?`;
+      }
+    }
     
     if (!confirm(confirmMessage)) return;
     

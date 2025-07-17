@@ -7,10 +7,12 @@ import { Circle, Clock, CheckCircle } from 'lucide-react';
 interface KanbanBoardProps {
   tasks: Task[];
   currentUser: string;
+  currentUserId: string;
   onUpdate: () => void;
+  profiles?: { user_id: string; username: string }[];
 }
 
-const KanbanBoard = ({ tasks, currentUser, onUpdate }: KanbanBoardProps) => {
+const KanbanBoard = ({ tasks, currentUser, currentUserId, onUpdate, profiles = [] }: KanbanBoardProps) => {
   const activeTasks = tasks.filter(task => !task.is_deleted);
   
   const openTasks = activeTasks.filter(task => task.status === 'open');
@@ -102,8 +104,9 @@ const KanbanBoard = ({ tasks, currentUser, onUpdate }: KanbanBoardProps) => {
                       <TaskCard
                         task={task}
                         currentUser={currentUser}
-                        currentUserId={currentUser}
+                        currentUserId={currentUserId}
                         onUpdate={onUpdate}
+                        profiles={profiles}
                       />
                     </div>
                   ))}

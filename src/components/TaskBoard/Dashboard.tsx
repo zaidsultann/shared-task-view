@@ -25,9 +25,10 @@ import { useRealtimeTasks } from '@/hooks/useRealtimeTasks';
 
 interface DashboardProps {
   user: User;
+  profiles?: { user_id: string; username: string }[];
 }
 
-const Dashboard = ({ user }: DashboardProps) => {
+const Dashboard = ({ user, profiles = [] }: DashboardProps) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -332,6 +333,7 @@ const Dashboard = ({ user }: DashboardProps) => {
           currentUser={user.user_id}
           currentUsername={user.username}
           onUpdate={fetchTasks}
+          profiles={profiles}
         />
       </div>
 
