@@ -181,14 +181,31 @@ export const BulkImportModal = ({ isOpen, onClose, onTasksImported }: BulkImport
       })
 
       return normalizedRow
-    }).filter(row => row.business_name && row.phone) // Only include rows with business name and phone
-
-    console.log('✅ Normalized data:', normalizedData.length, 'valid rows')
-    console.log('📊 Setting preview to show:', normalizedData.length, 'rows')
-    console.log('📋 First few rows:', normalizedData.slice(0, 3))
+    })
     
-    setTotalRows(normalizedData.length)
-    setPreview(normalizedData) // Show all valid rows
+    console.log('🔍 Raw normalized data before filtering:', normalizedData.length, 'rows')
+    normalizedData.forEach((row, index) => {
+      console.log(`Row ${index + 1}:`, {
+        business_name: row.business_name,
+        phone: row.phone,
+        hasBusinessName: !!row.business_name,
+        hasPhone: !!row.phone
+      })
+    })
+    
+    const filteredData = normalizedData.filter(row => {
+      const hasBusinessName = row.business_name && row.business_name.trim().length > 0
+      const hasPhone = row.phone && row.phone.trim().length > 0
+      console.log(`Filtering row: ${row.business_name} - Business: ${hasBusinessName}, Phone: ${hasPhone}`)
+      return hasBusinessName && hasPhone
+    }) // Only include rows with business name and phone
+
+     console.log('✅ Filtered data:', filteredData.length, 'valid rows out of', normalizedData.length)
+     console.log('📊 Setting preview to show:', filteredData.length, 'rows')
+     console.log('📋 First few filtered rows:', filteredData.slice(0, 3))
+     
+     setTotalRows(filteredData.length)
+     setPreview(filteredData) // Show filtered valid rows
   }
 
   const handleImport = async () => {
