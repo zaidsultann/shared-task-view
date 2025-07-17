@@ -392,32 +392,6 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
             {/* Collapsible Content */}
             <CollapsibleContent>
               <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-4 border-t bg-gray-50/30">
-                {/* Map Status Badge - only for completed tasks */}
-                {task.status === 'completed' && (
-                  <div className="pt-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${
-                        task.map_status === 'blue' ? 'bg-blue-500' :
-                        task.map_status === 'yellow' ? 'bg-yellow-500' :
-                        task.map_status === 'red' ? 'bg-red-500' :
-                        task.map_status === 'green' ? 'bg-green-500' :
-                        task.map_status === 'gray' ? 'bg-gray-500' :
-                        'bg-red-500'
-                      }`}></div>
-                      <Badge variant="outline" className="text-xs">
-                        {task.map_status === 'blue' ? 'Follow Up' :
-                         task.map_status === 'yellow' ? 'Pending Payment' :
-                         task.map_status === 'red' ? 'Not Visited' :
-                         task.map_status === 'green' ? 'Complete' :
-                         task.map_status === 'gray' ? 'Not Interested' : 'Not Visited'}
-                      </Badge>
-                      {/* Debug info */}
-                      <span className="text-xs text-gray-400 ml-2">
-                        ({task.map_status || 'no status'})
-                      </span>
-                    </div>
-                  </div>
-                )}
                 
                 {/* Task brief */}
                 <div className="text-sm text-gray-700 pt-3">
@@ -605,8 +579,27 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                   {/* Completed */}
                   {task.status === 'completed' && (
                     <div className="flex flex-col gap-2 w-full">
-                      {/* First row: Revert Button */}
-                      <div className="flex justify-center">
+                      {/* First row: Archive and Revert buttons */}
+                      <div className="flex gap-2 justify-center">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleArchiveTask(task)
+                              }}
+                              className="h-9 w-9 p-0 text-gray-600 hover:bg-gray-50"
+                            >
+                              <Archive className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Archive Task</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -627,10 +620,9 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                         </Tooltip>
                       </div>
                       
-                      {/* Second row: Download and Archive buttons */}
-                      <div className="flex gap-2">
-                        {/* Download Button */}
-                        {task.current_file_url && (
+                      {/* Second row: Download button */}
+                      {task.current_file_url && (
+                        <div className="flex">
                           <Button
                             variant="outline"
                             onClick={() => window.open(task.current_file_url, '_blank')}
@@ -639,28 +631,8 @@ export const EnhancedKanbanBoard = ({ tasks, currentUser, currentUsername, onUpd
                             <Download className="h-4 w-4 mr-2" />
                             Download
                           </Button>
-                        )}
-                        
-                        {/* Archive Button */}
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleArchiveTask(task)
-                              }}
-                              className="h-9 w-9 p-0 text-gray-600 hover:bg-gray-50"
-                            >
-                              <Archive className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Archive Task</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
+                        </div>
+                      )}
                     </div>
                    )}
                 </div>
