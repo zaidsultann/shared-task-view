@@ -55,7 +55,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
           <div className="flex justify-center">
             <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-large hover-lift">
               <img 
-                src="/lovable-uploads/c516933f-21f1-40ae-869b-9c8b76ebe1dd.png" 
+                src="/lovable-uploads/de0c8937-319e-402f-a37d-4767260cab4f.png" 
                 alt="Digitalizers Inc." 
                 className="w-12 h-12"
               />

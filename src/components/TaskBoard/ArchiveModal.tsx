@@ -273,7 +273,7 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
                         </div>
                       </div>
 
-                      <div className="flex gap-2">
+                       <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
@@ -291,6 +291,32 @@ const ArchiveModal: React.FC<ArchiveModalProps> = ({
                             <Download className="h-4 w-4" />
                           </Button>
                         )}
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              setIsLoading(true);
+                              await tasksApi.delete(task.id);
+                              toast({
+                                title: "Success",
+                                description: "Task deleted permanently",
+                              });
+                              onUpdate();
+                            } catch (error) {
+                              toast({
+                                title: "Error",
+                                description: "Failed to delete task",
+                                variant: "destructive",
+                              });
+                            } finally {
+                              setIsLoading(false);
+                            }
+                          }}
+                          disabled={isLoading}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
