@@ -82,7 +82,7 @@ export const EnhancedTaskBoard = () => {
   <img
     src="/lovable-uploads/de0c8937-319e-402f-a37d-4767260cab4f.png"
     alt="Digitalizers Inc."
-    className="w-7 h-7 sm:w-8 sm:h-8"
+    className="w-16 h-16 sm:w-14 sm:h-14"
   />
 </div>
               <div className="min-w-0 flex-1">
