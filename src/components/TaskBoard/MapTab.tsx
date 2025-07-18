@@ -247,6 +247,7 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
   // Set up real-time updates for immediate map sync
   useRealtimeTasks(() => {
     console.log('🗺️ MapTab: Realtime update detected, triggering map refresh...')
+    console.log('🗺️ MapTab: Current tasks count before refresh:', tasks.length)
     onTaskUpdate()
   })
 

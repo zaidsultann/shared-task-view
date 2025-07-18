@@ -20,7 +20,7 @@ export const useRealtimeTasks = (onTaskUpdate?: () => void) => {
     } 
     else if (payload.eventType === 'UPDATE' && payload.new) {
       const updatedTask = payload.new as Task
-      console.log('📝 Realtime: Updating task in cache:', updatedTask.business_name, 'Status:', updatedTask.status)
+      console.log('📝 Realtime: Updating task in cache:', updatedTask.business_name, 'Status:', updatedTask.status, 'Map Status:', updatedTask.map_status)
       queryClient.setQueryData(['tasks'], 
         currentTasks.map(task => 
           task.id === updatedTask.id ? updatedTask : task

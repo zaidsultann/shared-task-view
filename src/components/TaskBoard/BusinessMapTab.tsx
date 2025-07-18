@@ -58,6 +58,7 @@ export const BusinessMapTab = ({ tasks, onTaskUpdate }: BusinessMapTabProps) => 
   // Enhanced real-time hook for map updates
   useRealtimeTasks(() => {
     console.log('🗺️ BusinessMapTab: Realtime update detected, refreshing map...')
+    console.log('🗺️ BusinessMapTab: Current tasks count before refresh:', tasks.length)
     onTaskUpdate()
   })
 
