@@ -55,10 +55,11 @@ export const BusinessMapTab = ({ tasks, onTaskUpdate }: BusinessMapTabProps) => 
   const [isUpdating, setIsUpdating] = useState(false)
   const { toast } = useToast()
   
-  // Enhanced real-time hook for map updates
+  // Enhanced real-time hook for immediate map updates
   useRealtimeTasks(() => {
     console.log('🗺️ BusinessMapTab: Realtime update detected, refreshing map...')
     console.log('🗺️ BusinessMapTab: Current tasks count before refresh:', tasks.length)
+    // Force immediate refresh to update marker colors
     onTaskUpdate()
   })
 
@@ -157,9 +158,10 @@ export const BusinessMapTab = ({ tasks, onTaskUpdate }: BusinessMapTabProps) => 
           
           {visibleTasksOnMap.map((task) => {
             const status = getBusinessStatus(task)
+            console.log(`BusinessMapTab: Rendering marker for ${task.business_name} with status ${status.value} (${status.color})`)
             return (
               <Marker
-                key={task.id}
+                key={`${task.id}-${task.map_status}-${status.value}`} // Enhanced key for real-time updates
                 position={[task.latitude!, task.longitude!]}
                 icon={createCustomIcon(status.color)}
                 eventHandlers={{
@@ -168,15 +170,21 @@ export const BusinessMapTab = ({ tasks, onTaskUpdate }: BusinessMapTabProps) => 
               >
                 <Popup>
                   <div className="text-center">
-                    <h3 className="font-semibold">{task.business_name}</h3>
-                    <p className="text-sm text-gray-600">{status.label}</p>
+                    <h3 className="font-semibold text-sm">{task.business_name}</h3>
+                    <div className="flex items-center justify-center gap-2 my-2">
+                      <div 
+                        className="w-3 h-3 rounded-full border border-black"
+                        style={{ backgroundColor: status.color }}
+                      />
+                      <p className="text-xs text-gray-600">{status.label}</p>
+                    </div>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleBusinessClick(task)}
-                      className="mt-2"
+                      className="mt-2 text-xs"
                     >
-                      View Details
+                      Update Status
                     </Button>
                   </div>
                 </Popup>

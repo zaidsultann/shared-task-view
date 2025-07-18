@@ -21,11 +21,15 @@ export const useRealtimeTasks = (onTaskUpdate?: () => void) => {
     else if (payload.eventType === 'UPDATE' && payload.new) {
       const updatedTask = payload.new as Task
       console.log('📝 Realtime: Updating task in cache:', updatedTask.business_name, 'Status:', updatedTask.status, 'Map Status:', updatedTask.map_status)
-      queryClient.setQueryData(['tasks'], 
-        currentTasks.map(task => 
-          task.id === updatedTask.id ? updatedTask : task
-        )
+      
+      // Force immediate cache update for real-time map sync
+      const updatedTasks = currentTasks.map(task => 
+        task.id === updatedTask.id ? updatedTask : task
       )
+      queryClient.setQueryData(['tasks'], updatedTasks)
+      
+      // Also invalidate to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
     } 
     else if (payload.eventType === 'DELETE' && payload.old) {
       const deletedTask = payload.old as Task
