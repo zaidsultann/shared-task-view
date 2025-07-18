@@ -246,8 +246,11 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
 
   // Set up real-time updates for immediate map sync
   useRealtimeTasks(() => {
-    console.log('🗺️ MapTab: Realtime update detected, triggering map refresh...')
-    console.log('🗺️ MapTab: Current tasks count before refresh:', tasks.length)
+    console.log('🗺️ MapTab: Real-time update triggered!', {
+      timestamp: new Date().toLocaleTimeString(),
+      currentTasksCount: tasks.length,
+      mapTasksCount: mapTasks.length
+    })
     onTaskUpdate()
   })
 
@@ -354,39 +357,46 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
     }
   }, [])
 
-  // Update markers when tasks change - enhanced for real-time updates
+  // Enhanced marker update logic for continuous real-time updates
   useEffect(() => {
     if (!mapInstanceRef.current) return
 
-    console.log('🗺️ MapTab: Updating markers, mapTasks count:', mapTasks.length)
-    console.log('🗺️ MapTab: Task statuses:', mapTasks.map(t => ({ name: t.business_name, status: t.status, mapStatus: t.map_status })))
+    console.log('🗺️ MapTab: Markers updating - CONTINUOUS MODE', {
+      timestamp: new Date().toLocaleTimeString(),
+      totalTasks: tasks.length,
+      mapTasks: mapTasks.length,
+      taskStatuses: mapTasks.map(t => ({ 
+        id: t.id.slice(-8), 
+        name: t.business_name.slice(0, 20), 
+        status: t.status, 
+        mapStatus: t.map_status 
+      }))
+    })
 
-    // Clear existing markers
+    // Clear ALL existing markers to prevent duplicates
     markersRef.current.forEach(marker => {
       mapInstanceRef.current?.removeLayer(marker)
     })
     markersRef.current = []
 
-    // Add new markers with real-time status colors
+    // Create fresh markers with current status colors
     mapTasks.forEach((task, index) => {
-      console.log(`MapTab: Processing task ${index + 1}:`, {
-        name: task.business_name,
-        hasCoordinates: !!(task.latitude && task.longitude),
-        lat: task.latitude,
-        lng: task.longitude,
-        address: task.address,
-        status: task.status,
-        mapStatus: task.map_status
-      })
-
       if (task.latitude && task.longitude) {
-        console.log(`MapTab: Creating marker for ${task.business_name} at [${task.latitude}, ${task.longitude}] with status ${task.map_status}`)
+        const markerColor = getMarkerColor(task)
+        console.log(`🎯 Creating marker ${index + 1}:`, {
+          taskId: task.id.slice(-8),
+          name: task.business_name.slice(0, 20),
+          position: [task.latitude, task.longitude],
+          status: task.status,
+          mapStatus: task.map_status,
+          markerColor: markerColor
+        })
         
         const marker = L.marker([task.latitude, task.longitude], {
-          icon: createCustomIcon(getMarkerColor(task))
+          icon: createCustomIcon(markerColor)
         })
 
-        // Enhanced popup with current status
+        // Enhanced popup with real-time status display
         const statusLabel = (() => {
           const status = task.map_status || 'pending'
           switch (status) {
@@ -402,9 +412,10 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
           <div style="padding: 8px; min-width: 160px; font-family: system-ui;">
             <h3 style="font-weight: 600; margin: 0 0 4px 0; font-size: 14px; color: #1a1a1a;">${task.business_name}</h3>
             <p style="margin: 0 0 8px 0; font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px;">
-              <span style="width: 8px; height: 8px; border-radius: 50%; background: ${getMarkerColor(task)};"></span>
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: ${markerColor};"></span>
               ${statusLabel}
             </p>
+            <p style="margin: 0 0 8px 0; font-size: 10px; color: #999;">Last updated: ${new Date().toLocaleTimeString()}</p>
             <button onclick="window.dispatchEvent(new CustomEvent('taskClick', { detail: '${task.id}' }))" 
                     style="width: 100%; padding: 6px 10px; font-size: 11px; background: #000; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
               Update Status
@@ -418,14 +429,11 @@ export const MapTab = ({ tasks, onTaskUpdate }: MapTabProps) => {
 
         marker.addTo(mapInstanceRef.current)
         markersRef.current.push(marker)
-        console.log(`MapTab: Marker added for ${task.business_name} with color ${getMarkerColor(task)}`)
-      } else {
-        console.log(`MapTab: Skipping ${task.business_name} - missing coordinates`)
       }
     })
 
-    console.log(`MapTab: Total markers added: ${markersRef.current.length}`)
-  }, [mapTasks, tasks]) // Added tasks dependency for immediate updates
+    console.log(`✅ MapTab: Markers refreshed - ${markersRef.current.length} total markers active`)
+  }, [mapTasks, tasks]) // Both dependencies to catch all changes
 
   // Handle task click events from popup
   useEffect(() => {

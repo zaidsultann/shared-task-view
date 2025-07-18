@@ -55,10 +55,13 @@ export const BusinessMapTab = ({ tasks, onTaskUpdate }: BusinessMapTabProps) => 
   const [isUpdating, setIsUpdating] = useState(false)
   const { toast } = useToast()
   
-  // Enhanced real-time hook for immediate map updates
+  // Enhanced real-time hook for continuous map updates
   useRealtimeTasks(() => {
-    console.log('🗺️ BusinessMapTab: Realtime update detected, refreshing map...')
-    console.log('🗺️ BusinessMapTab: Current tasks count before refresh:', tasks.length)
+    console.log('🗺️ BusinessMapTab: Real-time update triggered!', {
+      timestamp: new Date().toLocaleTimeString(),
+      currentTasksCount: tasks.length,
+      visibleTasksCount: visibleTasksOnMap.length
+    })
     // Force immediate refresh to update marker colors
     onTaskUpdate()
   })
@@ -158,10 +161,18 @@ export const BusinessMapTab = ({ tasks, onTaskUpdate }: BusinessMapTabProps) => 
           
           {visibleTasksOnMap.map((task) => {
             const status = getBusinessStatus(task)
-            console.log(`BusinessMapTab: Rendering marker for ${task.business_name} with status ${status.value} (${status.color})`)
+            const uniqueKey = `${task.id}-${task.map_status}-${status.value}-${Date.now()}`
+            console.log(`🎯 BusinessMapTab: Rendering marker for ${task.business_name}`, {
+              taskId: task.id.slice(-8),
+              status: status.value,
+              color: status.color,
+              mapStatus: task.map_status,
+              uniqueKey: uniqueKey
+            })
+            
             return (
               <Marker
-                key={`${task.id}-${task.map_status}-${status.value}`} // Enhanced key for real-time updates
+                key={uniqueKey} // Force re-render on every status change
                 position={[task.latitude!, task.longitude!]}
                 icon={createCustomIcon(status.color)}
                 eventHandlers={{
@@ -178,6 +189,9 @@ export const BusinessMapTab = ({ tasks, onTaskUpdate }: BusinessMapTabProps) => 
                       />
                       <p className="text-xs text-gray-600">{status.label}</p>
                     </div>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Updated: {new Date().toLocaleTimeString()}
+                    </p>
                     <Button
                       size="sm"
                       variant="outline"
